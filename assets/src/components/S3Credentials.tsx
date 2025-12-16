@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-
 import {
 	Button,
 	CardBody,
@@ -12,8 +10,8 @@ import { __ } from '@wordpress/i18n';
 import { useState, useCallback, useEffect } from '@wordpress/element';
 import { isValidUrl } from '../js/utils';
 
-const API_NAMESPACE = OneUpdateSettings.restUrl + '/oneupdate/v1';
-const NONCE = OneUpdateSettings.restNonce;
+const API_NAMESPACE = window.OneUpdateSettings.restUrl + '/oneupdate/v1';
+const NONCE = window.OneUpdateSettings.restNonce;
 
 const S3Credentials = ( { setNotice } ) => {
 	const [ s3Credentials, setS3Credentials ] = useState( {
@@ -191,5 +189,3 @@ const S3Credentials = ( { setNotice } ) => {
 };
 
 export default S3Credentials;
-
-/* eslint-enable react-hooks/exhaustive-deps */

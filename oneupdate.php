@@ -1,95 +1,84 @@
 <?php
 /**
  * Plugin Name: OneUpdate
- * Plugin URI: https://github.com/rtCamp/OneUpdate/
- * Version: 1.0.0
  * Description: OneUpdate - Enterprise WordPress Plugin Manager Automate plugin updates across multiple WordPress sites with CI/CD integration. Creates pull requests for seamless development-to-production workflows.
  * Author: Utsav Patel, rtCamp
  * Author URI: https://rtcamp.com
+ * Plugin URI: https://github.com/rtCamp/OneUpdate/
+ * Update URI: https://github.com/rtCamp/OneUpdate/
+ * License: GPL2+
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain: oneupdate
  * Domain Path: /languages
- * Requires at least: 6.5
+ * Version: 1.0.0
  * Requires PHP: 8.0
- * Tested up to: 6.8
- * License: GPLv2 or later
- * License URI: http://www.gnu.org/licenses/gpl-2.0.html
+ * Requires at least: 6.8
+ * Tested up to: 6.8.2
  *
  * @package OneUpdate
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+namespace OneUpdate;
+
+// Exit if accessed directly.
+defined( 'ABSPATH' ) || exit();
+
+/**
+ * Define the plugin constants.
+ */
+function constants(): void {
+	/**
+	 * Version of the plugin.
+	 */
+	define( 'ONEUPDATE_VERSION', '1.0.0' );
+
+	/**
+	 * Root path to the plugin directory.
+	 */
+	define( 'ONEUPDATE_DIR', plugin_dir_path( __FILE__ ) );
+
+	/**
+	 * Root URL to the plugin directory.
+	 */
+	define( 'ONEUPDATE_URL', plugin_dir_url( __FILE__ ) );
+
+	/**
+	 * Plugin basename.
+	 */
+	define( 'ONEUPDATE_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 }
 
-define( 'ONEUPDATE_PLUGIN_LOADER_VERSION', '1.0.0' );
-define( 'ONEUPDATE_PLUGIN_LOADER_FEATURES_PATH', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
-define( 'ONEUPDATE_PLUGIN_LOADER_RELATIVE_PATH', dirname( plugin_basename( __FILE__ ) ) );
-define( 'ONEUPDATE_PLUGIN_LOADER_FEATURES_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
-define( 'ONEUPDATE_PLUGIN_LOADER_BUILD_PATH', ONEUPDATE_PLUGIN_LOADER_FEATURES_PATH . '/assets/build' );
-define( 'ONEUPDATE_PLUGIN_LOADER_SRC_PATH', ONEUPDATE_PLUGIN_LOADER_FEATURES_PATH . '/assets/src' );
-define( 'ONEUPDATE_PLUGIN_LOADER_BUILD_URI', untrailingslashit( plugin_dir_url( __FILE__ ) ) . '/assets/build' );
-define( 'ONEUPDATE_PLUGIN_LOADER_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
-define( 'ONEUPDATE_PLUGIN_LOADER_SLUG', 'oneupdate' );
+constants();
 
-
-// if autoload file does not exist then show notice that you are running the plugin from github repo so you need to build assets and install composer dependencies.
-if ( ! file_exists( ONEUPDATE_PLUGIN_LOADER_FEATURES_PATH . '/vendor/autoload.php' ) ) {
-	add_action(
-		'admin_notices',
-		function () {
-			?>
-		<div class="notice notice-error">
-			<p>
-				<?php
-				printf(
-					/* translators: %s is the plugin name. */
-					esc_html__( 'You are running the %s plugin from the GitHub repository. Please build the assets and install composer dependencies to use the plugin.', 'oneupdate' ),
-					'<strong>' . esc_html__( 'OneUpdate', 'oneupdate' ) . '</strong>'
-				);
-				?>
-			</p>
-			<p>
-				<?php
-				printf(
-					/* translators: %s is the command to run. */
-					esc_html__( 'Run the following commands in the plugin directory: %s', 'oneupdate' ),
-					'<code>composer install && npm install && npm run build:prod</code>'
-				);
-				?>
-			<p>
-				<?php
-				printf(
-					/* translators: %s is the plugin name. */
-					esc_html__( 'Please refer to the %s for more information.', 'oneupdate' ),
-					sprintf(
-						'<a href="%s" target="_blank">%s</a>',
-						esc_url( 'https://github.com/rtCamp/OneUpdate' ),
-						esc_html__( 'OneUpdate GitHub repository', 'oneupdate' )
-					)
-				);
-				?>
-			</p>
-		</div>
-			<?php
-		}
-	);
+// If autoloader failed, we cannot proceed.
+require_once __DIR__ . '/inc/Autoloader.php';
+if ( ! \OneUpdate\Autoloader::autoload() ) {
 	return;
 }
 
-// phpcs:disable WordPressVIPMinimum.Files.IncludingFile.UsingCustomConstant
-if ( file_exists( ONEUPDATE_PLUGIN_LOADER_FEATURES_PATH . '/vendor/autoload.php' ) ) {
-	require_once ONEUPDATE_PLUGIN_LOADER_FEATURES_PATH . '/vendor/autoload.php';
+/**
+ * Load plugin.
+ */
+if ( class_exists( 'OneUpdate\Main' ) ) {
+	add_action(
+		'plugins_loaded',
+		'\OneUpdate\load_plugin'
+	);
 }
-// phpcs:enable WordPressVIPMinimum.Files.IncludingFile.UsingCustomConstant
 
 /**
- * Load the plugin.
+ * Load OneUpdate plugin functionality.
+ *
+ * @return void
  */
-function oneupdate_plugin_loader() {
-	\OneUpdate\Plugin::get_instance();
+function load_plugin(): void {
+	\OneUpdate\Main::instance();
+
+	//phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- @todo remove before submitting to .org.
+	load_plugin_textdomain( 'oneupdate', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 }
 
-add_action( 'plugins_loaded', 'oneupdate_plugin_loader' );
+// @todo need to remove below code.
 
 use OneUpdate\Plugin_Configs\DB;
 
@@ -97,7 +86,7 @@ use OneUpdate\Plugin_Configs\DB;
  * Create custom database table on plugin activation and schedule cron jobs.
  */
 register_activation_hook(
-	ONEUPDATE_PLUGIN_LOADER_PLUGIN_BASENAME,
+	__FILE__,
 	function () {
 
 		// create database tables.
@@ -117,7 +106,7 @@ register_activation_hook(
  * Deactivate the plugin and clean up options.
  */
 register_deactivation_hook(
-	ONEUPDATE_PLUGIN_LOADER_PLUGIN_BASENAME,
+	__FILE__,
 	function () {
 		wp_clear_scheduled_hook( 'oneupdate_s3_zip_cleanup_event' );
 

@@ -1,12 +1,25 @@
-import { useState } from '@wordpress/element';
+/**
+ * WordPress dependencies
+ */
+import { useState } from 'react';
 import { Button, Card, CardHeader, CardBody, Modal } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import type { BrandSite, EditingIndex } from '@/admin/settings/page';
 
-const SiteTable = ( { sites, onEdit, onDelete, setFormData, setShowModal } ) => {
+const SiteTable = (
+	{ sites, onEdit, onDelete, setFormData, setShowModal } :
+	{
+		sites: BrandSite[];
+		onEdit: ( index: number ) => void;
+		onDelete: ( index: number|null ) => void;
+		setFormData: ( data: BrandSite ) => void;
+		setShowModal: ( show: boolean ) => void;
+	},
+) => {
 	const [ showDeleteModal, setShowDeleteModal ] = useState( false );
-	const [ deleteIndex, setDeleteIndex ] = useState( null );
+	const [ deleteIndex, setDeleteIndex ] = useState< EditingIndex >( null );
 
-	const handleDeleteClick = ( index ) => {
+	const handleDeleteClick = ( index:number ) => {
 		setDeleteIndex( index );
 		setShowDeleteModal( true );
 	};
@@ -35,12 +48,11 @@ const SiteTable = ( { sites, onEdit, onDelete, setFormData, setShowModal } ) => 
 				</Button>
 			</CardHeader>
 			<CardBody>
-				<table className="wp-list-table widefat fixed striped">
+				<table className="wp-list-table widefat fixed striped " style={ { marginTop: '16px' } }>
 					<thead>
 						<tr>
 							<th>{ __( 'Site Name', 'oneupdate' ) }</th>
 							<th>{ __( 'Site URL', 'oneupdate' ) }</th>
-							<th>{ __( 'GitHub Repo', 'oneupdate' ) }</th>
 							<th>{ __( 'API Key', 'oneupdate' ) }</th>
 							<th>{ __( 'Actions', 'oneupdate' ) }</th>
 						</tr>
@@ -48,19 +60,16 @@ const SiteTable = ( { sites, onEdit, onDelete, setFormData, setShowModal } ) => 
 					<tbody>
 						{ sites.length === 0 && (
 							<tr>
-								<td colSpan="5" style={ { textAlign: 'center' } }>
+								<td colSpan={ 4 } style={ { textAlign: 'center' } }>
 									{ __( 'No Brand Sites found.', 'oneupdate' ) }
 								</td>
 							</tr>
 						) }
 						{ sites?.map( ( site, index ) => (
 							<tr key={ index }>
-								<td>{ site?.siteName }</td>
-								<td>{ site?.siteUrl }</td>
-								<td>
-									{ site?.githubRepo }
-								</td>
-								<td><code>{ site?.apiKey?.substring( 0, 10 ) }...</code></td>
+								<td>{ site?.name }</td>
+								<td>{ site?.url }</td>
+								<td><code>{ site?.api_key?.substring( 0, 10 ) }...</code></td>
 								<td>
 									<Button
 										variant="secondary"
@@ -96,7 +105,10 @@ const SiteTable = ( { sites, onEdit, onDelete, setFormData, setShowModal } ) => 
 	);
 };
 
-const DeleteConfirmationModal = ( { onConfirm, onCancel } ) => (
+const DeleteConfirmationModal = (
+	{ onConfirm, onCancel }
+	: { onConfirm: () => void; onCancel: () => void },
+) => (
 	<Modal
 		title={ __( 'Delete Brand Site', 'oneupdate' ) }
 		onRequestClose={ onCancel }
@@ -104,20 +116,21 @@ const DeleteConfirmationModal = ( { onConfirm, onCancel } ) => (
 		shouldCloseOnClickOutside={ true }
 	>
 		<p>{ __( 'Are you sure you want to delete this Brand Site? This action cannot be undone.', 'oneupdate' ) }</p>
-		<Button
-			variant="secondary"
-			isDestructive
-			onClick={ onConfirm }
-		>
-			{ __( 'Delete', 'oneupdate' ) }
-		</Button>
-		<Button
-			variant="secondary"
-			onClick={ onCancel }
-			style={ { marginLeft: '10px' } }
-		>
-			{ __( 'Cancel', 'oneupdate' ) }
-		</Button>
+		<div style={ { display: 'flex', justifyContent: 'flex-end', marginTop: '20px', gap: '16px' } }>
+			<Button
+				variant="secondary"
+				onClick={ onCancel }
+			>
+				{ __( 'Cancel', 'oneupdate' ) }
+			</Button>
+			<Button
+				variant="primary"
+				isDestructive
+				onClick={ onConfirm }
+			>
+				{ __( 'Delete', 'oneupdate' ) }
+			</Button>
+		</div>
 	</Modal>
 );
 

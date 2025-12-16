@@ -1,9 +1,48 @@
 {
 	"name": "rtcamp/oneupdate",
-	"version": "1.0.0",
-	"description": "OneUpdate - Enterprise WordPress Plugin Manager Automate plugin updates across multiple WordPress sites with CI/CD integration. Creates pull requests for seamless development-to-production workflows.",
 	"type": "wordpress-plugin",
+	"authors": [
+		{
+			"name": "rtCamp",
+			"email": "marketing@rtcamp.com",
+			"homepage": "https://rtcamp.com"
+		}
+	],
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true,
+			"phpstan/extension-installer": true,
+			"composer/installers": true
+		},
+		"platform": {
+			"php": "8.1"
+		},
+		"sort-packages": true,
+		"preferred-install": "dist"
+	},
+	"minimum-stability": "dev",
+	"prefer-stable": true,
+	"extra": {
+		"installer-paths": {
+			"vendor/{$vendor}/{$name}/": [
+				"wpackagist-plugin/plugin-check"
+			]
+		}
+	},
+	"repositories": [
+		{
+			"type": "composer",
+			"url": "https://wpackagist.org",
+			"only": [
+				"wpackagist-plugin/*",
+				"wpackagist-theme/*"
+			]
+		}
+	],
 	"autoload": {
+		"psr-4": {
+			"OneUpdate\\": "inc/"
+		},
 		"classmap": [
 			"inc/"
 		],
@@ -11,31 +50,33 @@
 			"inc/helpers/custom-functions.php"
 		]
 	},
-	"authors": [
-		{
-			"name": "Utsav Patel",
-			"email": "up1512001@gmail.com"
-		}
-	],
-	"require-dev": {
-		"wp-coding-standards/wpcs": "^2.3",
-		"phpcompatibility/phpcompatibility-wp": "^2.1",
-		"automattic/vipwpcs": "^2.3",
-		"phpunit/phpunit": "^9.6",
-		"wp-phpunit/wp-phpunit": "^6.2",
-		"yoast/phpunit-polyfills": "^1.0"
-	},
-	"config": {
-		"allow-plugins": {
-			"dealerdirect/phpcodesniffer-composer-installer": true
-		}
-	},
 	"require": {
+		"php": "^8.1",
 		"aws/aws-sdk-php": "^3.343"
 	},
+	"require-dev": {
+		"automattic/vipwpcs": "^3.0",
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"phpcompatibility/php-compatibility": "^10.0.0-alpha",
+		"phpcompatibility/phpcompatibility-wp": "^3.0.0-alpha",
+		"phpstan/extension-installer": "^1.3",
+		"phpstan/phpstan-deprecation-rules": "^2.0.3",
+		"phpstan/phpstan-phpunit": "^2.0.3",
+		"phpstan/phpstan": "^2.1.22",
+		"phpunit/phpunit": "^8.5|^9.6",
+		"slevomat/coding-standard": "^8.0",
+		"squizlabs/php_codesniffer": "^3.9",
+		"szepeviktor/phpstan-wordpress": "^2.0.2",
+		"wp-coding-standards/wpcs": "^3.1",
+		"wp-phpunit/wp-phpunit": "^6.5",
+		"wpackagist-plugin/plugin-check": "~1.6.0",
+		"yoast/phpunit-polyfills": "^4.0"
+	},
 	"scripts": {
-		"pot": "wp i18n make-pot . languages/oneupdate.pot --domain=oneupdate --exclude=node_modules,vendor",
-		"phpcs": "vendor/bin/phpcs --standard=./phpcs.xml.dist",
-		"phpcs:fix": "vendor/bin/phpcbf --standard=./phpcs.xml.dist"
+		"format": "phpcbf",
+		"lint": "phpcs",
+		"phpstan": "phpstan analyse --memory-limit=1G",
+		"test": "vendor/bin/phpunit -c phpunit.xml.dist",
+		"test-multisite": "WP_MULTISITE=1 phpunit --exclude-group=ms-excluded"
 	}
 }

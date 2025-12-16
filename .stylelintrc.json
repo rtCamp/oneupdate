@@ -1,9 +1,24 @@
 {
 	"extends": "@wordpress/stylelint-config/scss",
-	"ignoreFiles": ["**/*.js", "**/*.json"],
+	"plugins": [
+		"@stylistic/stylelint-plugin"
+	],
+	"ignoreFiles": [
+		"**/*.js",
+		"**/*.json",
+		"**/*.php",
+		"**/*.svg"
+	],
 	"rules": {
 		"selector-class-pattern": null,
-		"declaration-property-unit-allowed-list": null,
-		"function-url-quotes": null
+		"@stylistic/indentation": [
+			"tab",
+			{
+				"baseIndentLevel": 0,
+				"indentInsideParens": "once-at-root-twice-in-block"
+			}
+		],
+		"@stylistic/no-missing-end-of-source-newline": true,
+		"@stylistic/no-eol-whitespace": true
 	}
 }

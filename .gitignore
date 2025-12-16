@@ -1,24 +1,41 @@
-# Core
-/wordpress/
-
-# macOS/IDE
-.DS_Store
-.idea
-
-# Log files
-*.log
-/tests/logs
-
-# Packages
-/node_modules/
-/vendor/
+# Vendor + dependency files
+node_modules/
+vendor/
 
 # Enviroment
 .env
 .wp-env.override.json
 
-# PHPCS
+# Local configs
 phpcs.xml
+phpunit.xml
+phpstan.neon
 
-# ignore build files
-/assets/build/
+# Log files
+*.log
+/tests/logs
+
+# Test output
+/tests/_output/*
+!/tests/_output/.gitkeep
+
+# OS files
+[Tt]humbs.db
+[Dd]esktop.ini
+*.DS_store
+.DS_store?
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# Build
+build/
+oneupdate.zip
+
+# TSConfig cache
+tsconfig.tsbuildinfo
