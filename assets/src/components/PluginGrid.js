@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, CheckboxControl, Modal, Spinner, TextControl, Notice } from '@wordpress/components';
@@ -7,7 +5,7 @@ import { Button, CheckboxControl, Modal, Spinner, TextControl, Notice } from '@w
 import PluginCard from './PluginCard';
 
 const API_NAMESPACE = OneUpdatePlugins.restUrl + '/oneupdate/v1';
-const API_KEY = OneUpdatePlugins.apiKey;
+const API_KEY = OneUpdatePlugins.api_key;
 
 const PluginGrid = () => {
 	const [ page, setPage ] = useState( 1 );
@@ -270,20 +268,20 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 	const [ selectedSite, setSelectedSite ] = useState( [] );
 	const [ selectedSiteInfo, setSelectedSiteInfo ] = useState( [] );
 
-	const handleSiteSelection = ( siteUrl ) => {
+	const handleSiteSelection = ( url ) => {
 		// Deselect if already selected else add to selected sites list
 		setSelectedSite( ( prev ) => {
-			if ( prev.includes( siteUrl ) ) {
-				return prev.filter( ( id ) => id !== siteUrl );
+			if ( prev.includes( url ) ) {
+				return prev.filter( ( id ) => id !== url );
 			}
-			return [ ...prev, siteUrl ];
+			return [ ...prev, url ];
 		} );
 	};
 
 	// based on selected sites need to get all info from sharedsites for all selected sites
 	useEffect( () => {
 		const selectedSiteFullInfo = sharedSites.filter( ( site ) =>
-			selectedSite.includes( site.siteUrl ),
+			selectedSite.includes( site.url ),
 		);
 
 		setSelectedSiteInfo( selectedSiteFullInfo );
@@ -350,10 +348,10 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 					<div className="oneupdate-site-selection">
 						{ sharedSites.map( ( site ) => (
 							<CheckboxControl
-								key={ site?.siteUrl }
-								label={ site?.siteName }
-								checked={ selectedSite.includes( site?.siteUrl ) }
-								onChange={ () => handleSiteSelection( site.siteUrl ) }
+								key={ site?.url }
+								label={ site?.name }
+								checked={ selectedSite.includes( site?.url ) }
+								onChange={ () => handleSiteSelection( site.url ) }
 							/>
 						) ) }
 					</div>
@@ -377,5 +375,3 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 };
 
 export default PluginGrid;
-
-/* eslint-enable react-hooks/exhaustive-deps */

@@ -53,7 +53,7 @@ function oneupdate_validate_api_key(): bool {
 		return current_user_can( 'manage_options' ) ? true : false;
 	}
 
-	// check X-oneupdate-Plugins-Token header.
+	// check X-OneUpdate-Token header.
 	if ( isset( $_SERVER['HTTP_X_ONEUPDATE_PLUGINS_TOKEN'] ) && ! empty( $_SERVER['HTTP_X_ONEUPDATE_PLUGINS_TOKEN'] ) ) {
 		$token = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_ONEUPDATE_PLUGINS_TOKEN'] ) );
 		// Get the api key from options.

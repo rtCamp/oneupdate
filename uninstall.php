@@ -70,14 +70,14 @@ function delete_plugin_data(): void {
 
 	// list of actions to be cleared on uninstall.
 	$actions_to_clear = [
-		'oneupdate_governing_site_configured',
-		'oneupdate_add_deduplicated_users',
+		'oneupdate_s3_zip_cleanup_event',
+		'oneupdate_s3_zip_history_cleanup_event', // legacy cron to cleanup.
 	];
 
 	// Clear scheduled actions.
-	if ( function_exists( 'as_unschedule_all_actions' ) ) {
+	if ( function_exists( 'wp_clear_scheduled_hook' ) ) {
 		foreach ( $actions_to_clear as $action ) {
-			as_unschedule_all_actions( $action );
+			wp_clear_scheduled_hook( $action );
 		}
 	}
 
@@ -92,16 +92,35 @@ function delete_plugin_data(): void {
 		'oneupdate_profile_update_requests',
 		'oneupdate_shared_sites',
 		'oneupdate_site_type',
+		'oneupdate_parent_site_url',
+		'oneupdate_db_version',
+		'oneupdate_consumer_api_key',
+		'oneupdate_site_type',
+		'oneupdate_child_site_api_key',
+		'oneupdate_s3_credentials',
+		'oneupdate_shared_sites',
+		'oneupdate_gh_token',
+		'oneupdate_child_site_public_key',
+		'oneupdate_github_token',
 	];
 
 	foreach ( $options as $option ) {
 		delete_option( $option );
 	}
 
+	// Transients to clean up.
+	$transients = [
+		'oneupdate_get_plugins',
+		'oneupdate_github_repos',
+	];
+
+	foreach ( $transients as $transient ) {
+		delete_transient( $transient );
+	}
+
 	// Drop custom tables created by the OneUpdate.
 	$tables_to_drop = [
-		'oneupdate_deduplicated_users',
-		'oneupdate_profile_requests',
+		'wp_oneupdate_s3_zip_history',
 	];
 
 	global $wpdb;

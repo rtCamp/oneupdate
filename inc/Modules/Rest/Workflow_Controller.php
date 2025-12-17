@@ -1,52 +1,37 @@
 <?php
 /**
- * Class Workflow - this contains the REST API endpoints for managing GitHub workflows.
+ * Class Workflow_Controller - this contains the REST API endpoints for managing GitHub workflows.
  *
  * @package OneUpdate
  */
 
-namespace OneUpdate\REST;
+namespace OneUpdate\Modules\Rest;
 
-use OneUpdate\Traits\Singleton;
-use OneUpdate\Cache;
-use OneUpdate\Plugin_Configs\Constants;
+use OneUpdate\Modules\Plugin\Cache;
+use OneUpdate\Modules\Settings\Settings;
+use OneUpdate\Modules\Plugin\Settings as Plugin_Settings;
+use OneUpdate\Modules\Plugin\VIP_Activation;
+use WP_REST_Request;
+use WP_REST_Response;
+use WP_REST_Server;
 
 /**
- * Class Workflow
+ * Class Workflow_Controller
  */
-class Workflow {
+class Workflow_Controller extends Abstract_REST_Controller {
+
+    /**
+     * Active plugins options key.
+     * 
+     * @var string
+     */
+    public const ACTIVE_PLUGINS = 'active_plugins';
 
 	/**
-	 * REST API namespace.
-	 *
-	 * @var string
+	 * {@inheritDoc}
 	 */
-	private const NAMESPACE = 'oneupdate/v1';
-
-	/**
-	 * Use Singleton trait.
-	 */
-	use Singleton;
-
-	/**
-	 * Protected class constructor
-	 */
-	protected function __construct() {
-		$this->setup_hooks();
-	}
-
-	/**
-	 * Setup WordPress hooks
-	 */
-	public function setup_hooks(): void {
-		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
-	}
-
-	/**
-	 * Register REST API routes.
-	 */
-	public function register_rest_routes(): void {
-		/**
+	public function register_routes(): void {
+        /**
 		 * Register a route to apply plugins to sites by creating PR's to privided github repo's.
 		 */
 		register_rest_route(
@@ -86,7 +71,7 @@ class Workflow {
 			array(
 				'methods'             => \WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'get_plugins' ),
-				'permission_callback' => 'oneupdate_validate_api_key',
+				'permission_callback' => [ $this, 'check_api_permissions' ],
 			)
 		);
 
@@ -100,12 +85,12 @@ class Workflow {
 				array(
 					'methods'             => \WP_REST_Server::READABLE,
 					'callback'            => array( $this, 'get_oneupdate_plugins_options' ),
-					'permission_callback' => 'oneupdate_validate_api_key',
+					'permission_callback' => [ $this, 'check_api_permissions' ],
 				),
 				array(
 					'methods'             => \WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'update_oneupdate_plugins_options' ),
-					'permission_callback' => 'oneupdate_validate_api_key',
+					'permission_callback' => [ $this, 'check_api_permissions' ],
 					'args'                => array(
 						'options' => array(
 							'required'          => true,
@@ -258,7 +243,7 @@ class Workflow {
 	 */
 	public function webhook_permission_callback(): bool {
 		$secret       = isset( $_GET['secret'] ) ? sanitize_text_field( wp_unslash( $_GET['secret'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- no need for nonce as its called from webhook like vip or github.
-		$valid_secret = get_option( Constants::ONEUPDATE_API_KEY, '' );
+		$valid_secret = Settings::get_api_key();
 		return hash_equals( $secret, $valid_secret );
 	}
 
@@ -270,7 +255,7 @@ class Workflow {
 	public function webhook_rebuild_transient(): \WP_REST_Response|\WP_Error {
 
 		// Clear the transient.
-		delete_transient( 'oneupdate_get_plugins' );
+		delete_transient( Cache::TRANSIENT_GET_PLUGINS );
 
 		// Rebuild the transient.
 		Cache::build_plugins_transient();
@@ -307,7 +292,7 @@ class Workflow {
 				if ( ! is_string( $site ) || empty( $site ) ) {
 					return new \WP_Error( 'invalid_site', __( 'Invalid site provided.', 'oneupdate' ), array( 'status' => 400 ) );
 				} else {
-					$oneupdate_sites = $GLOBALS['oneupdate_sites'] ?? array();
+					$oneupdate_sites = Settings::get_shared_sites();
 					$plugin_slug     = $plugin['slug'] ?? '';
 					$plugin_version  = $plugin['version'] ?? '';
 					$github_repo     = $oneupdate_sites[ $site ]['gh_repo'] ?? '';
@@ -321,9 +306,9 @@ class Workflow {
 							$plugin_slug,
 							$plugin_version,
 							'add_update',
-							$oneupdate_sites[ $site ]['siteName'] ?? ''
+							$oneupdate_sites[ $site ]['name'] ?? ''
 						);
-						$github_response['siteName'] = $GLOBALS['oneupdate_sites'][ $site ]['siteName'] ?? $site;
+						$github_response['name'] = $site;
 						$response[]                  = array(
 							'github_response' => $github_response,
 						);
@@ -374,12 +359,12 @@ class Workflow {
 		$errors = array();
 		if ( 'activate' === $action || 'deactivate' === $action || 'remove' === $action ) {
 			foreach ( $sites as $site ) {
-				$oneupdate_sites = $GLOBALS['oneupdate_sites'] ?? array();
-				$api_key         = $oneupdate_sites[ $site ]['apiKey'] ?? '';
+				$oneupdate_sites = Settings::get_shared_sites();
+				$api_key         = $oneupdate_sites[ $site ]['api_key'] ?? '';
 
 				$request_postfix = '/wp-json/' . self::NAMESPACE . '/oneupdate-plugins-options';
 				// strip the trailing slash from the site URL.
-				$site_url = rtrim( $oneupdate_sites[ $site ]['siteUrl'], '/' );
+				$site_url = rtrim( $oneupdate_sites[ $site ]['url'], '/' );
 
 				if ( ! empty( $api_key ) ) {
 					$response = wp_remote_post(
@@ -387,7 +372,7 @@ class Workflow {
 						array(
 							'headers' => array(
 								'Content-Type' => 'application/json',
-								'X-OneUpdate-Plugins-Token' => $api_key,
+								'X-OneUpdate-Token' => $api_key,
 							),
 							'body'    => wp_json_encode(
 								array(
@@ -448,8 +433,8 @@ class Workflow {
 		}
 		if ( 'update' === $action || 'change-version' === $action ) {
 			foreach ( $sites as $site ) {
-				$oneupdate_sites = $GLOBALS['oneupdate_sites'] ?? array();
-				$api_key         = $oneupdate_sites[ $site ]['apiKey'] ?? '';
+				$oneupdate_sites = Settings::get_shared_sites();
+				$api_key         = $oneupdate_sites[ $site ]['api_key'] ?? '';
 				$github_repo     = $oneupdate_sites[ $site ]['gh_repo'] ?? '';
 				if ( empty( $github_repo ) ) {
 					$errors[] = new \WP_Error(
@@ -470,7 +455,7 @@ class Workflow {
 					$slug,
 					$plugin_version,
 					'add_update',
-					$oneupdate_sites[ $site ]['siteName'] ?? ''
+					$oneupdate_sites[ $site ]['name'] ?? ''
 				);
 
 				if ( is_wp_error( $response ) ) {
@@ -488,8 +473,8 @@ class Workflow {
 		}
 		if ( 'remove' === $action ) {
 			foreach ( $sites as $site ) {
-				$oneupdate_sites = $GLOBALS['oneupdate_sites'] ?? array();
-				$api_key         = $oneupdate_sites[ $site ]['apiKey'] ?? '';
+				$oneupdate_sites = Settings::get_shared_sites();
+				$api_key         = $oneupdate_sites[ $site ]['api_key'] ?? '';
 				$github_repo     = $oneupdate_sites[ $site ]['gh_repo'] ?? '';
 				if ( empty( $github_repo ) ) {
 					$errors[] = new \WP_Error(
@@ -510,7 +495,7 @@ class Workflow {
 					$slug,
 					'',
 					'remove',
-					$oneupdate_sites[ $site ]['siteName'] ?? ''
+					$oneupdate_sites[ $site ]['name'] ?? ''
 				);
 
 				if ( is_wp_error( $response ) ) {
@@ -528,8 +513,8 @@ class Workflow {
 		}
 		if ( 'install' === $action ) {
 			foreach ( $sites as $site ) {
-				$oneupdate_sites = $GLOBALS['oneupdate_sites'] ?? array();
-				$api_key         = $oneupdate_sites[ $site ]['apiKey'] ?? '';
+				$oneupdate_sites = Settings::get_shared_sites();
+				$api_key         = $oneupdate_sites[ $site ]['api_key'] ?? '';
 				$github_repo     = $oneupdate_sites[ $site ]['gh_repo'] ?? '';
 				if ( empty( $github_repo ) ) {
 					$errors[] = new \WP_Error(
@@ -550,7 +535,7 @@ class Workflow {
 					$slug,
 					$plugin_version,
 					'add_update',
-					$oneupdate_sites[ $site ]['siteName'] ?? ''
+					$oneupdate_sites[ $site ]['name'] ?? ''
 				);
 
 				if ( is_wp_error( $response ) ) {
@@ -596,9 +581,9 @@ class Workflow {
 		// for each sites, apply the plugins.
 		$results = array();
 		foreach ( $sites_data as $site_data ) {
-			$site_name = $site_data['siteName'] ?? '';
-			$site_url  = $site_data['siteUrl'] ?? '';
-			$repo_url  = $site_data['githubRepo'] ?? '';
+			$site_name = $site_data['name'] ?? '';
+			$site_url  = $site_data['url'] ?? '';
+			$repo_url  = $site_data['github_repo'] ?? '';
 
 			if ( empty( $site_name ) || empty( $site_url ) || empty( $repo_url ) ) {
 				$results[] = array(
@@ -637,7 +622,7 @@ class Workflow {
 	 * @return array|\WP_Error
 	 */
 	private function trigger_github_action_for_private_plugin( string $repo, string $private_plugin, string $branch, string $site_name ): array|\WP_Error {
-		$github_token = get_option( Constants::ONEUPDATE_GH_TOKEN, '' );
+		$github_token = Plugin_Settings::get_github_token();
 
 		if ( empty( $github_token ) ) {
 			return new \WP_Error( 'no_github_token', __( 'GitHub token not found.', 'oneupdate' ), array( 'status' => 404 ) );
@@ -705,7 +690,7 @@ class Workflow {
 			'workflow_url'  => "https://github.com/{$repo}/actions/workflows/oneupdate-pr-creation-private.yml",
 			'run_id'        => $run_id,
 			'run_url'       => $run_id ? "https://github.com/{$repo}/actions/runs/{$run_id}" : null,
-			'siteName'      => $site_name,
+			'name'      => $site_name,
 		);
 	}
 
@@ -715,7 +700,7 @@ class Workflow {
 	 * @return WP_REST_Response|\WP_Error
 	 */
 	public function get_oneupdate_plugins_options(): \WP_REST_Response|\WP_Error {
-		$options = get_option( Constants::ONEUPDATE_PLUGINS_OPTIONS, array() );
+		$options = VIP_Activation::get_plugins_options();
 
 		return rest_ensure_response(
 			array(
@@ -746,12 +731,12 @@ class Workflow {
 		$plugin_type = $request_options['plugin_type'] ?? 'add_update';
 
 		// oneupdate_plugin_activate options.
-		$oneupdate_plugin_activate = get_option( Constants::ONEUPDATE_PLUGINS_OPTIONS, array() );
+		$oneupdate_plugin_activate = VIP_Activation::get_plugins_options();
 
 		// if plugin type is deactivate/remove then remove the plugin from options.
 		if ( 'deactivate' === $plugin_type || 'remove' === $plugin_type ) {
 			// get active plugins options.
-			$active_plugins = get_option( Constants::ONEUPDATE_ACTIVE_PLUGINS, array() );
+			$active_plugins = get_option( self::ACTIVE_PLUGINS, array() );
 			// remove the plugins from active plugins options.
 			foreach ( $plugins as $plugin ) {
 				if ( in_array( $plugin, $active_plugins, true ) ) {
@@ -763,12 +748,12 @@ class Workflow {
 				}
 			}
 			// update the active plugins options.
-			update_option( Constants::ONEUPDATE_ACTIVE_PLUGINS, $active_plugins, false );
+			update_option( self::ACTIVE_PLUGINS, $active_plugins, false );
 
 		}
 		if ( 'activate' === $plugin_type ) {
 			// if plugin type is activate then activate the plugins.
-			$active_plugins = get_option( Constants::ONEUPDATE_ACTIVE_PLUGINS, array() );
+			$active_plugins = get_option( self::ACTIVE_PLUGINS, array() );
 			foreach ( $plugins as $plugin ) {
 				if ( ! in_array( $plugin, $active_plugins, true ) ) {
 					activate_plugin( $plugin, '', false, true );
@@ -780,7 +765,7 @@ class Workflow {
 			}
 		}
 
-		update_option( Constants::ONEUPDATE_PLUGINS_OPTIONS, $oneupdate_plugin_activate, false );
+		update_option( self::ACTIVE_PLUGINS, $oneupdate_plugin_activate, false );
 
 		if ( ! empty( $plugins ) ) {
 			Cache::rebuild_transient_for_single_plugin(
@@ -807,7 +792,7 @@ class Workflow {
 	public function get_plugins(): \WP_REST_Response|\WP_Error {
 
 		// check if oneupdate_get_plugins cache is set.
-		$cached_plugins = get_transient( 'oneupdate_get_plugins' );
+		$cached_plugins = get_transient( Cache::TRANSIENT_GET_PLUGINS );
 		if ( false !== $cached_plugins ) {
 			return rest_ensure_response(
 				array(
@@ -844,19 +829,19 @@ class Workflow {
 		$error_logs   = array();
 
 		foreach ( $sites as $site ) {
-			if ( ! isset( $site['githubRepo'] ) ) {
+			if ( ! isset( $site['github_repo'] ) ) {
 				return new \WP_Error( 'invalid_site_data', __( 'Invalid site data provided.', 'oneupdate' ), array( 'status' => 400 ) );
 			}
 
 			foreach ( $plugins as $plugin ) {
 				// Create GitHub PR for each plugin.
-				$pr_response  = $this->trigger_github_action_for_pr_creation( $site['githubRepo'], 'production', $plugin['slug'], $plugin['version'], $plugin_type, $site['siteName'] ?? '' );
+				$pr_response  = $this->trigger_github_action_for_pr_creation( $site['github_repo'], 'production', $plugin['slug'], $plugin['version'], $plugin_type, $site['name'] ?? '' );
 				$created_pr[] = $pr_response;
 			}
 			// set oneupdate_plugins_options for all sites.
 			$request_postfix = '/wp-json/' . self::NAMESPACE . '/oneupdate-plugins-options';
-			$site_url        = $site['siteUrl'] ?? '';
-			$token           = $site['apiKey'] ?? '';
+			$site_url        = $site['url'] ?? '';
+			$token           = $site['api_key'] ?? '';
 			if ( ! empty( $site_url ) ) {
 				$site_url        = rtrim( $site_url, '/' );
 				$request_postfix = $site_url . '/' . $request_postfix;
@@ -864,7 +849,7 @@ class Workflow {
 
 			// if current site is same as site_url then use current site token.
 			if ( empty( $token ) ) {
-				$token = get_option( Constants::ONEUPDATE_API_KEY, '' );
+				$token = Settings::get_api_key();
 			}
 
 			// create comma separated string array of plugins.
@@ -878,7 +863,7 @@ class Workflow {
 				array(
 					'headers' => array(
 						'Content-Type'              => 'application/json',
-						'X-OneUpdate-Plugins-Token' => $token,
+						'X-OneUpdate-Token' => $token,
 					),
 					'body'    => wp_json_encode(
 						array(
@@ -923,7 +908,7 @@ class Workflow {
 	 * @return array|\WP_Error
 	 */
 	private function trigger_github_action_for_pr_creation( string $repo, string $branch, string $plugin_slug, string $version, string $plugin_type, string $site_name ): array|\WP_Error {
-		$github_token = get_option( Constants::ONEUPDATE_GH_TOKEN, '' );
+		$github_token = Plugin_Settings::get_github_token();
 
 		if ( empty( $github_token ) ) {
 			return new \WP_Error( 'no_github_token', __( 'GitHub token not found.', 'oneupdate' ), array( 'status' => 404 ) );
@@ -1011,7 +996,7 @@ class Workflow {
 			'workflow_url'  => "https://github.com/{$repo}/actions/workflows/oneupdate-pr-creation.yml",
 			'run_id'        => $run_id,
 			'run_url'       => $run_id ? "https://github.com/{$repo}/actions/runs/{$run_id}" : null,
-			'siteName'      => $site_name,
+			'name'      => $site_name,
 		);
 	}
 
@@ -1024,7 +1009,7 @@ class Workflow {
 	 * @return string|null The latest workflow run ID or null if not found.
 	 */
 	private function get_latest_workflow_run_id( string $repo, string $workflow_filename ): string|null {
-		$github_token = get_option( Constants::ONEUPDATE_GH_TOKEN, '' );
+		$github_token = Plugin_Settings::get_github_token();
 
 		if ( empty( $github_token ) ) {
 			return null;

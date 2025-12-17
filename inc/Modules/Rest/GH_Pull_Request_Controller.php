@@ -5,58 +5,33 @@
  * @package OneUpdate
  */
 
-namespace OneUpdate\REST;
+namespace OneUpdate\Modules\Rest;
 
-use OneUpdate\Traits\Singleton;
-use OneUpdate\Utils;
+use WP_REST_Request;
+use WP_REST_Response;
 use WP_REST_Server;
 
 /**
- * Class GitHub_Pull_Requests
+ * Class GH_Pull_Request_Controller
  */
-class GitHub_Pull_Requests {
+class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 
-	/**
-	 * REST API namespace.
-	 *
-	 * @var string
-	 */
-	private const NAMESPACE = 'oneupdate/v1/github';
-
-	/**
+    /**
 	 * GitHub API base URL.
 	 *
 	 * @var string
 	 */
 	private const GH_API_BASE_URL = 'https://api.github.com';
 
-	/**
-	 * Use Singleton trait.
-	 */
-	use Singleton;
+    /**
+     * Namespace for the REST API.
+     * 
+     * @var string
+     */
+    public const NAMESPACE = parent::NAMESPACE . '/github';
 
 	/**
-	 * Protected class constructor
-	 *
-	 * @return void
-	 */
-	protected function __construct() {
-		$this->setup_hooks();
-	}
-
-	/**
-	 * Setup WordPress hooks
-	 *
-	 * @return void
-	 */
-	public function setup_hooks(): void {
-		add_action( 'rest_api_init', array( $this, 'register_routes' ), 99 );
-	}
-
-	/**
-	 * Register REST API routes.
-	 *
-	 * @return void
+	 * {@inheritDoc}
 	 */
 	public function register_routes(): void {
 		/**
@@ -69,7 +44,7 @@ class GitHub_Pull_Requests {
 				array(
 					'methods'             => WP_REST_Server::READABLE,
 					'callback'            => array( $this, 'get_pull_requests' ),
-					'permission_callback' => array( self::class, 'permission_callback' ),
+					'permission_callback' => static fn () : bool => current_user_can( 'manage_options' ),
 					'args'                => array(
 						'owner'        => array(
 							'required' => true,
@@ -112,22 +87,13 @@ class GitHub_Pull_Requests {
 	}
 
 	/**
-	 * Permission callback for the routes.
-	 *
-	 * @return bool
-	 */
-	public static function permission_callback(): bool {
-		return current_user_can( 'manage_options' );
-	}
-
-	/**
 	 * Get pull requests by pagination.
 	 *
-	 * @param \WP_REST_Request $request The REST request.
+	 * @param WP_REST_Request $request The REST request.
 	 *
-	 * @return \WP_REST_Response
+	 * @return WP_REST_Response
 	 */
-	public function get_pull_requests( \WP_REST_Request $request ): \WP_REST_Response {
+	public function get_pull_requests( WP_REST_Request $request ): WP_REST_Response {
 		$gh_owner     = sanitize_text_field( $request['owner'] );
 		$gh_repo      = sanitize_text_field( $request['repo'] );
 		$pr_number    = filter_var( $request->get_param( 'pr_number' ), FILTER_VALIDATE_INT ) ?? 0;
@@ -159,9 +125,9 @@ class GitHub_Pull_Requests {
 	 * @param int    $per_page Number of pull requests per page. Default is 25.
 	 * @param int    $page Page number. Default is 1.
 	 *
-	 * @return \WP_REST_Response
+	 * @return WP_REST_Response
 	 */
-	private static function get_all_pull_requests( string $gh_owner, string $gh_repo, string $pr_state = 'open', int $per_page = 25, int $page = 1 ): \WP_REST_Response {
+	private static function get_all_pull_requests( string $gh_owner, string $gh_repo, string $pr_state = 'open', int $per_page = 25, int $page = 1 ): WP_REST_Response {
 
 		// gh api endpoint to get pull requests.
 		$gh_api_endpoint = self::GH_API_BASE_URL . "/repos/{$gh_owner}/{$gh_repo}/pulls";
@@ -172,12 +138,12 @@ class GitHub_Pull_Requests {
 			'order'    => 'desc',
 		);
 
-		$gh_api_endpoint = Utils::add_query_args( $gh_api_endpoint, $query_args );
+		$gh_api_endpoint = \add_query_arg( $query_args, $gh_api_endpoint );
 
 		$response = self::gh_api_request_with_validation( $gh_api_endpoint );
 
 		if ( false === $response['success'] ) {
-			return new \WP_REST_Response(
+			return new WP_REST_Response(
 				array(
 					'success' => false,
 					'message' => $response['message'],
@@ -193,7 +159,7 @@ class GitHub_Pull_Requests {
 		$total_count   = self::get_total_count_from_headers( $headers, count( $pull_requests ), $per_page );
 		$total_pages   = ceil( $total_count / $per_page );
 
-		$pull_requests_response = new \WP_REST_Response(
+		$pull_requests_response = new WP_REST_Response(
 			array(
 				'success'       => true,
 				'pull_requests' => $pull_requests,
@@ -224,9 +190,9 @@ class GitHub_Pull_Requests {
 	 * @param int    $page Page number. Default is 1.
 	 * @param string $pr_state State of pull requests to fetch. Default is 'all'.
 	 *
-	 * @return \WP_REST_Response
+	 * @return WP_REST_Response
 	 */
-	private static function search_pull_requests( string $gh_owner, string $gh_repo, string $search_query, int $per_page = 25, int $page = 1, string $pr_state = 'all' ): \WP_REST_Response {
+	private static function search_pull_requests( string $gh_owner, string $gh_repo, string $search_query, int $per_page = 25, int $page = 1, string $pr_state = 'all' ): WP_REST_Response {
 
 		// If we have a specific search query, use search API with state filter.
 		if ( ! empty( $search_query ) && 'all' !== $pr_state ) {
@@ -268,12 +234,12 @@ class GitHub_Pull_Requests {
 				'order'    => 'desc',
 			),
 		);
-		$gh_api_endpoint = Utils::add_query_args( $gh_api_endpoint, $query_args );
+		$gh_api_endpoint = \add_query_arg(  $query_args, $gh_api_endpoint );
 
 		$response = self::gh_api_request_with_validation( $gh_api_endpoint );
 
 		if ( false === $response['success'] ) {
-			return new \WP_REST_Response(
+			return new WP_REST_Response(
 				array(
 					'success' => false,
 					'message' => $response['message'],
@@ -298,7 +264,7 @@ class GitHub_Pull_Requests {
 
 		$total_pages = ceil( $total_count / $per_page );
 
-		$response_data = new \WP_REST_Response(
+		$response_data = new WP_REST_Response(
 			array(
 				'success'       => true,
 				'pull_requests' => $pull_requests,
@@ -328,9 +294,9 @@ class GitHub_Pull_Requests {
 	 * @param int    $page Page number.
 	 * @param string $pr_state State of pull requests to fetch.
 	 *
-	 * @return \WP_REST_Response
+	 * @return WP_REST_Response
 	 */
-	private static function search_pull_requests_with_query_and_state( string $gh_owner, string $gh_repo, string $search_query, int $per_page, int $page, string $pr_state ): \WP_REST_Response {
+	private static function search_pull_requests_with_query_and_state( string $gh_owner, string $gh_repo, string $search_query, int $per_page, int $page, string $pr_state ): WP_REST_Response {
 
 		// Use search API with state filter in query.
 		$gh_api_endpoint = self::GH_API_BASE_URL . '/search/issues';
@@ -340,12 +306,12 @@ class GitHub_Pull_Requests {
 			'page'     => $page,
 			'order'    => 'desc',
 		);
-		$gh_api_endpoint = Utils::add_query_args( $gh_api_endpoint, $query_args );
+		$gh_api_endpoint = \add_query_arg( $query_args, $gh_api_endpoint );
 
 		$response = self::gh_api_request_with_validation( $gh_api_endpoint );
 
 		if ( false === $response['success'] ) {
-			return new \WP_REST_Response(
+			return new WP_REST_Response(
 				array(
 					'success' => false,
 					'message' => $response['message'],
@@ -359,7 +325,7 @@ class GitHub_Pull_Requests {
 		$total_count    = $search_results['total_count'] ?? 0;
 		$total_pages    = ceil( $total_count / $per_page );
 
-		$response_data = new \WP_REST_Response(
+		$response_data = new WP_REST_Response(
 			array(
 				'success'       => true,
 				'pull_requests' => $pull_requests,
@@ -417,9 +383,9 @@ class GitHub_Pull_Requests {
 	 * @param string $gh_repo GitHub repo.
 	 * @param int    $pr_number Pull request number.
 	 *
-	 * @return \WP_REST_Response
+	 * @return WP_REST_Response
 	 */
-	private static function get_specific_pull_request( string $gh_owner, string $gh_repo, int $pr_number ): \WP_REST_Response {
+	private static function get_specific_pull_request( string $gh_owner, string $gh_repo, int $pr_number ): WP_REST_Response {
 
 		// gh api endpoint to get a specific pull request.
 		$gh_api_endpoint = self::GH_API_BASE_URL . "/repos/{$gh_owner}/{$gh_repo}/pulls/{$pr_number}";
@@ -427,7 +393,7 @@ class GitHub_Pull_Requests {
 		$response = self::gh_api_request_with_validation( $gh_api_endpoint );
 
 		if ( false === $response['success'] ) {
-			return new \WP_REST_Response(
+			return new WP_REST_Response(
 				array(
 					'success' => false,
 					'message' => $response['message'],
@@ -440,7 +406,7 @@ class GitHub_Pull_Requests {
 
 		$pull_request = self::format_github_pull_requests_info( array( $pull_request ) );
 
-		return new \WP_REST_Response(
+		return new WP_REST_Response(
 			array(
 				'success'      => true,
 				'pull_request' => $pull_request,
@@ -566,13 +532,13 @@ class GitHub_Pull_Requests {
 	 *
 	 * @param string $endpoint GitHub API endpoint.
 	 *
-	 * @return array|\WP_Error|\WP_REST_Response
+	 * @return array|\WP_Error|WP_REST_Response
 	 */
-	private static function gh_api_request( string $endpoint ): array|\WP_Error|\WP_REST_Response {
-		$gh_token = Utils::get_gh_token();
+	private static function gh_api_request( string $endpoint ): array|\WP_Error|WP_REST_Response {
+		$gh_token = get_option( 'oneupdate_gh_token', '' ); // @todo need to remove it.
 
 		if ( empty( $gh_token ) ) {
-			return new \WP_REST_Response(
+			return new WP_REST_Response(
 				array(
 					'success' => false,
 					'message' => __( 'GitHub token not configured.', 'oneupdate' ),

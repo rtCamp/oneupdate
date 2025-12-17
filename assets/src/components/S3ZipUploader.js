@@ -1,5 +1,3 @@
-/* eslint-disable @wordpress/no-unsafe-wp-apis */
-/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * WordPress dependencies
  */
@@ -187,10 +185,10 @@ const SiteSelectionModal = ( {
 		} else {
 			// Select all
 			setSelectedSiteInfo( sharedSites.map( ( site ) => ( {
-				siteUrl: site.siteUrl,
-				siteName: site.siteName,
-				apiKey: site.apiKey,
-				githubRepo: site.githubRepo,
+				url: site.url,
+				name: site.name,
+				api_key: site.api_key,
+				github_repo: site.github_repo,
 			} ) ) );
 		}
 	};
@@ -263,21 +261,21 @@ const SiteSelectionModal = ( {
 													if ( e.key === 'Enter' || e.key === ' ' ) {
 														e.preventDefault();
 														setSelectedSiteInfo( ( prev ) =>
-															prev.some( ( s ) => s.siteUrl === site.siteUrl )
-																? prev.filter( ( s ) => s.siteUrl !== site.siteUrl )
+															prev.some( ( s ) => s.url === site.url )
+																? prev.filter( ( s ) => s.url !== site.url )
 																: [
 																	...prev,
 																	{
-																		siteUrl: site.siteUrl,
-																		siteName: site.siteName,
-																		apiKey: site.apiKey,
-																		githubRepo: site.githubRepo,
+																		url: site.url,
+																		name: site.name,
+																		api_key: site.api_key,
+																		github_repo: site.github_repo,
 																	},
 																],
 														);
 													}
 												} }
-												aria-pressed={ selectedSiteInfo.includes( site.siteUrl ) }
+												aria-pressed={ selectedSiteInfo.includes( site.url ) }
 												onClick={ ( event ) => {
 													event.stopPropagation();
 
@@ -287,15 +285,15 @@ const SiteSelectionModal = ( {
 													}
 
 													setSelectedSiteInfo( ( prev ) =>
-														prev.some( ( s ) => s.siteUrl === site.siteUrl )
-															? prev.filter( ( s ) => s.siteUrl !== site.siteUrl )
+														prev.some( ( s ) => s.url === site.url )
+															? prev.filter( ( s ) => s.url !== site.url )
 															: [
 																...prev,
 																{
-																	siteUrl: site.siteUrl,
-																	siteName: site.siteName,
-																	apiKey: site.apiKey,
-																	githubRepo: site.githubRepo,
+																	url: site.url,
+																	name: site.name,
+																	api_key: site.api_key,
+																	github_repo: site.github_repo,
 																},
 															],
 													);
@@ -307,14 +305,14 @@ const SiteSelectionModal = ( {
 													label={
 														<div>
 															<div style={ { fontWeight: '500', color: '#23282d' } }>
-																{ site.siteName }
+																{ site.name }
 															</div>
 															<div style={ { fontSize: '12px', color: '#6c757d' } }>
-																{ site.siteUrl }
+																{ site.url }
 															</div>
 														</div>
 													}
-													checked={ selectedSiteInfo.some( ( s ) => s.siteUrl === site.siteUrl ) }
+													checked={ selectedSiteInfo.some( ( s ) => s.url === site.url ) }
 													disabled={ applyingPlugins }
 												/>
 											</div>
@@ -420,18 +418,18 @@ const ApplyPluginsModal = ( { history, setShowApplyPluginsModal, setCurrentNotic
 				if ( data.results && Array.isArray( data.results ) && data.results.length > 0 ) {
 					// Group actions by site name
 					const groupedBySite = data.results.reduce( ( acc, result ) => {
-						const siteName = result.siteName || 'Unknown Site';
-						if ( ! acc[ siteName ] ) {
-							acc[ siteName ] = [];
+						const name = result.name || 'Unknown Site';
+						if ( ! acc[ name ] ) {
+							acc[ name ] = [];
 						}
-						acc[ siteName ].push( result );
+						acc[ name ].push( result );
 						return acc;
 					}, {} );
 
 					// Format the message with site names and their respective URLs (each URL on new line)
-					const siteGroups = Object.entries( groupedBySite ).map( ( [ siteName, results ] ) => {
+					const siteGroups = Object.entries( groupedBySite ).map( ( [ name, results ] ) => {
 						const actionLinks = results.map( ( result ) => result.run_url ).join( '\n' );
-						return `${ siteName }\n${ actionLinks }`;
+						return `${ name }\n${ actionLinks }`;
 					} );
 
 					noticeMessage += `\n\n${ siteGroups.join( '\n\n' ) }`;
@@ -659,18 +657,18 @@ const S3ZipUploader = () => {
 				if ( applyData.results && Array.isArray( applyData.results ) && applyData.results.length > 0 ) {
 					// Group actions by site name
 					const groupedBySite = applyData.results.reduce( ( acc, result ) => {
-						const siteName = result.siteName || 'Unknown Site';
-						if ( ! acc[ siteName ] ) {
-							acc[ siteName ] = [];
+						const name = result.name || 'Unknown Site';
+						if ( ! acc[ name ] ) {
+							acc[ name ] = [];
 						}
-						acc[ siteName ].push( result );
+						acc[ name ].push( result );
 						return acc;
 					}, {} );
 
 					// Format the message with site names and their respective URLs (each URL on new line)
-					const siteGroups = Object.entries( groupedBySite ).map( ( [ siteName, results ] ) => {
+					const siteGroups = Object.entries( groupedBySite ).map( ( [ name, results ] ) => {
 						const actionLinks = results.map( ( result ) => result.run_url ).join( '\n' );
-						return `${ siteName }\n${ actionLinks }`;
+						return `${ name }\n${ actionLinks }`;
 					} );
 
 					noticeMessage += `\n\n${ siteGroups.join( '\n\n' ) }`;
@@ -824,10 +822,10 @@ const S3ZipUploader = () => {
 													} else {
 														setSelectedSitesForUpload(
 															sharedSites.map( ( site ) => ( {
-																siteUrl: site.siteUrl,
-																siteName: site.siteName,
-																apiKey: site.apiKey,
-																githubRepo: site.githubRepo,
+																url: site.url,
+																name: site.name,
+																api_key: site.api_key,
+																github_repo: site.github_repo,
 															} ) ),
 														);
 													}
@@ -879,21 +877,21 @@ const S3ZipUploader = () => {
 															if ( e.key === 'Enter' || e.key === ' ' ) {
 																e.preventDefault();
 																setSelectedSitesForUpload( ( prev ) =>
-																	prev.some( ( s ) => s.siteUrl === site.siteUrl )
-																		? prev.filter( ( s ) => s.siteUrl !== site.siteUrl )
+																	prev.some( ( s ) => s.url === site.url )
+																		? prev.filter( ( s ) => s.url !== site.url )
 																		: [
 																			...prev,
 																			{
-																				siteUrl: site.siteUrl,
-																				siteName: site.siteName,
-																				apiKey: site.apiKey,
-																				githubRepo: site.githubRepo,
+																				url: site.url,
+																				name: site.name,
+																				api_key: site.api_key,
+																				github_repo: site.github_repo,
 																			},
 																		],
 																);
 															}
 														} }
-														aria-pressed={ selectedSitesForUpload.some( ( s ) => s.siteUrl === site.siteUrl ) }
+														aria-pressed={ selectedSitesForUpload.some( ( s ) => s.url === site.url ) }
 														onClick={ ( event ) => {
 															event.stopPropagation();
 
@@ -903,15 +901,15 @@ const S3ZipUploader = () => {
 															}
 
 															setSelectedSitesForUpload( ( prev ) =>
-																prev.some( ( s ) => s.siteUrl === site.siteUrl )
-																	? prev.filter( ( s ) => s.siteUrl !== site.siteUrl )
+																prev.some( ( s ) => s.url === site.url )
+																	? prev.filter( ( s ) => s.url !== site.url )
 																	: [
 																		...prev,
 																		{
-																			siteUrl: site.siteUrl,
-																			siteName: site.siteName,
-																			apiKey: site.apiKey,
-																			githubRepo: site.githubRepo,
+																			url: site.url,
+																			name: site.name,
+																			api_key: site.api_key,
+																			github_repo: site.github_repo,
 																		},
 																	],
 															);
@@ -922,14 +920,14 @@ const S3ZipUploader = () => {
 															label={
 																<div>
 																	<div style={ { fontWeight: '500', color: '#23282d' } }>
-																		{ site.siteName }
+																		{ site.name }
 																	</div>
 																	<div style={ { fontSize: '12px', color: '#6c757d' } }>
-																		{ site.siteUrl }
+																		{ site.url }
 																	</div>
 																</div>
 															}
-															checked={ selectedSitesForUpload.some( ( s ) => s.siteUrl === site.siteUrl ) }
+															checked={ selectedSitesForUpload.some( ( s ) => s.url === site.url ) }
 															disabled={ uploading }
 														/>
 													</div>
@@ -1082,5 +1080,3 @@ const S3ZipUploader = () => {
 };
 
 export default S3ZipUploader;
-/* eslint-enable react-hooks/exhaustive-deps */
-/* eslint-enable @wordpress/no-unsafe-wp-apis */

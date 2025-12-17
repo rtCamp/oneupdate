@@ -45,14 +45,14 @@ final class Encryptor {
 	 *
 	 * @throws \RuntimeException When dependencies are missing or encryption fails.
 	 */
-	public static function encrypt( string $value ): string {
+	public static function encrypt( string $value ): string|bool {
 		$key = self::derive_key();
 		$iv  = random_bytes( self::IV_LENGTH );
 
 		$tag        = '';
 		$ciphertext = openssl_encrypt( $value, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag );
 		if ( false === $ciphertext ) {
-			throw new \RuntimeException( 'Failed to encrypt value.' );
+			return false;
 		}
 
 		return base64_encode( $iv . $tag . $ciphertext );
@@ -67,10 +67,10 @@ final class Encryptor {
 	 *
 	 * @throws \RuntimeException When dependencies are missing or the payload is invalid.
 	 */
-	public static function decrypt( string $value ): string {
+	public static function decrypt( string $value ): string|bool {
 		$decoded = base64_decode( $value, true );
 		if ( false === $decoded || strlen( $decoded ) < self::IV_LENGTH + self::TAG_LENGTH ) {
-			throw new \RuntimeException( 'Encrypted payload is invalid.' );
+			return false;
 		}
 
 		$key        = self::derive_key();
@@ -80,7 +80,7 @@ final class Encryptor {
 
 		$plaintext = openssl_decrypt( $ciphertext, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag );
 		if ( false === $plaintext ) {
-			throw new \RuntimeException( 'Failed to decrypt value.' );
+			return false;
 		}
 
 		return $plaintext;

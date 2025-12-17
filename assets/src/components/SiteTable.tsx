@@ -53,6 +53,7 @@ const SiteTable = (
 						<tr>
 							<th>{ __( 'Site Name', 'oneupdate' ) }</th>
 							<th>{ __( 'Site URL', 'oneupdate' ) }</th>
+							<th>{ __('GitHub Repo','oneupdate') }</th>
 							<th>{ __( 'API Key', 'oneupdate' ) }</th>
 							<th>{ __( 'Actions', 'oneupdate' ) }</th>
 						</tr>
@@ -60,7 +61,7 @@ const SiteTable = (
 					<tbody>
 						{ sites.length === 0 && (
 							<tr>
-								<td colSpan={ 4 } style={ { textAlign: 'center' } }>
+								<td colSpan={ 5 } style={ { textAlign: 'center' } }>
 									{ __( 'No Brand Sites found.', 'oneupdate' ) }
 								</td>
 							</tr>
@@ -69,6 +70,7 @@ const SiteTable = (
 							<tr key={ index }>
 								<td>{ site?.name }</td>
 								<td>{ site?.url }</td>
+								<td>{ site?.github_repo }</td>
 								<td><code>{ site?.api_key?.substring( 0, 10 ) }...</code></td>
 								<td>
 									<Button

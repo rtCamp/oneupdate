@@ -7,8 +7,8 @@
 
 namespace OneUpdate\Modules\Rest;
 
-use OneUpdate\Modules\Core\User_Roles;
 use OneUpdate\Modules\Settings\Settings;
+use OneUpdate\Modules\Plugin\Settings as Plugin_Settings;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -293,7 +293,7 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 		$urls = [];
 		foreach ( $sites_data as $site ) {
 			if ( isset( $site['url'] ) && in_array( $site['url'], $urls, true ) ) {
-				return new \WP_Error( 'duplicate_site_url', __( 'Brand Site already exists.', 'onesearch' ), [ 'status' => 400 ] );
+				return new \WP_Error( 'duplicate_site_url', __( 'Brand Site already exists.', 'oneupdate' ), [ 'status' => 400 ] );
 			}
 
 			// Add a unique ID if it doesn't exist.
@@ -319,7 +319,19 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 	 */
 	public function get_github_repos(): \WP_REST_Response|\WP_Error {
 
-		$github_token = get_option( Settings::OPTION_GITHUB_REPO_TOKEN, '' );
+		// check into transient first.
+		$cached_repos = get_transient( 'oneupdate_github_repos' );
+		if ( false !== $cached_repos ) {
+			return rest_ensure_response(
+				array(
+					'success' => true,
+					'repos'   => $cached_repos,
+					'count'   => count( $cached_repos ),
+				)
+			);
+		}
+
+		$github_token = Plugin_Settings::get_github_token();
 
 		if ( empty( $github_token ) ) {
 			return new \WP_Error( 'no_github_token', __( 'GitHub token not found.', 'oneupdate' ), array( 'status' => 404 ) );
@@ -352,6 +364,7 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 					array(
 						'status' => 500,
 						'error'  => is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_code( $response ),
+						'response' => $response,
 					)
 				);
 			}
@@ -372,16 +385,19 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 		// Filter for specific organizations.
 		$filtered_repos = array();
 		foreach ( $all_repos as $repo ) {
-				$filtered_repos[] = array(
-					'slug' => $repo['full_name'],
-					'name' => $repo['name'],
-					'url'  => $repo['html_url'],
-				);
+			$filtered_repos[] = array(
+				'slug' => $repo['full_name'],
+				'name' => $repo['name'],
+				'url'  => $repo['html_url'],
+			);
 		}
 
 		if ( empty( $filtered_repos ) ) {
 			return new \WP_Error( 'no_filtered_repos', __( 'No repositories found for rtCamp or wpcomvip.', 'oneupdate' ), array( 'status' => 404 ) );
 		}
+
+		// Cache the result for 10 minutes.
+		set_transient( 'oneupdate_github_repos', $filtered_repos, 10 * MINUTE_IN_SECONDS );
 
 		return rest_ensure_response(
 			array(
@@ -398,7 +414,7 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function get_s3_credentials(): \WP_REST_Response|\WP_Error {
-		$s3_credentials = get_option( Settings::OPTION_S3_CREDENTIALS, array() );
+		$s3_credentials = Plugin_Settings::get_s3_credentials();
 
 		return rest_ensure_response(
 			array(
@@ -432,24 +448,24 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 			}
 		}
 
-		// Update S3 credentials in options.
-		update_option( Settings::OPTION_S3_CREDENTIALS, $s3_credentials, false );
+		// Save S3 credentials.
+		$is_saved = Plugin_Settings::set_s3_credentials( $s3_credentials );
 
 		return rest_ensure_response(
 			array(
-				'success'        => true,
+				'success'        => $is_saved,
 				's3_credentials' => $s3_credentials,
 			)
 		);
 	}
 
-    	/**
+    /**
 	 * Get the GitHub token.
 	 *
 	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function get_github_token(): \WP_REST_Response|\WP_Error {
-		$github_token = get_option( Settings::OPTION_GITHUB_REPO_TOKEN, '' );
+		$github_token = Plugin_Settings::get_github_token();
 
 		return rest_ensure_response(
 			array(
@@ -498,11 +514,12 @@ class Basic_Options_Controller extends Abstract_REST_Controller {
 			);
 		}
 
-		update_option( Settings::OPTION_GITHUB_REPO_TOKEN, $github_token, false );
+		// Save GitHub token.
+		$is_saved = Plugin_Settings::set_github_token( $github_token );
 
 		return rest_ensure_response(
 			array(
-				'success'      => true,
+				'success'      => $is_saved,
 				'github_token' => $github_token,
 			)
 		);

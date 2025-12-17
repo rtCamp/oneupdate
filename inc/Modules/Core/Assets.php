@@ -32,9 +32,8 @@ class Assets implements Registrable {
 	public const EDITOR_STYLES_HANDLE       = self::PREFIX . 'editor';
 	public const SETTINGS_SCRIPT_HANDLE     = self::PREFIX . 'settings';
 	public const ONBOARDING_SCRIPT_HANDLE   = self::PREFIX . 'setup';
-	public const MANAGE_USERS_SCRIPT_HANDLE = self::PREFIX . 'manage-users';
-	public const ADMIN_USER_STYLES_HANDLE   = self::PREFIX . 'admin-user';
-	public const USER_PROFILE_SCRIPT_HANDLE = self::PREFIX . 'user-profile';
+	public const PLUGIN_MANAGER_SCRIPT_HANDLE = self::PREFIX . 'plugin-manager';
+	public const PULL_REQUESTS_SCRIPT_HANDLE = self::PREFIX . 'pull-requests';
 
 	/**
 	 * Localized data for scripts.
@@ -105,11 +104,11 @@ class Assets implements Registrable {
 		$this->register_script( self::ONBOARDING_SCRIPT_HANDLE, 'onboarding' );
 		$this->register_style( self::ONBOARDING_SCRIPT_HANDLE, 'onboarding', [ 'wp-components' ] );
 
-		$this->register_script( self::MANAGE_USERS_SCRIPT_HANDLE, 'manage-users' );
-		$this->register_style( self::MANAGE_USERS_SCRIPT_HANDLE, 'manage-users', [ 'wp-components' ] );
+		$this->register_script( self::PLUGIN_MANAGER_SCRIPT_HANDLE, 'plugin-manager' );
+		$this->register_style( self::PLUGIN_MANAGER_SCRIPT_HANDLE, 'plugin-manager', [ 'wp-components' ] );
 
-		$this->register_style( self::ADMIN_USER_STYLES_HANDLE, 'admin-user' );
-		$this->register_script( self::USER_PROFILE_SCRIPT_HANDLE, 'user-profile' );
+		$this->register_script( self::PULL_REQUESTS_SCRIPT_HANDLE, 'pull-requests' );
+		$this->register_style( self::PULL_REQUESTS_SCRIPT_HANDLE, 'pull-requests', [ 'wp-components' ] );
 
 		$this->register_style(
 			self::ADMIN_STYLES_HANDLE,
@@ -130,7 +129,6 @@ class Assets implements Registrable {
 	public function defer_scripts( string $tag, string $handle ): string {
 		$defer_handles = [
 			self::SETTINGS_SCRIPT_HANDLE,
-			self::USER_PROFILE_SCRIPT_HANDLE,
 		];
 
 		// Bail if we don't need to defer.

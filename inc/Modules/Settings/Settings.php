@@ -138,6 +138,9 @@ final class Settings implements Registrable {
 								'api_key' => [
 									'type' => 'string',
 								],
+								'github_repo' => [
+									'type' => 'string',
+								],
 							],
 						],
 					],
@@ -202,6 +205,7 @@ final class Settings implements Registrable {
 			$site_name    = isset( $site_data['name'] ) ? sanitize_text_field( $site_data['name'] ) : '';
 			$site_url     = isset( $site_data['url'] ) ? esc_url_raw( $site_data['url'] ) : '';
 			$site_api_key = isset( $site_data['api_key'] ) ? sanitize_text_field( $site_data['api_key'] ) : '';
+			$gh_repo     = isset( $site_data['github_repo'] ) ? sanitize_text_field( $site_data['github_repo'] ) : '';
 
 			// Only save if required fields are filled.
 			if ( empty( $site_name ) || empty( $site_url ) ) {
@@ -213,6 +217,7 @@ final class Settings implements Registrable {
 				'name'    => $site_name,
 				'url'     => untrailingslashit( $site_url ),
 				'api_key' => $site_api_key,
+				'github_repo' => $gh_repo,
 			];
 		}
 
@@ -242,11 +247,15 @@ final class Settings implements Registrable {
 				continue;
 			}
 
+			// trailingslashit to ensure consistent keys.
+			$url = trailingslashit( $brand['url'] );
+
 			$brands_to_return[ $brand['url'] ] = [
 				'api_key' => $brand['api_key'] ?? '',
 				'id'      => $brand['id'] ?? '',
 				'name'    => $brand['name'] ?? '',
-				'url'     => $brand['url'] ?? '',
+				'url'     => $url,
+				'github_repo' => $brand['github_repo'] ?? '',
 			];
 		}
 
@@ -364,25 +373,7 @@ final class Settings implements Registrable {
 	 */
 	public static function set_parent_site_url( string $url ): bool {
 
-		$is_updated = update_option( self::OPTION_CONSUMER_PARENT_SITE_URL, untrailingslashit( esc_url_raw( $url ) ), false );
-
-		if ( $is_updated ) {
-			/**
-			 * Action triggered when governing site is configured for the brand site.
-			 *
-			 * @hook oneupdate_governing_site_configured
-			 */
-			if ( function_exists( 'as_schedule_single_action' ) ) {
-				as_schedule_single_action(
-					time() + MINUTE_IN_SECONDS,
-					'oneupdate_governing_site_configured',
-					[],
-					'oneupdate'
-				);
-			}
-		}
-
-		return $is_updated;
+		return update_option( self::OPTION_CONSUMER_PARENT_SITE_URL, untrailingslashit( esc_url_raw( $url ) ), false );
 	}
 
 	/**

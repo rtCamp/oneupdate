@@ -26,14 +26,14 @@ export interface BrandSite {
 	name: string;
 	url: string;
 	api_key: string;
-    githubRepo: string;
+    github_repo: string;
 }
 
 export const defaultBrandSite: BrandSite = {
 	name: '',
 	url: '',
 	api_key: '',
-    githubRepo: '',
+    github_repo: '',
 };
 
 export type EditingIndex = number | null;

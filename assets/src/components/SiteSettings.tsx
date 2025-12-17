@@ -20,12 +20,12 @@ import { __ } from '@wordpress/i18n';
  */
 import type { NoticeType } from '@/admin/settings/page';
 
-const API_NAMESPACE = window.OneUpdateSettings.restUrl + 'oneupdate/v1';
-const NONCE = window.OneUpdateSettings.nonce as string;
+const API_NAMESPACE = window.OneUpdateSettings.restUrl + '/oneupdate/v1';
+const NONCE = window.OneUpdateSettings.restNonce as string;
 const API_KEY = window.OneUpdateSettings.api_key;
 
 const SiteSettings = () => {
-	const [ apiKey, setApiKey ] = useState( '' );
+	const [ api_key, setApiKey ] = useState( '' );
 	const [ isLoading, setIsLoading ] = useState( false );
 	const [ notice, setNotice ] = useState< NoticeType | null >( null );
 	const [ governingSite, setGoverningSite ] = useState( '' );
@@ -101,7 +101,7 @@ const SiteSettings = () => {
 					headers: {
 						'Content-Type': 'application/json',
 						'X-WP-Nonce': NONCE,
-						'X-OneUpdate-Token': apiKey,
+						'X-OneUpdate-Token': api_key,
 					},
 				},
 			);
@@ -119,7 +119,7 @@ const SiteSettings = () => {
 		} finally {
 			setIsLoading( false );
 		}
-	}, [ apiKey ] );
+	}, [ api_key ] );
 
 	const deleteGoverningSiteConnection = useCallback( async () => {
 		try {
@@ -130,7 +130,7 @@ const SiteSettings = () => {
 					headers: {
 						'Content-Type': 'application/json',
 						'X-WP-Nonce': NONCE,
-						'X-OneUpdate-Token': apiKey,
+						'X-OneUpdate-Token': api_key,
 					},
 				},
 			);
@@ -150,7 +150,7 @@ const SiteSettings = () => {
 		} finally {
 			setShowDisconnectionModal( false );
 		}
-	}, [ apiKey ] );
+	}, [ api_key ] );
 
 	const handleDisconnectGoverningSite = useCallback( async () => {
 		setShowDisconnectionModal( true );
@@ -186,7 +186,7 @@ const SiteSettings = () => {
 						<Button
 							variant="primary"
 							onClick={ () => {
-								navigator?.clipboard?.writeText( apiKey )
+								navigator?.clipboard?.writeText( api_key )
 									.then( () => {
 										setNotice( {
 											type: 'success',
@@ -216,7 +216,7 @@ const SiteSettings = () => {
 				<CardBody>
 					<div>
 						<TextareaControl
-							value={ apiKey }
+							value={ api_key }
 							disabled={ true }
 							help={ __( 'This key is used for secure communication with the Governing site.', 'oneupdate' ) }
 							__nextHasNoMarginBottom

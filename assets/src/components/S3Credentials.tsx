@@ -1,26 +1,40 @@
+/**
+ * WordPress dependencies
+ */
 import {
 	Button,
 	CardBody,
 	Card,
 	CardHeader,
 	TextControl,
-	__experimentalGrid as Grid, // eslint-disable-line @wordpress/no-unsafe-wp-apis
+	__experimentalGrid as Grid,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useState, useCallback, useEffect } from '@wordpress/element';
 import { isValidUrl } from '../js/utils';
+import { NoticeType } from '@/admin/settings/page';
 
 const API_NAMESPACE = window.OneUpdateSettings.restUrl + '/oneupdate/v1';
 const NONCE = window.OneUpdateSettings.restNonce;
 
-const S3Credentials = ( { setNotice } ) => {
-	const [ s3Credentials, setS3Credentials ] = useState( {
-		accessKey: '',
-		secretKey: '',
-		bucketName: '',
-		region: '',
-		endpoint: '',
-	} );
+interface S3CredentialsType {
+	accessKey: string;
+	secretKey: string;
+	bucketName: string;
+	region: string;
+	endpoint: string;
+}
+
+const defaultS3Credentials: S3CredentialsType = {
+	accessKey: '',
+	secretKey: '',
+	bucketName: '',
+	region: '',
+	endpoint: '',
+};
+
+const S3Credentials = ( { setNotice } : { setNotice: ( notice: NoticeType ) => void } ) => {
+	const [ s3Credentials, setS3Credentials ] = useState< S3CredentialsType >( defaultS3Credentials );
 	const [ isSaving, setIsSaving ] = useState( false );
 	const [ isLoading, setIsLoading ] = useState( true );
 

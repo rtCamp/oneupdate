@@ -5,47 +5,48 @@
  * @package OneUpdate
  */
 
-namespace OneUpdate;
+declare(strict_types = 1);
 
-use OneUpdate\Traits\Singleton;
+namespace OneUpdate\Modules\Plugin;
+
+use OneUpdate\Contracts\Interfaces\Registrable;
+use OneUpdate\Modules\Settings\Settings;
 
 /**
- * Class Cache
+ * Class - Cache
  */
-class Cache {
-
+final class Cache implements Registrable {
 	/**
-	 * Use Singleton trait.
-	 */
-	use Singleton;
-
-	/**
-	 * Cache constructor.
-	 */
-	protected function __construct() {
-		$this->setup_hooks();
-	}
-
-	/**
-	 * Setup hooks.
+	 * Prefix for options.
 	 *
-	 * @return void
+	 * @todo replace with a cross-plugin.
 	 */
-	public function setup_hooks(): void {
+	private const PREFIX = 'oneupdate_';
 
-		// if current site type is governing site then do not run the cache hooks.
-		if ( Utils::is_governing_site() ) {
-			return;
-		}
+    /**
+     * Plugins options.
+     * 
+     * @var string
+     */
+    public const TRANSIENT_GET_PLUGINS = self::PREFIX . 'get_plugins';
 
-		// Clear the cache when the plugin is activated, deactivated, uninstalled, or updated.
+	/**
+	 * {@inheritDoc}
+	 */
+	public function register_hooks(): void {
+
+        if( ! Settings::is_governing_site() ) {
+            return;
+        }
+
+        // Clear the cache when the plugin is activated, deactivated, uninstalled, or updated.
 		add_action( 'activated_plugin', array( $this, 'plugin_activation' ) );
 		add_action( 'deactivated_plugin', array( $this, 'plugin_deactivation' ) );
 		add_action( 'upgrader_process_complete', array( $this, 'clear_update_plugin_cache' ), 10, 2 );
 		add_action( 'deleted_plugin', array( $this, 'remove_plugin_from_transient' ) );
-	}
+    }
 
-	/**
+    /**
 	 * Plugin activation hook.
 	 *
 	 * @param string $plugin The plugin being activated.
@@ -76,7 +77,7 @@ class Cache {
 	 */
 	public function remove_plugin_from_transient(): void {
 		// delete transient.
-		delete_transient( 'oneupdate_get_plugins' );
+		delete_transient( self::TRANSIENT_GET_PLUGINS );
 	}
 
 	/**
@@ -91,7 +92,7 @@ class Cache {
 		// Check if the plugin being updated is the OneUpdate plugin.
 		if ( isset( $hook_extra['action'] ) && 'update' === $hook_extra['action'] && isset( $hook_extra['type'] ) && 'plugin' === $hook_extra['type'] ) {
 			// delete transient.
-			delete_transient( 'oneupdate_get_plugins' );
+			delete_transient( self::TRANSIENT_GET_PLUGINS );
 		}
 	}
 
@@ -115,7 +116,7 @@ class Cache {
 			$plugins[ $slug ]['is_active'] = is_plugin_active( $slug );
 			// example this is plugin slug block-visibility/block-visibility.php.
 			// I only want the slug part block-visibility.
-			$plugins[ $slug ]['plugin_slug']         = explode( '/', $slug )[0];
+			$plugins[ $slug ]['plugin_slug']         = explode( '/', (string) $slug )[0];
 			$plugins[ $slug ]['is_update_available'] = false;
 			// if plugin is hello.php then its slug will be hello-dolly.
 			if ( 'hello.php' === $slug ) {
@@ -161,7 +162,7 @@ class Cache {
 		// reconstruct plugins array and make slug like this block-visibility instead of block-visibility/block-visibility.php.
 		$reconstructed_plugins = array();
 		foreach ( $plugins as $slug => $plugin ) {
-			$plugin_slug                           = explode( '/', $slug )[0];
+			$plugin_slug                           = explode( '/', (string) $slug )[0];
 			$reconstructed_plugins[ $plugin_slug ] = $plugin;
 			// add plugin slug to the plugin array.
 			$reconstructed_plugins[ $plugin_slug ]['plugin_slug']      = $plugin_slug;
@@ -169,7 +170,7 @@ class Cache {
 		}
 
 		// set the cache for one hour.
-		set_transient( 'oneupdate_get_plugins', wp_json_encode( $reconstructed_plugins ), HOUR_IN_SECONDS );
+		set_transient( self::TRANSIENT_GET_PLUGINS, wp_json_encode( $reconstructed_plugins ), HOUR_IN_SECONDS );
 
 		// Return the reconstructed plugins array for rest response.
 		return $reconstructed_plugins;
@@ -203,7 +204,7 @@ class Cache {
 		$reconstructed_plugins[ $plugin_slug ]['is_active'] = $is_activation ? true : ( $is_deactivation ? false : is_plugin_active( $original_plugin_slug ) );
 
 		// set the cache for one hour.
-		set_transient( 'oneupdate_get_plugins', wp_json_encode( $reconstructed_plugins ), HOUR_IN_SECONDS );
+		set_transient( self::TRANSIENT_GET_PLUGINS, wp_json_encode( $reconstructed_plugins ), HOUR_IN_SECONDS );
 	}
 
 	/**
@@ -216,7 +217,7 @@ class Cache {
 	 */
 	public static function hello_dolly_plugin( bool $is_activation, bool $is_deactivation ): void {
 		$original_plugin_slug = 'hello.php';
-		$existing_transient   = get_transient( 'oneupdate_get_plugins' );
+		$existing_transient   = get_transient( self::TRANSIENT_GET_PLUGINS );
 		if ( ! $existing_transient ) {
 			self::build_plugins_transient();
 		}
@@ -226,6 +227,6 @@ class Cache {
 		$reconstructed_plugins[ $original_plugin_slug ]['is_active'] = $is_activation ? true : ( $is_deactivation ? false : is_plugin_active( $original_plugin_slug ) );
 
 		// set the cache for one hour.
-		set_transient( 'oneupdate_get_plugins', wp_json_encode( $reconstructed_plugins ), HOUR_IN_SECONDS );
+		set_transient( self::TRANSIENT_GET_PLUGINS, wp_json_encode( $reconstructed_plugins ), HOUR_IN_SECONDS );
 	}
 }

@@ -25,12 +25,23 @@ final class Main {
 	 */
 	private const REGISTRABLE_CLASSES = [
 		Modules\Core\Assets::class,
+		Modules\Core\DB::class,
 		Modules\Core\Rest::class,
+
+		Modules\Jobs\Schedular::class,
 		
 		Modules\Settings\Admin::class,
 		Modules\Settings\Settings::class,
 
+		Modules\Plugin\Admin::class,
+		Modules\Plugin\Settings::class,
+		Modules\Plugin\VIP_Activation::class,
+		Modules\Plugin\S3::class,
+
         Modules\Rest\Basic_Options_Controller::class,
+		Modules\Rest\GH_Pull_Request_Controller::class,
+		Modules\Rest\S3_Controller::class,
+		Modules\Rest\Workflow_Controller::class,
 	];
 
 	/**
