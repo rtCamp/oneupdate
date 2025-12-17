@@ -84,24 +84,18 @@ function delete_plugin_data(): void {
 	// Options to clean up.
 	$options = [
 		'oneupdate_child_site_api_key',
+		'oneupdate_child_site_public_key',
 		'oneupdate_consumer_api_key',
 		'oneupdate_db_version',
+		'oneupdate_gh_token',
+		'oneupdate_github_token',
 		'oneupdate_governing_site_url',
 		'oneupdate_new_users',
 		'oneupdate_parent_site_url',
 		'oneupdate_profile_update_requests',
-		'oneupdate_shared_sites',
-		'oneupdate_site_type',
-		'oneupdate_parent_site_url',
-		'oneupdate_db_version',
-		'oneupdate_consumer_api_key',
-		'oneupdate_site_type',
-		'oneupdate_child_site_api_key',
 		'oneupdate_s3_credentials',
 		'oneupdate_shared_sites',
-		'oneupdate_gh_token',
-		'oneupdate_child_site_public_key',
-		'oneupdate_github_token',
+		'oneupdate_site_type',
 	];
 
 	foreach ( $options as $option ) {

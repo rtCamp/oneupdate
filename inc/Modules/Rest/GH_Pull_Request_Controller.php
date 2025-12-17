@@ -7,6 +7,7 @@
 
 namespace OneUpdate\Modules\Rest;
 
+use OneUpdate\Modules\Plugin\Settings as Plugin_Settings;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -535,7 +536,7 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 	 * @return array|\WP_Error|\WP_REST_Response
 	 */
 	private static function gh_api_request( string $endpoint ): array|\WP_Error|WP_REST_Response {
-		$gh_token = get_option( 'oneupdate_gh_token', '' ); // @todo need to remove it.
+		$gh_token = Plugin_Settings::get_github_token();
 
 		if ( empty( $gh_token ) ) {
 			return new WP_REST_Response(

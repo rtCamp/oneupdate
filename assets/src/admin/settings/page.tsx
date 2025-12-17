@@ -184,15 +184,11 @@ const SettingsPage = () => {
 			) }
 
 			{ SITE_TYPE === 'governing-site' && (
-				<SiteTable sites={ sites } onEdit={ setEditingIndex } onDelete={ handleDelete } setFormData={ setFormData } setShowModal={ setShowModal } />
-			) }
-
-			{ SITE_TYPE === 'governing-site' && (
-				<GitHubRepoToken setNotice={ setNotice } fetchAllAvailableGitHubRepos={ fetchAllAvailableGitHubRepos } />
-			) }
-
-			{ SITE_TYPE === 'governing-site' && (
-				<S3Credentials setNotice={ setNotice } />
+				<>
+					<SiteTable sites={ sites } onEdit={ setEditingIndex } onDelete={ handleDelete } setFormData={ setFormData } setShowModal={ setShowModal } />
+					<GitHubRepoToken setNotice={ setNotice } fetchAllAvailableGitHubRepos={ fetchAllAvailableGitHubRepos } />
+					<S3Credentials setNotice={ setNotice } />
+				</>
 			) }
 
 			{ showModal && (

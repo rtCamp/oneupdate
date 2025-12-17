@@ -5,6 +5,8 @@
  * @package OneUpdate\Modules\Jobs
  */
 
+declare(strict_types = 1);
+
 namespace OneUpdate\Modules\Jobs;
 
 use OneUpdate\Contracts\Interfaces\Registrable;
@@ -13,7 +15,7 @@ use OneUpdate\Modules\Settings\Settings;
 /**
  * Class Schedular
  */
-class Schedular implements Registrable {
+final class Schedular implements Registrable {
 
 	/**
 	 * Global prefix.

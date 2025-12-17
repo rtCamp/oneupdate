@@ -12,6 +12,7 @@ namespace OneUpdate\Modules\Plugin;
 use Aws\S3\S3Client;
 use OneUpdate\Contracts\Interfaces\Registrable;
 use OneUpdate\Modules\Core\DB;
+use OneUpdate\Modules\Jobs\Schedular;
 use OneUpdate\Modules\Plugin\Settings as Plugin_Settings;
 use OneUpdate\Modules\Settings\Settings;
 
@@ -29,7 +30,7 @@ final class S3 implements Registrable {
 			return;
 		}
 
-		add_action( 'oneupdate_s3_zip_cleanup_event', [ $this, 'zip_cleanup' ] );
+		add_action( Schedular::S3_ZIP_CLEANUP, [ $this, 'zip_cleanup' ] );
 	}
 
 	/**

@@ -11,7 +11,7 @@
  * Text Domain: oneupdate
  * Domain Path: /languages
  * Version: 1.0.0
- * Requires PHP: 8.0
+ * Requires PHP: 8.1
  * Requires at least: 6.8
  * Tested up to: 6.8.2
  *

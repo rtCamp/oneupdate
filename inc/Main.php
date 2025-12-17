@@ -38,6 +38,7 @@ final class Main {
 
 		Modules\Rest\Basic_Options_Controller::class,
 		Modules\Rest\GH_Pull_Request_Controller::class,
+		Modules\Rest\Governing_Controller::class,
 		Modules\Rest\S3_Controller::class,
 		Modules\Rest\Workflow_Controller::class,
 

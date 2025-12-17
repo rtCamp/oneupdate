@@ -32,9 +32,7 @@ class S3_Controller extends Abstract_REST_Controller {
 			[
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => [ $this, 'handle_s3_upload' ],
-				'permission_callback' => static function () {
-					return current_user_can( 'manage_options' );
-				},
+				'permission_callback' => static fn (): bool => current_user_can( 'manage_options' ),
 			]
 		);
 
@@ -47,9 +45,7 @@ class S3_Controller extends Abstract_REST_Controller {
 			[
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => [ $this, 'get_s3_upload_history' ],
-				'permission_callback' => static function () {
-					return current_user_can( 'manage_options' );
-				},
+				'permission_callback' => static fn (): bool => current_user_can( 'manage_options' ),
 			]
 		);
 
@@ -62,9 +58,7 @@ class S3_Controller extends Abstract_REST_Controller {
 			[
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => [ $this, 's3_health_check' ],
-				'permission_callback' => static function () {
-					return current_user_can( 'manage_options' );
-				},
+				'permission_callback' => static fn (): bool => current_user_can( 'manage_options' ),
 			]
 		);
 	}
@@ -104,7 +98,7 @@ class S3_Controller extends Abstract_REST_Controller {
 				404
 			);
 		} catch ( \Aws\Exception\AwsException $e ) {
-			return new WP_REST_Response( [ 'message' => 'S3 health check failed: ' . $e->getMessage() ], 500 );
+			return new \WP_Error( 500, 'S3 health check failed: ' . $e->getMessage() );
 		}
 	}
 

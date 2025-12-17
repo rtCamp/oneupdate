@@ -174,7 +174,7 @@ final class Admin implements Registrable {
 	 *
 	 * @return array<string, string>
 	 */
-	private static function get_repo_brand_site_mapping() {
+	private static function get_repo_brand_site_mapping(): array {
 		$sites   = Settings::get_shared_sites();
 		$mapping = [];
 		foreach ( $sites as $site ) {

@@ -41,7 +41,7 @@ final class Encryptor {
 	 *
 	 * @param string $value The value to encrypt.
 	 *
-	 * @return string The encrypted value.
+	 * @return string|bool The encrypted value.
 	 *
 	 * @throws \RuntimeException When dependencies are missing or encryption fails.
 	 */
@@ -63,7 +63,7 @@ final class Encryptor {
 	 *
 	 * @param string $value The value to decrypt.
 	 *
-	 * @return string The decrypted value.
+	 * @return string|bool The decrypted value.
 	 *
 	 * @throws \RuntimeException When dependencies are missing or the payload is invalid.
 	 */

@@ -37,21 +37,19 @@ class Workflow_Controller extends Abstract_REST_Controller {
 			[
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => [ $this, 'apply_plugins_to_selected_sites' ],
-				'permission_callback' => static function () {
-						return current_user_can( 'manage_options' );
-				},
+				'permission_callback' => static fn (): bool => current_user_can( 'manage_options' ),
 				'args'                => [
 					'sites'   => [
 						'required'          => true,
 						'type'              => 'array',
-						'sanitize_callback' => static function ( $value ) {
+						'sanitize_callback' => static function ( $value ): bool {
 							return is_array( $value );
 						},
 					],
 					'plugins' => [
 						'required'          => true,
 						'type'              => 'array',
-						'sanitize_callback' => static function ( $value ) {
+						'sanitize_callback' => static function ( $value ): bool {
 							return is_array( $value );
 						},
 					],
@@ -92,7 +90,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 						'options' => [
 							'required'          => true,
 							'type'              => 'array',
-							'sanitize_callback' => static function ( $value ) {
+							'sanitize_callback' => static function ( $value ): bool {
 								return is_array( $value );
 							},
 						],
@@ -109,21 +107,19 @@ class Workflow_Controller extends Abstract_REST_Controller {
 			[
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => [ $this, 'apply_private_plugins_to_selected_sites' ],
-				'permission_callback' => static function () {
-						return current_user_can( 'manage_options' );
-				},
+				'permission_callback' => static fn (): bool => current_user_can( 'manage_options' ),
 				'args'                => [
 					'sites'   => [
 						'required'          => true,
 						'type'              => 'array',
-						'sanitize_callback' => static function ( $value ) {
+						'sanitize_callback' => static function ( $value ): bool {
 							return is_array( $value );
 						},
 					],
 					'plugins' => [
 						'required'          => true,
 						'type'              => 'array',
-						'sanitize_callback' => static function ( $value ) {
+						'sanitize_callback' => static function ( $value ): bool {
 							return is_array( $value );
 						},
 					],
@@ -140,9 +136,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 			[
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => [ $this, 'execute_plugin_action' ],
-				'permission_callback' => static function () {
-						return current_user_can( 'manage_options' );
-				},
+				'permission_callback' => static fn (): bool => current_user_can( 'manage_options' ),
 				'args'                => [
 					'action'           => [
 						'required'          => true,
@@ -162,7 +156,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 					'sites'            => [
 						'required'          => true,
 						'type'              => 'array',
-						'sanitize_callback' => static function ( $value ) {
+						'sanitize_callback' => static function ( $value ): bool {
 							return is_array( $value );
 						},
 					],
@@ -190,14 +184,12 @@ class Workflow_Controller extends Abstract_REST_Controller {
 			[
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => [ $this, 'bulk_plugin_update' ],
-				'permission_callback' => static function () {
-						return current_user_can( 'manage_options' );
-				},
+				'permission_callback' => static fn (): bool => current_user_can( 'manage_options' ),
 				'args'                => [
 					'plugins' => [
 						'required'          => true,
 						'type'              => 'array',
-						'sanitize_callback' => static function ( $value ) {
+						'sanitize_callback' => static function ( $value ): bool {
 							return is_array( $value );
 						},
 					],

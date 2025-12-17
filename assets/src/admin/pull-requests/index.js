@@ -1,3 +1,6 @@
+/**
+ * WordPress dependencies
+ */
 import { useState, useEffect, useCallback, createRoot } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import {
@@ -10,7 +13,7 @@ import {
 	Modal,
 	Spinner,
 	DropdownMenu,
-	__experimentalGrid as Grid, // eslint-disable-line @wordpress/no-unsafe-wp-apis
+	__experimentalGrid as Grid,
 	Snackbar,
 	MenuGroup,
 	MenuItem,
@@ -19,9 +22,9 @@ import { decodeEntities } from '@wordpress/html-entities';
 import { moreVertical } from '@wordpress/icons';
 import ViewIcon from '../../components/icons/View';
 
-const API_NAMESPACE = OneUpdatePullRequests.restUrl + '/oneupdate/v1/github';
-const NONCE = OneUpdatePullRequests.restNonce;
-const REPOS = OneUpdatePullRequests.repos;
+const API_NAMESPACE = window.OneUpdatePullRequests.restUrl + '/oneupdate/v1/github';
+const NONCE = window.OneUpdatePullRequests.restNonce;
+const REPOS = window.OneUpdatePullRequests.repos;
 
 const PER_PAGE = 25;
 const PR_LABEL_STYLES = {

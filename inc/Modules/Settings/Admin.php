@@ -47,7 +47,7 @@ class Admin implements Registrable {
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 25 );
 
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ], 5 );
-		add_action( 'admin_menu', [ $this, 'add_submenu' ], 20 ); // 20 priority to make sure settings page respect its position.
+		add_action( 'admin_menu', [ $this, 'add_submenu' ], 20 );
 		add_action( 'admin_menu', [ $this, 'remove_default_submenu' ], 999 );
 	}
 
@@ -210,12 +210,7 @@ class Admin implements Registrable {
 			wp_localize_script(
 				Assets::SETTINGS_SCRIPT_HANDLE,
 				'OneUpdateSettings',
-				array_merge(
-					Assets::get_localized_data(),
-					[
-						'GitHubRepoToken' => '', // @todo add later
-					]
-				)
+				Assets::get_localized_data(),
 			);
 			wp_enqueue_script( Assets::SETTINGS_SCRIPT_HANDLE );
 		}

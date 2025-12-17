@@ -70,7 +70,7 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	 * @param \WP_REST_Request<array{}> $request Request.
 	 * @return bool
 	 */
-	public function check_api_permissions( $request ) {
+	public function check_api_permissions( $request ): bool {
 		// check if the request is from same site.
 		if ( Settings::is_governing_site() ) {
 			return current_user_can( 'manage_options' );

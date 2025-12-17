@@ -36,6 +36,8 @@ final class Settings implements Registrable {
 	public function register_hooks(): void {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_action( 'rest_api_init', [ $this, 'register_settings' ] );
+
+		// Listen to updates.
 	}
 
 	/**
