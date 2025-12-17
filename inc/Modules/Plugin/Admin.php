@@ -41,7 +41,7 @@ final class Admin implements Registrable {
 		if ( ! Settings::is_governing_site() || empty( Settings::get_shared_sites() ) ) {
 			return;
 		}
-		add_action( 'admin_menu', [ $this, 'add_submenu' ] );
+		add_action( 'admin_menu', [ $this, 'add_submenu' ], 10 );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 25 );
 	}
 

@@ -749,7 +749,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 				unset( $oneupdate_plugin_activate[ $plugin ] );
 			}
 			// update the active plugins options.
-			update_option( self::ACTIVE_PLUGINS, $active_plugins, false );
+			update_option( self::ACTIVE_PLUGINS, $active_plugins );
 		}
 		if ( 'activate' === $plugin_type ) {
 			// if plugin type is activate then activate the plugins.
@@ -766,8 +766,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 				$oneupdate_plugin_activate[ $plugin ] = $plugin;
 			}
 		}
-
-		update_option( self::ACTIVE_PLUGINS, $oneupdate_plugin_activate, false );
+		update_option( VIP_Activation::PLUGINS_OPTIONS, $oneupdate_plugin_activate );
 
 		if ( ! empty( $plugins ) ) {
 			Cache::rebuild_transient_for_single_plugin(
