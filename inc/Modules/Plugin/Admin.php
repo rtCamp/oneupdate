@@ -29,10 +29,10 @@ final class Admin implements Registrable {
 	 */
 	public const SCREEN_ID = self::MENU_SLUG;
 
-    /**
-     * Pull Requests screen ID.
-     */
-    public const PULL_REQUESTS_SCREEN_ID = self::MENU_SLUG . '-pull-requests';
+	/**
+	 * Pull Requests screen ID.
+	 */
+	public const PULL_REQUESTS_SCREEN_ID = self::MENU_SLUG . '-pull-requests';
 
 	/**
 	 * {@inheritDoc}
@@ -56,21 +56,21 @@ final class Admin implements Registrable {
 			__( 'Plugin Manager', 'oneupdate' ),
 			'manage_options',
 			self::MENU_SLUG,
-			array( $this, 'render_plugin_manager' )
+			[ $this, 'render_plugin_manager' ]
 		);
 
-        // Pull Requests menu page.
-        add_submenu_page(
-            self::MENU_SLUG,
-				__( 'Pull Requests', 'oneupdate' ),
-				__( 'Pull Requests', 'oneupdate' ),
-				'manage_options',
-				self::PULL_REQUESTS_SCREEN_ID,
-				array( $this, 'render_pull_requests' )
-			);
+		// Pull Requests menu page.
+		add_submenu_page(
+			self::MENU_SLUG,
+			__( 'Pull Requests', 'oneupdate' ),
+			__( 'Pull Requests', 'oneupdate' ),
+			'manage_options',
+			self::PULL_REQUESTS_SCREEN_ID,
+			[ $this, 'render_pull_requests' ]
+		);
 	}
 
-    /**
+	/**
 	 * Render admin page
 	 *
 	 * @return void
@@ -130,50 +130,59 @@ final class Admin implements Registrable {
 	 * @param string $hook Current admin page hook.
 	 */
 	public function enqueue_scripts( string $hook ): void {
-		
-        if( strpos( $hook, 'toplevel_page_'.self::SCREEN_ID ) !== false ) {
-            $this->enqueue_plugin_manager_script();
-        }
 
-        if( strpos( $hook, self::PULL_REQUESTS_SCREEN_ID ) !== false ) {
-            $this->enqueue_pull_requests_script();
-        }
+		if ( strpos( $hook, 'toplevel_page_' . self::SCREEN_ID ) !== false ) {
+			$this->enqueue_plugin_manager_script();
+		}
+
+		if ( strpos( $hook, self::PULL_REQUESTS_SCREEN_ID ) === false ) {
+			return;
+		}
+
+		$this->enqueue_pull_requests_script();
 	}
 
-    private function enqueue_plugin_manager_script(): void {
-        wp_localize_script( Assets::PLUGIN_MANAGER_SCRIPT_HANDLE, 'OneUpdatePlugins', Assets::get_localized_data() );
-        wp_enqueue_script( Assets::PLUGIN_MANAGER_SCRIPT_HANDLE );
-        wp_enqueue_style( Assets::PLUGIN_MANAGER_SCRIPT_HANDLE );
-    }
+	/**
+	 * Enqueue plugin manager admin script.
+	 */
+	private function enqueue_plugin_manager_script(): void {
+		wp_localize_script( Assets::PLUGIN_MANAGER_SCRIPT_HANDLE, 'OneUpdatePlugins', Assets::get_localized_data() );
+		wp_enqueue_script( Assets::PLUGIN_MANAGER_SCRIPT_HANDLE );
+		wp_enqueue_style( Assets::PLUGIN_MANAGER_SCRIPT_HANDLE );
+	}
 
-    /**
-     * Enqueue pull requests admin script.
-     */
-    private function enqueue_pull_requests_script(): void {
-        wp_localize_script( 
-            Assets::PULL_REQUESTS_SCRIPT_HANDLE,
-             'OneUpdatePullRequests',
-             array_merge(
-                 Assets::get_localized_data(),
-                 [
-                    'repos' => self::get_repo_brand_site_mapping(),
-                 ]
+	/**
+	 * Enqueue pull requests admin script.
+	 */
+	private function enqueue_pull_requests_script(): void {
+		wp_localize_script(
+			Assets::PULL_REQUESTS_SCRIPT_HANDLE,
+			'OneUpdatePullRequests',
+			array_merge(
+				Assets::get_localized_data(),
+				[
+					'repos' => self::get_repo_brand_site_mapping(),
+				]
+			)
+		);
 
-             )
-             );
+		wp_enqueue_script( Assets::PULL_REQUESTS_SCRIPT_HANDLE );
+	}
 
-        wp_enqueue_script( Assets::PULL_REQUESTS_SCRIPT_HANDLE );
-    }
-
-    private static function get_repo_brand_site_mapping(){
-        $sites = Settings::get_shared_sites();
-        $mapping = [];
-        foreach( $sites as $site ){
-            if( empty( $site['github_repo'] ) || empty( $site['name'] ) || in_array( $site['github_repo'], array_keys( $mapping ), true ) ){
-                continue;
-            }
-            $mapping[ $site['github_repo'] ] = $site['name'];
-        }
-        return $mapping;
-    }
+	/**
+	 * Get mapping of GitHub repos to brand site names.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function get_repo_brand_site_mapping() {
+		$sites   = Settings::get_shared_sites();
+		$mapping = [];
+		foreach ( $sites as $site ) {
+			if ( empty( $site['gh_repo'] ) || empty( $site['name'] ) || in_array( $site['gh_repo'], array_keys( $mapping ), true ) ) {
+				continue;
+			}
+			$mapping[ $site['gh_repo'] ] = $site['name'];
+		}
+		return $mapping;
+	}
 }

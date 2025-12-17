@@ -30,36 +30,46 @@ class DB implements Registrable {
 	 */
 	private const DB_VERSION = self::ONEUPDATE . 'db_version';
 
-    /**
-     * S3 Zip History Table.
-     * 
-     * @var string
-     */
-    public const S3_ZIP_HISTORY_TABLE = self::ONEUPDATE . 's3_zip_history';
+	/**
+	 * S3 Zip History Table.
+	 *
+	 * @var string
+	 */
+	public const S3_ZIP_HISTORY_TABLE = self::ONEUPDATE . 's3_zip_history';
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
-        self::maybe_create_tables();
-    }
+		self::maybe_create_tables();
+	}
 
-    public static function maybe_create_tables(): void {
+	/**
+	 * Maybe create database tables.
+	 *
+	 * @return void
+	 */
+	public static function maybe_create_tables(): void {
 
-        $current_version = ONEUPDATE_VERSION;
+		$current_version = ONEUPDATE_VERSION;
 		$db_version      = get_option( self::DB_VERSION, '0.0.0' );
 
 		if ( ! version_compare( $db_version, $current_version, '<' ) ) {
 			return;
 		}
 
-        self::create_s3_zip_history_table();
+		self::create_s3_zip_history_table();
 
 		update_option( self::DB_VERSION, $current_version, false );
-    }
+	}
 
-    public static function create_s3_zip_history_table(): void {
-        global $wpdb;
+	/**
+	 * Create S3 Zip History Table.
+	 *
+	 * @return void
+	 */
+	public static function create_s3_zip_history_table(): void {
+		global $wpdb;
 		$table_name      = $wpdb->prefix . self::S3_ZIP_HISTORY_TABLE;
 		$charset_collate = $wpdb->get_charset_collate();
 
@@ -75,5 +85,5 @@ class DB implements Registrable {
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		dbDelta( $sql );
-    }
+	}
 }

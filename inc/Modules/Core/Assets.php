@@ -28,12 +28,12 @@ class Assets implements Registrable {
 	/**
 	 * Asset handles
 	 */
-	public const ADMIN_STYLES_HANDLE        = self::PREFIX . 'admin';
-	public const EDITOR_STYLES_HANDLE       = self::PREFIX . 'editor';
-	public const SETTINGS_SCRIPT_HANDLE     = self::PREFIX . 'settings';
-	public const ONBOARDING_SCRIPT_HANDLE   = self::PREFIX . 'setup';
+	public const ADMIN_STYLES_HANDLE          = self::PREFIX . 'admin';
+	public const EDITOR_STYLES_HANDLE         = self::PREFIX . 'editor';
+	public const SETTINGS_SCRIPT_HANDLE       = self::PREFIX . 'settings';
+	public const ONBOARDING_SCRIPT_HANDLE     = self::PREFIX . 'setup';
 	public const PLUGIN_MANAGER_SCRIPT_HANDLE = self::PREFIX . 'plugin-manager';
-	public const PULL_REQUESTS_SCRIPT_HANDLE = self::PREFIX . 'pull-requests';
+	public const PULL_REQUESTS_SCRIPT_HANDLE  = self::PREFIX . 'pull-requests';
 
 	/**
 	 * Localized data for scripts.

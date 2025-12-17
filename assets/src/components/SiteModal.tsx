@@ -23,7 +23,13 @@ interface ErrorsType {
 	url: string;
 	api_key: string;
 	message: string;
-	github_repo: string;
+	gh_repo: string;
+}
+
+interface GitHubRepos {
+	slug: string;
+	url: string;
+	name: string;
 }
 
 const SiteModal = (
@@ -36,7 +42,7 @@ const SiteModal = (
 		editing: boolean;
 		sites: typeof defaultBrandSite[];
 		originalData: typeof defaultBrandSite | undefined;
-		allGitHubRepos: any[];
+		allGitHubRepos: GitHubRepos[];
 	},
 ) => {
 	const [ errors, setErrors ] = useState< ErrorsType >( {
@@ -44,7 +50,7 @@ const SiteModal = (
 		url: '',
 		api_key: '',
 		message: '',
-		github_repo: '',
+		gh_repo: '',
 	} );
 	const [ showNotice, setShowNotice ] = useState( false );
 	const [ isProcessing, setIsProcessing ] = useState( false );
@@ -58,8 +64,8 @@ const SiteModal = (
 		return (
 			formData.name !== originalData?.name ||
 			formData.url !== originalData?.url ||
-			formData.api_key !== originalData?.api_key || 
-			formData.github_repo !== originalData?.github_repo
+			formData.api_key !== originalData?.api_key ||
+			formData.gh_repo !== originalData?.gh_repo
 		);
 	}, [ editing, formData, originalData ] );
 
@@ -77,7 +83,7 @@ const SiteModal = (
 			url: urlError,
 			api_key: ! formData.api_key.trim() ? __( 'API Key is required.', 'oneupdate' ) : '',
 			message: '',
-			github_repo: ! formData.github_repo.trim() ? __( 'GitHub Repository is required.', 'oneupdate' ) : '',
+			gh_repo: ! formData.gh_repo.trim() ? __( 'GitHub Repository is required.', 'oneupdate' ) : '',
 		};
 
 		// make sure site name is under 20 characters
@@ -180,7 +186,7 @@ const SiteModal = (
 		! formData.name ||
 		! formData.url ||
 		! formData.api_key ||
-		! formData.github_repo ||
+		! formData.gh_repo ||
 		( editing && ! hasChanges );
 
 	return (
@@ -218,8 +224,8 @@ const SiteModal = (
 			/>
 			<ComboboxControl
 				label={ __( 'GitHub Repository*', 'oneupdate' ) }
-				value={ formData.github_repo }
-				onChange={ ( value ) => setFormData( { ...formData, github_repo: value || '' } ) }
+				value={ formData.gh_repo }
+				onChange={ ( value ) => setFormData( { ...formData, gh_repo: value || '' } ) }
 				options={ allGitHubRepos.map( ( repo ) => ( { label: repo.slug, value: repo.slug } ) ) }
 				placeholder={ __( 'Select a repository', 'oneupdate' ) }
 				help={ __( 'Select the GitHub repository associated with this site.', 'oneupdate' ) }

@@ -23,30 +23,30 @@ final class Cache implements Registrable {
 	 */
 	private const PREFIX = 'oneupdate_';
 
-    /**
-     * Plugins options.
-     * 
-     * @var string
-     */
-    public const TRANSIENT_GET_PLUGINS = self::PREFIX . 'get_plugins';
+	/**
+	 * Plugins options.
+	 *
+	 * @var string
+	 */
+	public const TRANSIENT_GET_PLUGINS = self::PREFIX . 'get_plugins';
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
 
-        if( ! Settings::is_governing_site() ) {
-            return;
-        }
+		if ( ! Settings::is_governing_site() ) {
+			return;
+		}
 
-        // Clear the cache when the plugin is activated, deactivated, uninstalled, or updated.
-		add_action( 'activated_plugin', array( $this, 'plugin_activation' ) );
-		add_action( 'deactivated_plugin', array( $this, 'plugin_deactivation' ) );
-		add_action( 'upgrader_process_complete', array( $this, 'clear_update_plugin_cache' ), 10, 2 );
-		add_action( 'deleted_plugin', array( $this, 'remove_plugin_from_transient' ) );
-    }
+		// Clear the cache when the plugin is activated, deactivated, uninstalled, or updated.
+		add_action( 'activated_plugin', [ $this, 'plugin_activation' ] );
+		add_action( 'deactivated_plugin', [ $this, 'plugin_deactivation' ] );
+		add_action( 'upgrader_process_complete', [ $this, 'clear_update_plugin_cache' ], 10, 2 );
+		add_action( 'deleted_plugin', [ $this, 'remove_plugin_from_transient' ] );
+	}
 
-    /**
+	/**
 	 * Plugin activation hook.
 	 *
 	 * @param string $plugin The plugin being activated.
@@ -90,10 +90,12 @@ final class Cache implements Registrable {
 	 */
 	public function clear_update_plugin_cache( $upgrader, $hook_extra ): void {
 		// Check if the plugin being updated is the OneUpdate plugin.
-		if ( isset( $hook_extra['action'] ) && 'update' === $hook_extra['action'] && isset( $hook_extra['type'] ) && 'plugin' === $hook_extra['type'] ) {
-			// delete transient.
-			delete_transient( self::TRANSIENT_GET_PLUGINS );
+		if ( ! isset( $hook_extra['action'] ) || 'update' !== $hook_extra['action'] || ! isset( $hook_extra['type'] ) || 'plugin' !== $hook_extra['type'] ) {
+			return;
 		}
+
+		// delete transient.
+		delete_transient( self::TRANSIENT_GET_PLUGINS );
 	}
 
 	/**
@@ -108,7 +110,7 @@ final class Cache implements Registrable {
 		$plugins = get_plugins();
 
 		if ( empty( $plugins ) ) {
-			return new \WP_Error( 'no_plugins', __( 'No plugins found.', 'oneupdate' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'no_plugins', __( 'No plugins found.', 'oneupdate' ), [ 'status' => 404 ] );
 		}
 
 		// add is_active field to each plugin.
@@ -125,12 +127,12 @@ final class Cache implements Registrable {
 			// check if plugin is public or private by hitting https://api.wordpress.org/plugins/info/1.0/{plugin-slug}.json endpoint.
 			$plugin_info = wp_safe_remote_get(
 				"https://api.wordpress.org/plugins/info/1.0/{$plugins[$slug]['plugin_slug']}.json?fields=icons",
-				array(
+				[
 					'timeout' => 5, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
-					'headers' => array(
+					'headers' => [
 						'Accept' => 'application/json',
-					),
-				)
+					],
+				]
 			);
 			if ( is_wp_error( $plugin_info ) || wp_remote_retrieve_response_code( $plugin_info ) !== 200 ) {
 				$plugins[ $slug ]['is_public'] = false;
@@ -153,14 +155,16 @@ final class Cache implements Registrable {
 		$updates = get_plugin_updates();
 		if ( ! empty( $updates ) ) {
 			foreach ( $updates as $slug => $update ) {
-				if ( isset( $plugins[ $slug ] ) ) {
-					$plugins[ $slug ]['update'] = $update->update;
+				if ( ! isset( $plugins[ $slug ] ) ) {
+					continue;
 				}
+
+				$plugins[ $slug ]['update'] = $update->update;
 			}
 		}
 
 		// reconstruct plugins array and make slug like this block-visibility instead of block-visibility/block-visibility.php.
-		$reconstructed_plugins = array();
+		$reconstructed_plugins = [];
 		foreach ( $plugins as $slug => $plugin ) {
 			$plugin_slug                           = explode( '/', (string) $slug )[0];
 			$reconstructed_plugins[ $plugin_slug ] = $plugin;
@@ -190,9 +194,9 @@ final class Cache implements Registrable {
 		if ( 'hello.php' === $plugin_slug ) {
 			self::hello_dolly_plugin( $is_activation, $is_deactivation );
 			return;
-		} else {
-			$plugin_slug = explode( '/', $plugin_slug )[0];
 		}
+
+		$plugin_slug = explode( '/', $plugin_slug )[0];
 
 		$existing_transient = get_transient( 'oneupdate_get_plugins' );
 		if ( ! $existing_transient ) {

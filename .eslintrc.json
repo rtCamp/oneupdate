@@ -21,7 +21,8 @@
 		"_": true,
 		"OneUpdateSettings": true,
 		"OneUpdatePlugins": true,
-		"OneUpdateS3ZipUploader": true
+		"OneUpdateS3ZipUploader": true,
+		"OneUpdatePullRequests": true
 	},
 	"rules": {
 		"eslint-comments/no-unlimited-disable": "error",

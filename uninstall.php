@@ -111,7 +111,7 @@ function delete_plugin_data(): void {
 	// Transients to clean up.
 	$transients = [
 		'oneupdate_get_plugins',
-		'oneupdate_github_repos',
+		'oneupdate_gh_repos',
 	];
 
 	foreach ( $transients as $transient ) {

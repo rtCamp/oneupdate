@@ -29,7 +29,7 @@ final class Main {
 		Modules\Core\Rest::class,
 
 		Modules\Jobs\Schedular::class,
-		
+
 		Modules\Settings\Admin::class,
 		Modules\Settings\Settings::class,
 
@@ -38,7 +38,7 @@ final class Main {
 		Modules\Plugin\VIP_Activation::class,
 		Modules\Plugin\S3::class,
 
-        Modules\Rest\Basic_Options_Controller::class,
+		Modules\Rest\Basic_Options_Controller::class,
 		Modules\Rest\GH_Pull_Request_Controller::class,
 		Modules\Rest\S3_Controller::class,
 		Modules\Rest\Workflow_Controller::class,

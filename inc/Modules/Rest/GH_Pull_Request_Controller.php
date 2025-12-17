@@ -16,19 +16,19 @@ use WP_REST_Server;
  */
 class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 
-    /**
+	/**
 	 * GitHub API base URL.
 	 *
 	 * @var string
 	 */
 	private const GH_API_BASE_URL = 'https://api.github.com';
 
-    /**
-     * Namespace for the REST API.
-     * 
-     * @var string
-     */
-    public const NAMESPACE = parent::NAMESPACE . '/github';
+	/**
+	 * Namespace for the REST API.
+	 *
+	 * @var string
+	 */
+	public const NAMESPACE = parent::NAMESPACE . '/github';
 
 	/**
 	 * {@inheritDoc}
@@ -40,58 +40,58 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 		register_rest_route(
 			self::NAMESPACE,
 			'/pull-requests/(?P<owner>[a-zA-Z0-9._-]+)/(?P<repo>[a-zA-Z0-9._-]+)',
-			array(
-				array(
+			[
+				[
 					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => array( $this, 'get_pull_requests' ),
-					'permission_callback' => static fn () : bool => current_user_can( 'manage_options' ),
-					'args'                => array(
-						'owner'        => array(
+					'callback'            => [ $this, 'get_pull_requests' ],
+					'permission_callback' => static fn (): bool => current_user_can( 'manage_options' ),
+					'args'                => [
+						'owner'        => [
 							'required' => true,
 							'type'     => 'string',
-						),
-						'repo'         => array(
+						],
+						'repo'         => [
 							'required' => true,
 							'type'     => 'string',
-						),
-						'pr_number'    => array(
+						],
+						'pr_number'    => [
 							'required' => false,
 							'type'     => 'integer',
-						),
-						'state'        => array(
+						],
+						'state'        => [
 							'required' => false,
 							'type'     => 'string',
 							'default'  => 'all',
-							'enum'     => array( 'open', 'closed', 'all', 'merged' ),
-						),
-						'page'         => array(
+							'enum'     => [ 'open', 'closed', 'all', 'merged' ],
+						],
+						'page'         => [
 							'required' => false,
 							'type'     => 'integer',
 							'default'  => 1,
-						),
-						'per_page'     => array(
+						],
+						'per_page'     => [
 							'required' => false,
 							'type'     => 'integer',
 							'default'  => 25,
 							'maximum'  => 100,
 							'minimum'  => 1,
-						),
-						'search_query' => array(
+						],
+						'search_query' => [
 							'required' => false,
 							'type'     => 'string',
-						),
-					),
-				),
-			)
+						],
+					],
+				],
+			]
 		);
 	}
 
 	/**
 	 * Get pull requests by pagination.
 	 *
-	 * @param WP_REST_Request $request The REST request.
+	 * @param \WP_REST_Request $request The REST request.
 	 *
-	 * @return WP_REST_Response
+	 * @return \WP_REST_Response
 	 */
 	public function get_pull_requests( WP_REST_Request $request ): WP_REST_Response {
 		$gh_owner     = sanitize_text_field( $request['owner'] );
@@ -125,18 +125,18 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 	 * @param int    $per_page Number of pull requests per page. Default is 25.
 	 * @param int    $page Page number. Default is 1.
 	 *
-	 * @return WP_REST_Response
+	 * @return \WP_REST_Response
 	 */
 	private static function get_all_pull_requests( string $gh_owner, string $gh_repo, string $pr_state = 'open', int $per_page = 25, int $page = 1 ): WP_REST_Response {
 
 		// gh api endpoint to get pull requests.
 		$gh_api_endpoint = self::GH_API_BASE_URL . "/repos/{$gh_owner}/{$gh_repo}/pulls";
-		$query_args      = array(
+		$query_args      = [
 			'state'    => $pr_state,
 			'per_page' => $per_page,
 			'page'     => $page,
 			'order'    => 'desc',
-		);
+		];
 
 		$gh_api_endpoint = \add_query_arg( $query_args, $gh_api_endpoint );
 
@@ -144,33 +144,33 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 
 		if ( false === $response['success'] ) {
 			return new WP_REST_Response(
-				array(
+				[
 					'success' => false,
 					'message' => $response['message'],
-				),
+				],
 				$response['status_code']
 			);
 		}
 
-		$pull_requests = $response['data'] ?? array();
-		$headers       = $response['headers'] ?? array();
+		$pull_requests = $response['data'] ?? [];
+		$headers       = $response['headers'] ?? [];
 
 		$pull_requests = self::format_github_pull_requests_info( $pull_requests );
 		$total_count   = self::get_total_count_from_headers( $headers, count( $pull_requests ), $per_page );
 		$total_pages   = ceil( $total_count / $per_page );
 
 		$pull_requests_response = new WP_REST_Response(
-			array(
+			[
 				'success'       => true,
 				'pull_requests' => $pull_requests,
-				'pagination'    => array(
+				'pagination'    => [
 					'current_page' => $page,
 					'per_page'     => $per_page,
 					'total_pages'  => $total_pages,
 					'total_count'  => $total_count,
-				),
+				],
 				'api'           => $gh_api_endpoint,
-			),
+			],
 			200
 		);
 
@@ -190,7 +190,7 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 	 * @param int    $page Page number. Default is 1.
 	 * @param string $pr_state State of pull requests to fetch. Default is 'all'.
 	 *
-	 * @return WP_REST_Response
+	 * @return \WP_REST_Response
 	 */
 	private static function search_pull_requests( string $gh_owner, string $gh_repo, string $search_query, int $per_page = 25, int $page = 1, string $pr_state = 'all' ): WP_REST_Response {
 
@@ -199,16 +199,16 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 			return self::search_pull_requests_with_query_and_state( $gh_owner, $gh_repo, $search_query, $per_page, $page, $pr_state );
 		}
 
-		$query_args = array();
+		$query_args = [];
 
 		// If no search query or state is 'all', use the original search approach.
 		if ( ! empty( $search_query ) ) {
 			$gh_api_endpoint = self::GH_API_BASE_URL . '/search/issues';
 			$query_args      = array_merge(
 				$query_args,
-				array(
+				[
 					'q' => $search_query . "+repo:{$gh_owner}/{$gh_repo}+type:pr",
-				),
+				],
 			);
 
 			// Add state to search query if not 'all'.
@@ -220,41 +220,41 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 			$gh_api_endpoint = self::GH_API_BASE_URL . "/repos/{$gh_owner}/{$gh_repo}/pulls";
 			$query_args      = array_merge(
 				$query_args,
-				array(
+				[
 					'state' => $pr_state,
-				)
+				]
 			);
 		}
 
 		$query_args      = array_merge(
 			$query_args,
-			array(
+			[
 				'per_page' => $per_page,
 				'page'     => $page,
 				'order'    => 'desc',
-			),
+			],
 		);
-		$gh_api_endpoint = \add_query_arg(  $query_args, $gh_api_endpoint );
+		$gh_api_endpoint = \add_query_arg( $query_args, $gh_api_endpoint );
 
 		$response = self::gh_api_request_with_validation( $gh_api_endpoint );
 
 		if ( false === $response['success'] ) {
 			return new WP_REST_Response(
-				array(
+				[
 					'success' => false,
 					'message' => $response['message'],
-				),
+				],
 				$response['status_code']
 			);
 		}
 
-		$results = $response['data'] ?? array();
-		$headers = $response['headers'] ?? array();
+		$results = $response['data'] ?? [];
+		$headers = $response['headers'] ?? [];
 
 		// Handle different response formats.
 		if ( ! empty( $search_query ) ) {
 			// Search API response.
-			$pull_requests = isset( $results['items'] ) ? self::format_github_pull_requests_info( $results['items'] ) : array();
+			$pull_requests = isset( $results['items'] ) ? self::format_github_pull_requests_info( $results['items'] ) : [];
 			$total_count   = $results['total_count'] ?? 0;
 		} else {
 			// Pulls API response.
@@ -265,16 +265,16 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 		$total_pages = ceil( $total_count / $per_page );
 
 		$response_data = new WP_REST_Response(
-			array(
+			[
 				'success'       => true,
 				'pull_requests' => $pull_requests,
-				'pagination'    => array(
+				'pagination'    => [
 					'current_page' => $page,
 					'per_page'     => $per_page,
 					'total_pages'  => $total_pages,
 					'total_count'  => $total_count,
-				),
-			),
+				],
+			],
 			200
 		);
 
@@ -294,48 +294,48 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 	 * @param int    $page Page number.
 	 * @param string $pr_state State of pull requests to fetch.
 	 *
-	 * @return WP_REST_Response
+	 * @return \WP_REST_Response
 	 */
 	private static function search_pull_requests_with_query_and_state( string $gh_owner, string $gh_repo, string $search_query, int $per_page, int $page, string $pr_state ): WP_REST_Response {
 
 		// Use search API with state filter in query.
 		$gh_api_endpoint = self::GH_API_BASE_URL . '/search/issues';
-		$query_args      = array(
+		$query_args      = [
 			'q'        => $search_query . "+repo:{$gh_owner}/{$gh_repo}+type:pr+state:{$pr_state}",
 			'per_page' => $per_page,
 			'page'     => $page,
 			'order'    => 'desc',
-		);
+		];
 		$gh_api_endpoint = \add_query_arg( $query_args, $gh_api_endpoint );
 
 		$response = self::gh_api_request_with_validation( $gh_api_endpoint );
 
 		if ( false === $response['success'] ) {
 			return new WP_REST_Response(
-				array(
+				[
 					'success' => false,
 					'message' => $response['message'],
-				),
+				],
 				$response['status_code']
 			);
 		}
 
-		$search_results = $response['data'] ?? array();
-		$pull_requests  = isset( $search_results['items'] ) ? self::format_github_pull_requests_info( $search_results['items'] ) : array();
+		$search_results = $response['data'] ?? [];
+		$pull_requests  = isset( $search_results['items'] ) ? self::format_github_pull_requests_info( $search_results['items'] ) : [];
 		$total_count    = $search_results['total_count'] ?? 0;
 		$total_pages    = ceil( $total_count / $per_page );
 
 		$response_data = new WP_REST_Response(
-			array(
+			[
 				'success'       => true,
 				'pull_requests' => $pull_requests,
-				'pagination'    => array(
+				'pagination'    => [
 					'current_page' => $page,
 					'per_page'     => $per_page,
 					'total_pages'  => $total_pages,
 					'total_count'  => $total_count,
-				),
-			),
+				],
+			],
 			200
 		);
 
@@ -383,7 +383,7 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 	 * @param string $gh_repo GitHub repo.
 	 * @param int    $pr_number Pull request number.
 	 *
-	 * @return WP_REST_Response
+	 * @return \WP_REST_Response
 	 */
 	private static function get_specific_pull_request( string $gh_owner, string $gh_repo, int $pr_number ): WP_REST_Response {
 
@@ -394,23 +394,23 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 
 		if ( false === $response['success'] ) {
 			return new WP_REST_Response(
-				array(
+				[
 					'success' => false,
 					'message' => $response['message'],
-				),
+				],
 				$response['status_code']
 			);
 		}
 
-		$pull_request = $response['data'] ?? array();
+		$pull_request = $response['data'] ?? [];
 
-		$pull_request = self::format_github_pull_requests_info( array( $pull_request ) );
+		$pull_request = self::format_github_pull_requests_info( [ $pull_request ] );
 
 		return new WP_REST_Response(
-			array(
+			[
 				'success'      => true,
 				'pull_request' => $pull_request,
-			),
+			],
 			200
 		);
 	}
@@ -423,18 +423,18 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 	 * @return array Formatted array of pull requests.
 	 */
 	private static function format_github_pull_requests_info( array $pull_requests ): array {
-		$formatted_prs = array();
+		$formatted_prs = [];
 		foreach ( $pull_requests as $pr ) {
-			$formatted_prs[] = array(
+			$formatted_prs[] = [
 				'id'            => $pr['id'] ?? '',
 				'url'           => $pr['url'] ?? '',
 				'number'        => $pr['number'] ?? '',
 				'title'         => $pr['title'] ?? '',
-				'user'          => isset( $pr['user'] ) ? array(
+				'user'          => isset( $pr['user'] ) ? [
 					'login'      => $pr['user']['login'] ?? '',
 					'avatar_url' => $pr['user']['avatar_url'] ?? '',
 					'html_url'   => $pr['user']['html_url'] ?? '',
-				) : null,
+				] : null,
 				'labels'        => $pr['labels'] ?? '',
 				'state'         => $pr['state'] ?? '',
 				'created_at'    => $pr['created_at'] ?? '',
@@ -446,11 +446,11 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 				'base_branch'   => isset( $pr['base'] ) ? ( $pr['base']['ref'] ?? '' ) : '',
 				'merged_at'     => $pr['merged_at'] ?? null,
 				'merged'        => $pr['merged'] ?? null,
-				'merged_by'     => isset( $pr['merged_by'] ) ? array(
+				'merged_by'     => isset( $pr['merged_by'] ) ? [
 					'login'      => $pr['merged_by']['login'] ?? '',
 					'avatar_url' => $pr['merged_by']['avatar_url'] ?? '',
 					'html_url'   => $pr['merged_by']['html_url'] ?? '',
-				) : null,
+				] : null,
 
 				'comments'      => $pr['comments'] ?? null,
 				'commits'       => $pr['commits'] ?? null,
@@ -461,7 +461,7 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 				'draft'         => $pr['draft'] ?? null,
 				'auto_merge'    => $pr['auto_merge'] ?? null,
 
-			);
+			];
 		}
 		return $formatted_prs;
 	}
@@ -478,11 +478,11 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 
 		// Check for WP_Error.
 		if ( is_wp_error( $response ) ) {
-			return array(
+			return [
 				'success'     => false,
 				'status_code' => 500,
 				'message'     => $response->get_error_message(),
-			);
+			];
 		}
 
 		// Get response details.
@@ -492,7 +492,7 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 
 		// Check for non-200 status codes.
 		if ( 200 !== $status_code ) {
-			return array(
+			return [
 				'success'     => false,
 				'status_code' => $status_code,
 				'message'     => sprintf(
@@ -502,7 +502,7 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 				),
 				'body'        => $body,
 				'headers'     => $headers,
-			);
+			];
 		}
 
 		// Decode JSON response.
@@ -510,21 +510,21 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 
 		// Check for JSON decode errors.
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
-			return array(
+			return [
 				'success'     => false,
 				'status_code' => 500,
 				'message'     => __( 'Failed to parse GitHub API response as JSON.', 'oneupdate' ),
 				'body'        => $body,
-			);
+			];
 		}
 
-		return array(
+		return [
 			'success'     => true,
 			'status_code' => $status_code,
 			'data'        => $data,
 			'headers'     => $headers,
 			'body'        => $body,
-		);
+		];
 	}
 
 	/**
@@ -532,36 +532,34 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 	 *
 	 * @param string $endpoint GitHub API endpoint.
 	 *
-	 * @return array|\WP_Error|WP_REST_Response
+	 * @return array|\WP_Error|\WP_REST_Response
 	 */
 	private static function gh_api_request( string $endpoint ): array|\WP_Error|WP_REST_Response {
 		$gh_token = get_option( 'oneupdate_gh_token', '' ); // @todo need to remove it.
 
 		if ( empty( $gh_token ) ) {
 			return new WP_REST_Response(
-				array(
+				[
 					'success' => false,
 					'message' => __( 'GitHub token not configured.', 'oneupdate' ),
-				),
+				],
 				401
 			);
 		}
 
-		$response = wp_safe_remote_get(
+		return wp_safe_remote_get(
 			$endpoint,
-			array(
-				'headers'     => array(
+			[
+				'headers'     => [
 					'Authorization'   => "Bearer {$gh_token}",
 					'Accept'          => 'application/vnd.github.v3+json',
 					'User-Agent'      => __( 'OneUpdate Plugin Loader', 'oneupdate' ),
 					'Content-Type'    => 'application/json',
 					'Accept-Encoding' => 'identity',
-				),
+				],
 				'httpversion' => '1.1',
 				'timeout'     => 15, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
-			),
+			],
 		);
-
-		return $response;
 	}
 }

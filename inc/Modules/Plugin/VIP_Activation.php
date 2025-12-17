@@ -37,26 +37,31 @@ final class VIP_Activation implements Registrable {
 			return; // Ensure the function exists before proceeding.
 		}
 
-        $plugins_option = get_option( self::PLUGINS_OPTIONS, array() );
+		$plugins_option = get_option( self::PLUGINS_OPTIONS, [] );
 
-        if( ! is_array( $plugins_option ) || empty( $plugins_option ) ) {
-            return;
-        }
+		if ( ! is_array( $plugins_option ) || empty( $plugins_option ) ) {
+			return;
+		}
 
-        foreach ( $plugins_option as $plugin_data ) {
-            // check given directory exists into plugins folder.
-            if ( ! is_string( $plugin_data ) || 'hello.php' === $plugin_data || ! file_exists( WP_PLUGIN_DIR . '/' . $plugin_data ) ) {
-                continue; // Skip invalid plugin data.
-            }
-            \wpcom_vip_load_plugin( $plugin_data );
-        }
-    }
+		foreach ( $plugins_option as $plugin_data ) {
+			// check given directory exists into plugins folder.
+			if ( ! is_string( $plugin_data ) || 'hello.php' === $plugin_data || ! file_exists( WP_PLUGIN_DIR . '/' . $plugin_data ) ) {
+				continue; // Skip invalid plugin data.
+			}
+			\wpcom_vip_load_plugin( $plugin_data );
+		}
+	}
 
+	/**
+	 * Get plugins options.
+	 *
+	 * @return array<string, mixed>
+	 */
 	public static function get_plugins_options(): array {
-		$plugins_option = get_option( self::PLUGINS_OPTIONS, array() );
+		$plugins_option = get_option( self::PLUGINS_OPTIONS, [] );
 
 		if ( ! is_array( $plugins_option ) ) {
-			return array();
+			return [];
 		}
 
 		return $plugins_option;

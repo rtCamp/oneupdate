@@ -1,4 +1,4 @@
-import DOMPurify from "dompurify";
+import DOMPurify from 'dompurify';
 
 /**
  * Helper function to validate if a string is a well-formed URL.
@@ -7,9 +7,9 @@ import DOMPurify from "dompurify";
  *
  * @return {boolean} True if the string is a valid URL, false otherwise.
  */
-const isURL = (str: string): boolean => {
+const isURL = ( str: string ): boolean => {
 	try {
-		new URL(str);
+		new URL( str );
 		return true;
 	} catch {
 		return false;
@@ -23,11 +23,11 @@ const isURL = (str: string): boolean => {
  *
  * @return {boolean} True if the URL is valid, false otherwise.
  */
-const isValidUrl = (url: string): boolean => {
+const isValidUrl = ( url: string ): boolean => {
 	try {
-		const parsedUrl = new URL(url);
-		return isURL(parsedUrl.href);
-	} catch (e) {
+		const parsedUrl = new URL( url );
+		return isURL( parsedUrl.href );
+	} catch ( e ) {
 		return false;
 	}
 };
@@ -39,8 +39,8 @@ const isValidUrl = (url: string): boolean => {
  *
  * @return {string} The sanitized string.
  */
-const PurifyElement = (item: string) => {
-	return DOMPurify.sanitize(item, { ALLOWED_TAGS: [] });
+const PurifyElement = ( item: string ) => {
+	return DOMPurify.sanitize( item, { ALLOWED_TAGS: [] } );
 };
 
 export { isURL, isValidUrl, PurifyElement };

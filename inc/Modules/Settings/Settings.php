@@ -40,8 +40,6 @@ final class Settings implements Registrable {
 	public const OPTION_CONSUMER_PARENT_SITE_URL = self::SETTING_PREFIX . 'parent_site_url';
 	// Governing settings.
 	public const OPTION_GOVERNING_SHARED_SITES = self::SETTING_PREFIX . 'shared_sites';
-    public const OPTION_GITHUB_REPO_TOKEN = self::SETTING_PREFIX . 'gh_repo_token';
-    public const OPTION_S3_CREDENTIALS = self::SETTING_PREFIX . 's3_credentials';
 
 	/**
 	 * Site type keys.
@@ -138,7 +136,7 @@ final class Settings implements Registrable {
 								'api_key' => [
 									'type' => 'string',
 								],
-								'github_repo' => [
+								'gh_repo' => [
 									'type' => 'string',
 								],
 							],
@@ -186,7 +184,8 @@ final class Settings implements Registrable {
 	 * id: string,
 	 * name: string,
 	 * url: string,
-	 * api_key: string
+	 * api_key: string,
+	 * gh_repo: string
 	 * }[]
 	 */
 	public static function sanitize_shared_sites( $input ): array {
@@ -205,7 +204,7 @@ final class Settings implements Registrable {
 			$site_name    = isset( $site_data['name'] ) ? sanitize_text_field( $site_data['name'] ) : '';
 			$site_url     = isset( $site_data['url'] ) ? esc_url_raw( $site_data['url'] ) : '';
 			$site_api_key = isset( $site_data['api_key'] ) ? sanitize_text_field( $site_data['api_key'] ) : '';
-			$gh_repo     = isset( $site_data['github_repo'] ) ? sanitize_text_field( $site_data['github_repo'] ) : '';
+			$gh_repo      = isset( $site_data['gh_repo'] ) ? sanitize_text_field( $site_data['gh_repo'] ) : '';
 
 			// Only save if required fields are filled.
 			if ( empty( $site_name ) || empty( $site_url ) ) {
@@ -217,7 +216,7 @@ final class Settings implements Registrable {
 				'name'    => $site_name,
 				'url'     => untrailingslashit( $site_url ),
 				'api_key' => $site_api_key,
-				'github_repo' => $gh_repo,
+				'gh_repo' => $gh_repo,
 			];
 		}
 
@@ -236,6 +235,7 @@ final class Settings implements Registrable {
 	 *  id: string,
 	 *  name: string,
 	 *  url: string,
+	 *  gh_repo: string
 	 * }>
 	 */
 	public static function get_shared_sites(): array {
@@ -250,12 +250,12 @@ final class Settings implements Registrable {
 			// trailingslashit to ensure consistent keys.
 			$url = trailingslashit( $brand['url'] );
 
-			$brands_to_return[ $brand['url'] ] = [
+			$brands_to_return[ $url ] = [
 				'api_key' => $brand['api_key'] ?? '',
 				'id'      => $brand['id'] ?? '',
 				'name'    => $brand['name'] ?? '',
 				'url'     => $url,
-				'github_repo' => $brand['github_repo'] ?? '',
+				'gh_repo' => $brand['gh_repo'] ?? '',
 			];
 		}
 
@@ -272,6 +272,7 @@ final class Settings implements Registrable {
 	 *   id: string,
 	 *   name: string,
 	 *   url: string,
+	 *   gh_repo: string
 	 * }
 	 */
 	public static function get_shared_site_by_url( string $site_url ): ?array {
@@ -292,6 +293,7 @@ final class Settings implements Registrable {
 	 *   id: string,
 	 *   name: string,
 	 *   url: string,
+	 *   gh_repo: string
 	 * }
 	 */
 	public static function get_shared_site_by_name( string $site_name ): ?array {
@@ -372,7 +374,6 @@ final class Settings implements Registrable {
 	 * @param string $url The parent site URL.
 	 */
 	public static function set_parent_site_url( string $url ): bool {
-
 		return update_option( self::OPTION_CONSUMER_PARENT_SITE_URL, untrailingslashit( esc_url_raw( $url ) ), false );
 	}
 

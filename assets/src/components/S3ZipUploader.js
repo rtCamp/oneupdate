@@ -188,7 +188,7 @@ const SiteSelectionModal = ( {
 				url: site.url,
 				name: site.name,
 				api_key: site.api_key,
-				github_repo: site.github_repo,
+				gh_repo: site.gh_repo,
 			} ) ) );
 		}
 	};
@@ -269,7 +269,7 @@ const SiteSelectionModal = ( {
 																		url: site.url,
 																		name: site.name,
 																		api_key: site.api_key,
-																		github_repo: site.github_repo,
+																		gh_repo: site.gh_repo,
 																	},
 																],
 														);
@@ -293,7 +293,7 @@ const SiteSelectionModal = ( {
 																	url: site.url,
 																	name: site.name,
 																	api_key: site.api_key,
-																	github_repo: site.github_repo,
+																	gh_repo: site.gh_repo,
 																},
 															],
 													);
@@ -825,7 +825,7 @@ const S3ZipUploader = () => {
 																url: site.url,
 																name: site.name,
 																api_key: site.api_key,
-																github_repo: site.github_repo,
+																gh_repo: site.gh_repo,
 															} ) ),
 														);
 													}
@@ -885,7 +885,7 @@ const S3ZipUploader = () => {
 																				url: site.url,
 																				name: site.name,
 																				api_key: site.api_key,
-																				github_repo: site.github_repo,
+																				gh_repo: site.gh_repo,
 																			},
 																		],
 																);
@@ -909,7 +909,7 @@ const S3ZipUploader = () => {
 																			url: site.url,
 																			name: site.name,
 																			api_key: site.api_key,
-																			github_repo: site.github_repo,
+																			gh_repo: site.gh_repo,
 																		},
 																	],
 															);

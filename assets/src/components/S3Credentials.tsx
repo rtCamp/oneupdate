@@ -12,7 +12,7 @@ import {
 import { __ } from '@wordpress/i18n';
 import { useState, useCallback, useEffect } from '@wordpress/element';
 import { isValidUrl } from '../js/utils';
-import { NoticeType } from '@/admin/settings/page';
+import type { NoticeType } from '@/admin/settings/page';
 
 const API_NAMESPACE = window.OneUpdateSettings.restUrl + '/oneupdate/v1';
 const NONCE = window.OneUpdateSettings.restNonce;

@@ -710,7 +710,7 @@ const PluginManager = () => {
 
 			if ( 'change-version' === currentAction || 'install' === currentAction || 'update' === currentAction || 'remove' === currentAction ) {
 				noticeMessage = sprintf(
-				/* translators: %s is the plugin name, %s is the action verb, %s is the site names */
+					/* translators: %1s is the plugin name, %2s is the action verb */
 					__( '%1$s %2$s PR raised successfully.', 'oneupdate' ),
 					pluginName,
 					actionVerb,
@@ -718,7 +718,7 @@ const PluginManager = () => {
 				noticeMessage += '\n\n';
 			} else {
 				noticeMessage = sprintf(
-				/* translators: %s is the plugin name, %s is the action verb, %s is the site names */
+				/* translators: %1s is the plugin name, %2s is the action verb, %3s is the site names */
 					__( '%1$s %2$s successfully on %3$s.', 'oneupdate' ),
 					pluginName,
 					actionVerb,

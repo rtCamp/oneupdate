@@ -8,58 +8,55 @@
 namespace OneUpdate\Modules\Rest;
 
 use OneUpdate\Modules\Plugin\Cache;
-use OneUpdate\Modules\Settings\Settings;
 use OneUpdate\Modules\Plugin\Settings as Plugin_Settings;
 use OneUpdate\Modules\Plugin\VIP_Activation;
-use WP_REST_Request;
-use WP_REST_Response;
-use WP_REST_Server;
+use OneUpdate\Modules\Settings\Settings;
 
 /**
  * Class Workflow_Controller
  */
 class Workflow_Controller extends Abstract_REST_Controller {
 
-    /**
-     * Active plugins options key.
-     * 
-     * @var string
-     */
-    public const ACTIVE_PLUGINS = 'active_plugins';
+	/**
+	 * Active plugins options key.
+	 *
+	 * @var string
+	 */
+	public const ACTIVE_PLUGINS = 'active_plugins';
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public function register_routes(): void {
-        /**
+		/**
 		 * Register a route to apply plugins to sites by creating PR's to privided github repo's.
 		 */
 		register_rest_route(
 			self::NAMESPACE,
 			'/apply-plugins',
-			array(
+			[
 				'methods'             => \WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'apply_plugins_to_selected_sites' ),
-				'permission_callback' => function () {
+				'callback'            => [ $this, 'apply_plugins_to_selected_sites' ],
+				'permission_callback' => static function () {
 						return current_user_can( 'manage_options' );
 				},
-				'args'                => array(
-					'sites'   => array(
+				'args'                => [
+					'sites'   => [
 						'required'          => true,
 						'type'              => 'array',
-						'sanitize_callback' => function ( $value ) {
+						'sanitize_callback' => static function ( $value ) {
 							return is_array( $value );
 						},
-					),
-					'plugins' => array(
+					],
+					'plugins' => [
 						'required'          => true,
 						'type'              => 'array',
-						'sanitize_callback' => function ( $value ) {
+						'sanitize_callback' => static function ( $value ) {
 							return is_array( $value );
 						},
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 
 		/**
@@ -68,11 +65,11 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		register_rest_route(
 			self::NAMESPACE,
 			'/get_plugins',
-			array(
+			[
 				'methods'             => \WP_REST_Server::READABLE,
-				'callback'            => array( $this, 'get_plugins' ),
+				'callback'            => [ $this, 'get_plugins' ],
 				'permission_callback' => [ $this, 'check_api_permissions' ],
-			)
+			]
 		);
 
 		/**
@@ -81,27 +78,27 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		register_rest_route(
 			self::NAMESPACE,
 			'/oneupdate-plugins-options',
-			array(
-				array(
+			[
+				[
 					'methods'             => \WP_REST_Server::READABLE,
-					'callback'            => array( $this, 'get_oneupdate_plugins_options' ),
+					'callback'            => [ $this, 'get_oneupdate_plugins_options' ],
 					'permission_callback' => [ $this, 'check_api_permissions' ],
-				),
-				array(
+				],
+				[
 					'methods'             => \WP_REST_Server::CREATABLE,
-					'callback'            => array( $this, 'update_oneupdate_plugins_options' ),
+					'callback'            => [ $this, 'update_oneupdate_plugins_options' ],
 					'permission_callback' => [ $this, 'check_api_permissions' ],
-					'args'                => array(
-						'options' => array(
+					'args'                => [
+						'options' => [
 							'required'          => true,
 							'type'              => 'array',
-							'sanitize_callback' => function ( $value ) {
+							'sanitize_callback' => static function ( $value ) {
 								return is_array( $value );
 							},
-						),
-					),
-				),
-			),
+						],
+					],
+				],
+			],
 		);
 		/**
 		 * Register a route to apply private plugins to selected sites.
@@ -109,29 +106,29 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		register_rest_route(
 			self::NAMESPACE,
 			'/apply-private-plugins',
-			array(
+			[
 				'methods'             => \WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'apply_private_plugins_to_selected_sites' ),
-				'permission_callback' => function () {
+				'callback'            => [ $this, 'apply_private_plugins_to_selected_sites' ],
+				'permission_callback' => static function () {
 						return current_user_can( 'manage_options' );
 				},
-				'args'                => array(
-					'sites'   => array(
+				'args'                => [
+					'sites'   => [
 						'required'          => true,
 						'type'              => 'array',
-						'sanitize_callback' => function ( $value ) {
+						'sanitize_callback' => static function ( $value ) {
 							return is_array( $value );
 						},
-					),
-					'plugins' => array(
+					],
+					'plugins' => [
 						'required'          => true,
 						'type'              => 'array',
-						'sanitize_callback' => function ( $value ) {
+						'sanitize_callback' => static function ( $value ) {
 							return is_array( $value );
 						},
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 
 		/**
@@ -140,48 +137,48 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		register_rest_route(
 			self::NAMESPACE,
 			'/execute-plugin-action',
-			array(
+			[
 				'methods'             => \WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'execute_plugin_action' ),
-				'permission_callback' => function () {
+				'callback'            => [ $this, 'execute_plugin_action' ],
+				'permission_callback' => static function () {
 						return current_user_can( 'manage_options' );
 				},
-				'args'                => array(
-					'action'           => array(
+				'args'                => [
+					'action'           => [
 						'required'          => true,
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
-					),
-					'slug'             => array(
+					],
+					'slug'             => [
 						'required'          => true,
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
-					),
-					'plugin_version'   => array(
+					],
+					'plugin_version'   => [
 						'required'          => false,
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
-					),
-					'sites'            => array(
+					],
+					'sites'            => [
 						'required'          => true,
 						'type'              => 'array',
-						'sanitize_callback' => function ( $value ) {
+						'sanitize_callback' => static function ( $value ) {
 							return is_array( $value );
 						},
-					),
-					'plugin_type'      => array(
+					],
+					'plugin_type'      => [
 						'required'          => false,
 						'type'              => 'string',
 						'default'           => 'public',
 						'sanitize_callback' => 'sanitize_text_field',
-					),
-					'plugin_path_info' => array(
+					],
+					'plugin_path_info' => [
 						'required'          => false,
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 
 		/**
@@ -190,22 +187,22 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		register_rest_route(
 			self::NAMESPACE,
 			'/bulk-plugin-update',
-			array(
+			[
 				'methods'             => \WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'bulk_plugin_update' ),
-				'permission_callback' => function () {
+				'callback'            => [ $this, 'bulk_plugin_update' ],
+				'permission_callback' => static function () {
 						return current_user_can( 'manage_options' );
 				},
-				'args'                => array(
-					'plugins' => array(
+				'args'                => [
+					'plugins' => [
 						'required'          => true,
 						'type'              => 'array',
-						'sanitize_callback' => function ( $value ) {
+						'sanitize_callback' => static function ( $value ) {
 							return is_array( $value );
 						},
-					),
-				),
-			)
+					],
+				],
+			]
 		);
 
 		/**
@@ -214,25 +211,25 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		register_rest_route(
 			self::NAMESPACE,
 			'/webhook/rebuild-transient',
-			array(
-				array(
+			[
+				[
 					'methods'             => \WP_REST_Server::CREATABLE,
-					'callback'            => array( $this, 'webhook_rebuild_transient' ),
-					'permission_callback' => array( $this, 'webhook_permission_callback' ),
-				),
-				array(
+					'callback'            => [ $this, 'webhook_rebuild_transient' ],
+					'permission_callback' => [ $this, 'webhook_permission_callback' ],
+				],
+				[
 					'methods'             => \WP_REST_Server::READABLE,
-					'callback'            => array( $this, 'webhook_rebuild_transient' ),
-					'args'                => array(
-						'secret' => array(
+					'callback'            => [ $this, 'webhook_rebuild_transient' ],
+					'args'                => [
+						'secret' => [
 							'required'          => true,
 							'type'              => 'string',
 							'sanitize_callback' => 'sanitize_text_field',
-						),
-					),
-					'permission_callback' => array( $this, 'webhook_permission_callback' ),
-				),
-			)
+						],
+					],
+					'permission_callback' => [ $this, 'webhook_permission_callback' ],
+				],
+			]
 		);
 	}
 
@@ -261,10 +258,10 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		Cache::build_plugins_transient();
 
 		return rest_ensure_response(
-			array(
+			[
 				'success' => true,
 				'message' => __( 'Transient rebuilt successfully.', 'oneupdate' ),
-			)
+			]
 		);
 	}
 
@@ -278,51 +275,53 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	public function bulk_plugin_update( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$body         = $request->get_body();
 		$decoded_body = json_decode( $body, true );
-		$plugins      = $decoded_body['plugins'] ?? array();
+		$plugins      = $decoded_body['plugins'] ?? [];
 
 		if ( ! is_array( $plugins ) || empty( $plugins ) ) {
-			return new \WP_Error( 'invalid_plugins', __( 'Invalid plugins provided.', 'oneupdate' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'invalid_plugins', __( 'Invalid plugins provided.', 'oneupdate' ), [ 'status' => 400 ] );
 		}
 
-		$response = array();
+		$response = [];
 
 		foreach ( $plugins as $plugin ) {
-			$sites = $plugin['sites'] ?? array();
+			$sites = $plugin['sites'] ?? [];
 			foreach ( $sites as $site ) {
 				if ( ! is_string( $site ) || empty( $site ) ) {
-					return new \WP_Error( 'invalid_site', __( 'Invalid site provided.', 'oneupdate' ), array( 'status' => 400 ) );
-				} else {
-					$oneupdate_sites = Settings::get_shared_sites();
-					$plugin_slug     = $plugin['slug'] ?? '';
-					$plugin_version  = $plugin['version'] ?? '';
-					$github_repo     = $oneupdate_sites[ $site ]['gh_repo'] ?? '';
-					$plugin_type     = $plugin['plugin_type'] ?? 'public';
-
-					if ( ! empty( $github_repo ) && ! empty( $plugin_slug ) && ! empty( $plugin_version ) && 'public' === $plugin_type ) {
-						// Trigger GitHub action to update the plugin.
-						$github_response             = $this->trigger_github_action_for_pr_creation(
-							$github_repo,
-							'production',
-							$plugin_slug,
-							$plugin_version,
-							'add_update',
-							$oneupdate_sites[ $site ]['name'] ?? ''
-						);
-						$github_response['name'] = $site;
-						$response[]                  = array(
-							'github_response' => $github_response,
-						);
-					}
+					return new \WP_Error( 'invalid_site', __( 'Invalid site provided.', 'oneupdate' ), [ 'status' => 400 ] );
 				}
+
+				$oneupdate_sites = Settings::get_shared_sites();
+				$plugin_slug     = $plugin['slug'] ?? '';
+				$plugin_version  = $plugin['version'] ?? '';
+				$gh_repo         = $oneupdate_sites[ $site ]['gh_repo'] ?? '';
+				$plugin_type     = $plugin['plugin_type'] ?? 'public';
+
+				if ( empty( $gh_repo ) || empty( $plugin_slug ) || empty( $plugin_version ) || 'public' !== $plugin_type ) {
+					continue;
+				}
+
+				// Trigger GitHub action to update the plugin.
+				$github_response         = $this->trigger_github_action_for_pr_creation(
+					$gh_repo,
+					'production',
+					$plugin_slug,
+					$plugin_version,
+					'add_update',
+					$oneupdate_sites[ $site ]['name'] ?? ''
+				);
+				$github_response['name'] = $site;
+				$response[]              = [
+					'github_response' => $github_response,
+				];
 			}
 		}
 
 		return rest_ensure_response(
-			array(
+			[
 				'success'  => true,
 				'message'  => __( 'Bulk plugin update initiated successfully.', 'oneupdate' ),
 				'response' => $response,
-			)
+			]
 		);
 	}
 
@@ -339,24 +338,24 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		$action           = $decoded_body['action'] ?? '';
 		$slug             = $decoded_body['slug'] ?? '';
 		$plugin_version   = $decoded_body['plugin_version'] ?? '';
-		$sites            = $decoded_body['sites'] ?? array();
+		$sites            = $decoded_body['sites'] ?? [];
 		$plugin_type      = $decoded_body['plugin_type'] ?? 'public';
 		$plugin_path_info = $decoded_body['plugin_path_info'] ?? '';
 
-		if ( ! in_array( $action, array( 'activate', 'deactivate', 'update', 'remove', 'change-version', 'install' ), true ) ) {
-			return new \WP_Error( 'invalid_action', __( 'Invalid action provided.', 'oneupdate' ), array( 'status' => 400 ) );
+		if ( ! in_array( $action, [ 'activate', 'deactivate', 'update', 'remove', 'change-version', 'install' ], true ) ) {
+			return new \WP_Error( 'invalid_action', __( 'Invalid action provided.', 'oneupdate' ), [ 'status' => 400 ] );
 		}
 
 		if ( empty( $slug ) || ! is_string( $slug ) ) {
-			return new \WP_Error( 'invalid_slug', __( 'Invalid plugin slug provided.', 'oneupdate' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'invalid_slug', __( 'Invalid plugin slug provided.', 'oneupdate' ), [ 'status' => 400 ] );
 		}
 
 		if ( ! is_array( $sites ) || empty( $sites ) ) {
-			return new \WP_Error( 'invalid_sites', __( 'Invalid sites provided.', 'oneupdate' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'invalid_sites', __( 'Invalid sites provided.', 'oneupdate' ), [ 'status' => 400 ] );
 		}
 
-		$output = array();
-		$errors = array();
+		$output = [];
+		$errors = [];
 		if ( 'activate' === $action || 'deactivate' === $action || 'remove' === $action ) {
 			foreach ( $sites as $site ) {
 				$oneupdate_sites = Settings::get_shared_sites();
@@ -366,26 +365,56 @@ class Workflow_Controller extends Abstract_REST_Controller {
 				// strip the trailing slash from the site URL.
 				$site_url = rtrim( $oneupdate_sites[ $site ]['url'], '/' );
 
-				if ( ! empty( $api_key ) ) {
-					$response = wp_remote_post(
-						$site_url . $request_postfix,
-						array(
-							'headers' => array(
-								'Content-Type' => 'application/json',
-								'X-OneUpdate-Token' => $api_key,
-							),
-							'body'    => wp_json_encode(
-								array(
-									'options' => array(
-										'plugins'     => array( $plugin_path_info ),
-										'plugin_type' => $action,
-									),
-								)
-							),
-							'timeout' => 30, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
-						)
+				if ( empty( $api_key ) ) {
+					continue;
+				}
+
+				$response = wp_remote_post(
+					$site_url . $request_postfix,
+					[
+						'headers' => [
+							'Content-Type'      => 'application/json',
+							'X-OneUpdate-Token' => $api_key,
+						],
+						'body'    => wp_json_encode(
+							[
+								'options' => [
+									'plugins'     => [ $plugin_path_info ],
+									'plugin_type' => $action,
+								],
+							]
+						),
+						'timeout' => 30, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
+					]
+				);
+				if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+					$errors[] = new \WP_Error(
+						'plugin_action_error',
+						sprintf(
+							/* translators: %s is the site URL */
+							__( 'Failed to execute plugin action on site %s.', 'oneupdate' ),
+							$site
+						),
+						[
+							'status'   => 500,
+							'response' => $response,
+							'error'    => is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_body( $response ),
+						]
 					);
-					if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+				} else {
+					$body         = wp_remote_retrieve_body( $response );
+					$decoded_body = json_decode( $body, true );
+
+					if ( isset( $decoded_body['success'] ) && $decoded_body['success'] ) {
+						$output[] = [
+							'site'             => $site,
+							'action'           => $action,
+							'slug'             => $slug,
+							'status'           => 'success',
+							'response'         => $decoded_body,
+							'plugin_info_path' => $plugin_path_info,
+						];
+					} else {
 						$errors[] = new \WP_Error(
 							'plugin_action_error',
 							sprintf(
@@ -393,40 +422,12 @@ class Workflow_Controller extends Abstract_REST_Controller {
 								__( 'Failed to execute plugin action on site %s.', 'oneupdate' ),
 								$site
 							),
-							array(
+							[
 								'status'   => 500,
 								'response' => $response,
-								'error'    => is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_body( $response ),
-							)
+								'error'    => isset( $decoded_body['message'] ) ? $decoded_body['message'] : __( 'Unknown error occurred.', 'oneupdate' ),
+							]
 						);
-					} else {
-						$body         = wp_remote_retrieve_body( $response );
-						$decoded_body = json_decode( $body, true );
-
-						if ( isset( $decoded_body['success'] ) && $decoded_body['success'] ) {
-							$output[] = array(
-								'site'             => $site,
-								'action'           => $action,
-								'slug'             => $slug,
-								'status'           => 'success',
-								'response'         => $decoded_body,
-								'plugin_info_path' => $plugin_path_info,
-							);
-						} else {
-							$errors[] = new \WP_Error(
-								'plugin_action_error',
-								sprintf(
-									/* translators: %s is the site URL */
-									__( 'Failed to execute plugin action on site %s.', 'oneupdate' ),
-									$site
-								),
-								array(
-									'status'   => 500,
-									'response' => $response,
-									'error'    => isset( $decoded_body['message'] ) ? $decoded_body['message'] : __( 'Unknown error occurred.', 'oneupdate' ),
-								)
-							);
-						}
 					}
 				}
 			}
@@ -434,23 +435,22 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		if ( 'update' === $action || 'change-version' === $action ) {
 			foreach ( $sites as $site ) {
 				$oneupdate_sites = Settings::get_shared_sites();
-				$api_key         = $oneupdate_sites[ $site ]['api_key'] ?? '';
-				$github_repo     = $oneupdate_sites[ $site ]['gh_repo'] ?? '';
-				if ( empty( $github_repo ) ) {
+				$gh_repo         = $oneupdate_sites[ $site ]['gh_repo'] ?? '';
+				if ( empty( $gh_repo ) ) {
 					$errors[] = new \WP_Error(
-						'no_github_repo',
+						'no_gh_repo',
 						sprintf(
 							/* translators: %s is the site URL */
 							__( 'GitHub repository not found for site %s.', 'oneupdate' ),
 							$site
 						),
-						array( 'status' => 404 )
+						[ 'status' => 404 ]
 					);
 					continue;
 				}
 
 				$response = $this->trigger_github_action_for_pr_creation(
-					$github_repo,
+					$gh_repo,
 					'production',
 					$slug,
 					$plugin_version,
@@ -461,36 +461,35 @@ class Workflow_Controller extends Abstract_REST_Controller {
 				if ( is_wp_error( $response ) ) {
 					$errors[] = $response;
 				} else {
-					$output[] = array(
+					$output[] = [
 						'site'     => $site,
 						'action'   => $action,
 						'slug'     => $slug,
 						'status'   => 'success',
 						'response' => $response,
-					);
+					];
 				}
 			}
 		}
 		if ( 'remove' === $action ) {
 			foreach ( $sites as $site ) {
 				$oneupdate_sites = Settings::get_shared_sites();
-				$api_key         = $oneupdate_sites[ $site ]['api_key'] ?? '';
-				$github_repo     = $oneupdate_sites[ $site ]['gh_repo'] ?? '';
-				if ( empty( $github_repo ) ) {
+				$gh_repo         = $oneupdate_sites[ $site ]['gh_repo'] ?? '';
+				if ( empty( $gh_repo ) ) {
 					$errors[] = new \WP_Error(
-						'no_github_repo',
+						'no_gh_repo',
 						sprintf(
 							/* translators: %s is the site URL */
 							__( 'GitHub repository not found for site %s.', 'oneupdate' ),
 							$site
 						),
-						array( 'status' => 404 )
+						[ 'status' => 404 ]
 					);
 					continue;
 				}
 
 				$response = $this->trigger_github_action_for_pr_creation(
-					$github_repo,
+					$gh_repo,
 					'production',
 					$slug,
 					'',
@@ -501,36 +500,35 @@ class Workflow_Controller extends Abstract_REST_Controller {
 				if ( is_wp_error( $response ) ) {
 					$errors[] = $response;
 				} else {
-					$output[] = array(
+					$output[] = [
 						'site'     => $site,
 						'action'   => $action,
 						'slug'     => $slug,
 						'status'   => 'success',
 						'response' => $response,
-					);
+					];
 				}
 			}
 		}
 		if ( 'install' === $action ) {
 			foreach ( $sites as $site ) {
 				$oneupdate_sites = Settings::get_shared_sites();
-				$api_key         = $oneupdate_sites[ $site ]['api_key'] ?? '';
-				$github_repo     = $oneupdate_sites[ $site ]['gh_repo'] ?? '';
-				if ( empty( $github_repo ) ) {
+				$gh_repo         = $oneupdate_sites[ $site ]['gh_repo'] ?? '';
+				if ( empty( $gh_repo ) ) {
 					$errors[] = new \WP_Error(
-						'no_github_repo',
+						'no_gh_repo',
 						sprintf(
 							/* translators: %s is the site URL */
 							__( 'GitHub repository not found for site %s.', 'oneupdate' ),
 							$site
 						),
-						array( 'status' => 404 )
+						[ 'status' => 404 ]
 					);
 					continue;
 				}
 
 				$response = $this->trigger_github_action_for_pr_creation(
-					$github_repo,
+					$gh_repo,
 					'production',
 					$slug,
 					$plugin_version,
@@ -541,24 +539,25 @@ class Workflow_Controller extends Abstract_REST_Controller {
 				if ( is_wp_error( $response ) ) {
 					$errors[] = $response;
 				} else {
-					$output[] = array(
+					$output[] = [
 						'site'     => $site,
 						'action'   => $action,
 						'slug'     => $slug,
 						'status'   => 'success',
 						'response' => $response,
-					);
+					];
 				}
 			}
 		}
 
 		return rest_ensure_response(
-			array(
-				'success' => count( $errors ) === 0,
-				'message' => __( 'Plugin action executed successfully.', 'oneupdate' ),
-				'output'  => $output,
-				'errors'  => $errors,
-			)
+			[
+				'success'     => count( $errors ) === 0,
+				'message'     => __( 'Plugin action executed successfully.', 'oneupdate' ),
+				'output'      => $output,
+				'errors'      => $errors,
+				'plugin_type' => $plugin_type,
+			]
 		);
 	}
 
@@ -572,25 +571,25 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	public function apply_private_plugins_to_selected_sites( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$body         = $request->get_body();
 		$decoded_body = json_decode( $body, true );
-		$sites_data   = $decoded_body['sites'] ?? array();
-		$plugins      = $decoded_body['plugins'] ?? array();
+		$sites_data   = $decoded_body['sites'] ?? [];
+		$plugins      = $decoded_body['plugins'] ?? [];
 		if ( ! is_array( $sites_data ) || ! is_array( $plugins ) ) {
-			return new \WP_Error( 'invalid_data', __( 'Invalid data provided.', 'oneupdate' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'invalid_data', __( 'Invalid data provided.', 'oneupdate' ), [ 'status' => 400 ] );
 		}
 
 		// for each sites, apply the plugins.
-		$results = array();
+		$results = [];
 		foreach ( $sites_data as $site_data ) {
 			$site_name = $site_data['name'] ?? '';
 			$site_url  = $site_data['url'] ?? '';
-			$repo_url  = $site_data['github_repo'] ?? '';
+			$repo_url  = $site_data['gh_repo'] ?? '';
 
 			if ( empty( $site_name ) || empty( $site_url ) || empty( $repo_url ) ) {
-				$results[] = array(
+				$results[] = [
 					'site'    => $site_name,
 					'status'  => 'error',
 					'message' => __( 'Invalid site data provided.', 'oneupdate' ),
-				);
+				];
 				continue;
 			}
 			foreach ( $plugins as $private_plugin ) {
@@ -604,10 +603,10 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		}
 
 		return rest_ensure_response(
-			array(
+			[
 				'success' => true,
 				'results' => $results,
-			)
+			]
 		);
 	}
 
@@ -625,7 +624,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		$github_token = Plugin_Settings::get_github_token();
 
 		if ( empty( $github_token ) ) {
-			return new \WP_Error( 'no_github_token', __( 'GitHub token not found.', 'oneupdate' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'no_github_token', __( 'GitHub token not found.', 'oneupdate' ), [ 'status' => 404 ] );
 		}
 
 		$action_url = "https://api.github.com/repos/{$repo}/actions/workflows/oneupdate-pr-creation-private.yml/dispatches";
@@ -633,32 +632,32 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		// pass the zip file as input to the GitHub action.
 		$response = wp_safe_remote_post(
 			$action_url,
-			array(
-				'headers' => array(
+			[
+				'headers' => [
 					'Authorization' => 'Bearer ' . $github_token,
 					'Accept'        => 'application/vnd.github.v3+json',
 					'User-Agent'    => 'OneUpdate Plugin Loader',
-				),
+				],
 				'timeout' => 30, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
 				'body'    => wp_json_encode(
-					array(
+					[
 						'ref'    => $branch,
-						'inputs' => array(
+						'inputs' => [
 							'zip_url' => $private_plugin,
-						),
-					)
+						],
+					]
 				),
-			),
+			],
 		);
 
 		if ( is_wp_error( $response ) || 204 !== wp_remote_retrieve_response_code( $response ) ) {
 			return new \WP_Error(
 				'github_action_error',
 				__( 'Failed to trigger GitHub action for PR creation.', 'oneupdate' ),
-				array(
+				[
 					'status' => 500,
 					'error'  => is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_code( $response ),
-				)
+				]
 			);
 		}
 
@@ -669,10 +668,10 @@ class Workflow_Controller extends Abstract_REST_Controller {
 			return new \WP_Error(
 				'github_action_error',
 				__( 'Failed to trigger GitHub action for PR creation.', 'oneupdate' ),
-				array(
+				[
 					'status' => 500,
 					'error'  => is_wp_error( $response ) ? $response->get_error_message() : $response_code,
-				)
+				]
 			);
 		}
 
@@ -681,7 +680,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		// Try to get the workflow run ID.
 		$run_id = $this->get_latest_workflow_run_id( $repo, 'oneupdate-pr-creation-private.yml' );
 
-		return array(
+		return [
 			'success'       => true,
 			'repo'          => $repo,
 			'branch'        => $branch,
@@ -690,23 +689,23 @@ class Workflow_Controller extends Abstract_REST_Controller {
 			'workflow_url'  => "https://github.com/{$repo}/actions/workflows/oneupdate-pr-creation-private.yml",
 			'run_id'        => $run_id,
 			'run_url'       => $run_id ? "https://github.com/{$repo}/actions/runs/{$run_id}" : null,
-			'name'      => $site_name,
-		);
+			'name'          => $site_name,
+		];
 	}
 
 	/**
 	 * Get onpress plugins options.
 	 *
-	 * @return WP_REST_Response|\WP_Error
+	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function get_oneupdate_plugins_options(): \WP_REST_Response|\WP_Error {
 		$options = VIP_Activation::get_plugins_options();
 
 		return rest_ensure_response(
-			array(
+			[
 				'success' => true,
 				'options' => $options,
-			)
+			]
 		);
 	}
 
@@ -720,14 +719,14 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	public function update_oneupdate_plugins_options( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$body            = $request->get_body();
 		$decoded_body    = json_decode( $body, true );
-		$request_options = $decoded_body['options'] ?? array();
+		$request_options = $decoded_body['options'] ?? [];
 
 		if ( ! is_array( $request_options ) ) {
-			return new \WP_Error( 'invalid_options', __( 'Invalid options provided.', 'oneupdate' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'invalid_options', __( 'Invalid options provided.', 'oneupdate' ), [ 'status' => 400 ] );
 		}
 
 		// from request options get plugins and plugin type.
-		$plugins     = $request_options['plugins'] ?? array();
+		$plugins     = $request_options['plugins'] ?? [];
 		$plugin_type = $request_options['plugin_type'] ?? 'add_update';
 
 		// oneupdate_plugin_activate options.
@@ -736,32 +735,35 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		// if plugin type is deactivate/remove then remove the plugin from options.
 		if ( 'deactivate' === $plugin_type || 'remove' === $plugin_type ) {
 			// get active plugins options.
-			$active_plugins = get_option( self::ACTIVE_PLUGINS, array() );
+			$active_plugins = get_option( self::ACTIVE_PLUGINS, [] );
 			// remove the plugins from active plugins options.
 			foreach ( $plugins as $plugin ) {
 				if ( in_array( $plugin, $active_plugins, true ) ) {
 					deactivate_plugins( $plugin, true );
-					$active_plugins = array_diff( $active_plugins, array( $plugin ) );
+					$active_plugins = array_diff( $active_plugins, [ $plugin ] );
 				}
-				if ( isset( $oneupdate_plugin_activate[ $plugin ] ) ) {
-					unset( $oneupdate_plugin_activate[ $plugin ] );
+				if ( ! isset( $oneupdate_plugin_activate[ $plugin ] ) ) {
+					continue;
 				}
+
+				unset( $oneupdate_plugin_activate[ $plugin ] );
 			}
 			// update the active plugins options.
 			update_option( self::ACTIVE_PLUGINS, $active_plugins, false );
-
 		}
 		if ( 'activate' === $plugin_type ) {
 			// if plugin type is activate then activate the plugins.
-			$active_plugins = get_option( self::ACTIVE_PLUGINS, array() );
+			$active_plugins = get_option( self::ACTIVE_PLUGINS, [] );
 			foreach ( $plugins as $plugin ) {
 				if ( ! in_array( $plugin, $active_plugins, true ) ) {
 					activate_plugin( $plugin, '', false, true );
 					$active_plugins[] = $plugin;
 				}
-				if ( ! isset( $oneupdate_plugin_activate[ $plugin ] ) ) {
-					$oneupdate_plugin_activate[ $plugin ] = $plugin;
+				if ( isset( $oneupdate_plugin_activate[ $plugin ] ) ) {
+					continue;
 				}
+
+				$oneupdate_plugin_activate[ $plugin ] = $plugin;
 			}
 		}
 
@@ -776,11 +778,11 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		}
 
 		return rest_ensure_response(
-			array(
+			[
 				'success'     => true,
 				'plugin_type' => $plugin_type,
 				'plugins'     => $plugins,
-			)
+			]
 		);
 	}
 
@@ -795,20 +797,20 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		$cached_plugins = get_transient( Cache::TRANSIENT_GET_PLUGINS );
 		if ( false !== $cached_plugins ) {
 			return rest_ensure_response(
-				array(
+				[
 					'success' => true,
 					'plugins' => json_decode( $cached_plugins ),
-				)
+				]
 			);
 		}
 
 		$reconstructed_plugins = Cache::build_plugins_transient();
 
 		return rest_ensure_response(
-			array(
+			[
 				'success' => true,
 				'plugins' => $reconstructed_plugins,
-			)
+			]
 		);
 	}
 
@@ -822,20 +824,20 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	public function apply_plugins_to_selected_sites( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$body         = $request->get_body();
 		$decoded_body = json_decode( $body, true );
-		$sites        = $decoded_body['sites'] ?? array();
-		$plugins      = $decoded_body['plugins'] ?? array();
+		$sites        = $decoded_body['sites'] ?? [];
+		$plugins      = $decoded_body['plugins'] ?? [];
 		$plugin_type  = $decoded_body['plugin_type'] ?? 'add_update';
-		$created_pr   = array();
-		$error_logs   = array();
+		$created_pr   = [];
+		$error_logs   = [];
 
 		foreach ( $sites as $site ) {
-			if ( ! isset( $site['github_repo'] ) ) {
-				return new \WP_Error( 'invalid_site_data', __( 'Invalid site data provided.', 'oneupdate' ), array( 'status' => 400 ) );
+			if ( ! isset( $site['gh_repo'] ) ) {
+				return new \WP_Error( 'invalid_site_data', __( 'Invalid site data provided.', 'oneupdate' ), [ 'status' => 400 ] );
 			}
 
 			foreach ( $plugins as $plugin ) {
 				// Create GitHub PR for each plugin.
-				$pr_response  = $this->trigger_github_action_for_pr_creation( $site['github_repo'], 'production', $plugin['slug'], $plugin['version'], $plugin_type, $site['name'] ?? '' );
+				$pr_response  = $this->trigger_github_action_for_pr_creation( $site['gh_repo'], 'production', $plugin['slug'], $plugin['version'], $plugin_type, $site['name'] ?? '' );
 				$created_pr[] = $pr_response;
 			}
 			// set oneupdate_plugins_options for all sites.
@@ -853,45 +855,47 @@ class Workflow_Controller extends Abstract_REST_Controller {
 			}
 
 			// create comma separated string array of plugins.
-			$slug_array_of_plugins = array();
+			$slug_array_of_plugins = [];
 			foreach ( $plugins as $plugin ) {
 				$slug_array_of_plugins[] = $plugin['slug'];
 			}
 
 			$response = wp_remote_post(
 				$request_postfix,
-				array(
-					'headers' => array(
-						'Content-Type'              => 'application/json',
+				[
+					'headers' => [
+						'Content-Type'      => 'application/json',
 						'X-OneUpdate-Token' => $token,
-					),
+					],
 					'body'    => wp_json_encode(
-						array(
-							'options' => array(
+						[
+							'options' => [
 								'plugins'     => $slug_array_of_plugins,
 								'plugin_type' => $plugin_type,
-							),
-						)
+							],
+						]
 					),
 					'timeout' => 30, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
-				)
+				]
 			);
-			if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
-				$error_logs[] = array(
-					'site'     => $site,
-					'error'    => is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_code( $response ),
-					'status'   => wp_remote_retrieve_response_code( $response ),
-					'response' => $response,
-				);
+			if ( ! is_wp_error( $response ) && wp_remote_retrieve_response_code( $response ) === 200 ) {
+				continue;
 			}
+
+			$error_logs[] = [
+				'site'     => $site,
+				'error'    => is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_code( $response ),
+				'status'   => wp_remote_retrieve_response_code( $response ),
+				'response' => $response,
+			];
 		}
 
 		return rest_ensure_response(
-			array(
+			[
 				'success'     => count( $error_logs ) === 0,
 				'created_prs' => $created_pr,
 				'logs'        => $error_logs,
-			)
+			]
 		);
 	}
 
@@ -911,7 +915,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		$github_token = Plugin_Settings::get_github_token();
 
 		if ( empty( $github_token ) ) {
-			return new \WP_Error( 'no_github_token', __( 'GitHub token not found.', 'oneupdate' ), array( 'status' => 404 ) );
+			return new \WP_Error( 'no_github_token', __( 'GitHub token not found.', 'oneupdate' ), [ 'status' => 404 ] );
 		}
 
 		// construct plugin zip from plugin slug and version.
@@ -922,32 +926,32 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		// pass the zip file as input to the GitHub action.
 		$response = wp_safe_remote_post(
 			$action_url,
-			array(
-				'headers' => array(
+			[
+				'headers' => [
 					'Authorization' => 'Bearer ' . $github_token,
 					'Accept'        => 'application/vnd.github.v3+json',
 					'User-Agent'    => 'OneUpdate Plugin Loader',
-				),
+				],
 				'timeout' => 30, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
 				'body'    => wp_json_encode(
-					array(
+					[
 						'ref'    => $branch,
-						'inputs' => array(
+						'inputs' => [
 							'plugin_slug' => $plugin_slug,
 							'version'     => $version,
 							'zip_url'     => $wordpress_plugin_api,
 							'plugin_type' => $plugin_type,
-						),
-					)
+						],
+					]
 				),
-			),
+			],
 		);
 
 		if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 204 ) {
 			return new \WP_Error(
 				'github_action_error',
 				__( 'Failed to trigger GitHub action for PR creation.', 'oneupdate' ),
-				array(
+				[
 					'status'               => 500,
 					'plugin'               => $plugin_slug,
 					'version'              => $version,
@@ -957,7 +961,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 					'wordpress_plugin_api' => $wordpress_plugin_api,
 					'response'             => $response,
 					'error'                => is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_code( $response ),
-				)
+				]
 			);
 		}
 
@@ -968,7 +972,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 			return new \WP_Error(
 				'github_action_error',
 				__( 'Failed to trigger GitHub action for PR creation.', 'oneupdate' ),
-				array(
+				[
 					'status'      => 500,
 					'plugin'      => $plugin_slug,
 					'version'     => $version,
@@ -976,7 +980,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 					'repo'        => $repo,
 					'plugin_type' => $plugin_type,
 					'error'       => is_wp_error( $response ) ? $response->get_error_message() : $response_code,
-				)
+				]
 			);
 		}
 
@@ -985,7 +989,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		// Try to get the workflow run ID.
 		$run_id = $this->get_latest_workflow_run_id( $repo, 'oneupdate-pr-creation.yml' );
 
-		return array(
+		return [
 			'success'       => true,
 			'repo'          => $repo,
 			'branch'        => $branch,
@@ -996,8 +1000,8 @@ class Workflow_Controller extends Abstract_REST_Controller {
 			'workflow_url'  => "https://github.com/{$repo}/actions/workflows/oneupdate-pr-creation.yml",
 			'run_id'        => $run_id,
 			'run_url'       => $run_id ? "https://github.com/{$repo}/actions/runs/{$run_id}" : null,
-			'name'      => $site_name,
-		);
+			'name'          => $site_name,
+		];
 	}
 
 	/**
@@ -1019,14 +1023,14 @@ class Workflow_Controller extends Abstract_REST_Controller {
 
 		$response = wp_safe_remote_get(
 			$runs_url,
-			array(
-				'headers' => array(
+			[
+				'headers' => [
 					'Authorization' => 'Bearer ' . $github_token,
 					'Accept'        => 'application/vnd.github.v3+json',
 					'User-Agent'    => 'OneUpdate Plugin Loader',
-				),
+				],
 				'timeout' => 15, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
-			)
+			]
 		);
 
 		if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {

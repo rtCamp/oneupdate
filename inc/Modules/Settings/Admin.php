@@ -29,7 +29,7 @@ class Admin implements Registrable {
 	 */
 	public const SCREEN_ID = self::MENU_SLUG . '-settings';
 
-    /**
+	/**
 	 * Path to the SVG logo for the menu.
 	 *
 	 * @todo Replace with actual logo.
@@ -44,14 +44,14 @@ class Admin implements Registrable {
 		add_action( 'admin_footer', [ $this, 'inject_site_selection_modal' ] );
 		add_filter( 'plugin_action_links_' . ONEUPDATE_PLUGIN_BASENAME, [ $this, 'add_action_links' ], 2 );
 		add_filter( 'admin_body_class', [ $this, 'add_body_classes' ] );
-        add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 25 );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ], 25 );
 
-        add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
 		add_action( 'admin_menu', [ $this, 'add_submenu' ], 20 ); // 20 priority to make sure settings page respect its position.
 		add_action( 'admin_menu', [ $this, 'remove_default_submenu' ], 999 );
 	}
 
-    /**
+	/**
 	 * Add admin menu.
 	 */
 	public function add_admin_menu(): void {
@@ -108,7 +108,7 @@ class Admin implements Registrable {
 	 * Inject site selection modal into the admin footer.
 	 */
 	public function inject_site_selection_modal(): void {
-        if ( ! $this->should_display_site_selection_modal() ) {
+		if ( ! $this->should_display_site_selection_modal() ) {
 			return;
 		}
 
@@ -148,6 +148,7 @@ class Admin implements Registrable {
 	 *
 	 * @param string $classes Existing body classes.
 	 */
+
 	/**
 	 * Add body classes for the admin area.
 	 *
@@ -168,10 +169,10 @@ class Admin implements Registrable {
 	}
 
 		/**
-	 * Add body class if the modal is going to be shown.
-	 *
-	 * @param string $classes        Existing body classes.
-	 */
+		 * Add body class if the modal is going to be shown.
+		 *
+		 * @param string $classes        Existing body classes.
+		 */
 	private function add_body_class_for_modal( string $classes ): string {
 		if ( ! $this->should_display_site_selection_modal() ) {
 			return $classes;
@@ -198,36 +199,36 @@ class Admin implements Registrable {
 		return $classes;
 	}
 
-    /**
+	/**
 	 * Enqueue admin scripts.
 	 *
 	 * @param string $hook Current admin page hook.
 	 */
 	public function enqueue_scripts( string $hook ): void {
 
-        if ( strpos( $hook, self::SCREEN_ID ) !== false ) {
-			wp_localize_script( 
-                Assets::SETTINGS_SCRIPT_HANDLE,
-                 'OneUpdateSettings',
-                 array_merge(
-                    Assets::get_localized_data(),
-                    [
-                        'GitHubRepoToken' => '', // @todo add later
-                    ]
-                 )
-                );
+		if ( strpos( $hook, self::SCREEN_ID ) !== false ) {
+			wp_localize_script(
+				Assets::SETTINGS_SCRIPT_HANDLE,
+				'OneUpdateSettings',
+				array_merge(
+					Assets::get_localized_data(),
+					[
+						'GitHubRepoToken' => '', // @todo add later
+					]
+				)
+			);
 			wp_enqueue_script( Assets::SETTINGS_SCRIPT_HANDLE );
 		}
 
-		if( ! $this->should_display_site_selection_modal() ) {
-            return;
-        }
+		if ( ! $this->should_display_site_selection_modal() ) {
+			return;
+		}
 
 		// Enqueue the onboarding modal.
 		$this->enqueue_onboarding_scripts();
 	}
 
-    /**
+	/**
 	 * Enqueue scripts and styles for the onboarding screen.
 	 */
 	private function enqueue_onboarding_scripts(): void {
@@ -249,7 +250,7 @@ class Admin implements Registrable {
 		wp_enqueue_style( Assets::ONBOARDING_SCRIPT_HANDLE );
 	}
 
-    /**
+	/**
 	 * Whether to display the site selection modal.
 	 */
 	private function should_display_site_selection_modal(): bool {
@@ -257,8 +258,8 @@ class Admin implements Registrable {
 		if ( ! $current_screen || ( 'plugins' !== $current_screen->base && ! str_contains( $current_screen->id, self::MENU_SLUG ) ) ) {
 			return false;
 		}
-        
-        // Bail if the site type is already set.
+
+		// Bail if the site type is already set.
 		return empty( Settings::get_site_type() );
 	}
 }

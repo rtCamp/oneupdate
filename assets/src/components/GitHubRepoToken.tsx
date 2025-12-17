@@ -1,26 +1,26 @@
 /**
  * WordPress dependencies
  */
-import { 
-	Button, 
-	CardBody, 
-	Card, 
-	CardHeader, 
-	TextControl 
+import {
+	Button,
+	CardBody,
+	Card,
+	CardHeader,
+	TextControl,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useState, useCallback, useEffect } from '@wordpress/element';
-import { NoticeType } from '@/admin/settings/page';
+import type { NoticeType } from '@/admin/settings/page';
 
 const API_NAMESPACE = window.OneUpdateSettings.restUrl + '/oneupdate/v1';
 const NONCE = window.OneUpdateSettings.restNonce;
 
-const GitHubRepoToken = ( 
-	{ setNotice, fetchAllAvailableGitHubRepos } : 
+const GitHubRepoToken = (
+	{ setNotice, fetchAllAvailableGitHubRepos } :
 	{
 		setNotice: ( notice: NoticeType ) => void,
 		fetchAllAvailableGitHubRepos: () => Promise<void>,
-	} 
+	},
 ) => {
 	const [ repoToken, setRepoToken ] = useState( '' );
 

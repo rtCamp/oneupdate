@@ -21,7 +21,7 @@ import { __ } from '@wordpress/i18n';
 import type { NoticeType } from '@/admin/settings/page';
 
 const API_NAMESPACE = window.OneUpdateSettings.restUrl + '/oneupdate/v1';
-const NONCE = window.OneUpdateSettings.restNonce as string;
+const NONCE = window.OneUpdateSettings.restNonce;
 const API_KEY = window.OneUpdateSettings.api_key;
 
 const SiteSettings = () => {

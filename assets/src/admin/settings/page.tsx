@@ -26,14 +26,14 @@ export interface BrandSite {
 	name: string;
 	url: string;
 	api_key: string;
-    github_repo: string;
+    gh_repo: string;
 }
 
 export const defaultBrandSite: BrandSite = {
 	name: '',
 	url: '',
 	api_key: '',
-    github_repo: '',
+	gh_repo: '',
 };
 
 export type EditingIndex = number | null;
@@ -55,31 +55,31 @@ const SettingsPage = () => {
 	const [ formData, setFormData ] = useState< BrandSite >( defaultBrandSite );
 	const [ notice, setNotice ] = useState< NoticeType | null >( null );
 
-    const [ allGitHubRepos, setAllGitHubRepos ] = useState( [] );
-        const fetchAllAvailableGitHubRepos = useCallback( async () => {
-            const response = await fetch(
-                `${ API_NAMESPACE }/github-repos`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-WP-NONCE': NONCE,
-                    },
-                },
-            );
-            const data = await response.json();
-            if ( data?.repos ) {
-                setAllGitHubRepos( data.repos );
-            } else {
-                setAllGitHubRepos( [] );
-            }
-        }, [] );
-    
-        useEffect( () => {
-            if ( SITE_TYPE === 'governing-site' ) {
-                fetchAllAvailableGitHubRepos();
-            }
-        }, [ SITE_TYPE ] );
+	const [ allGitHubRepos, setAllGitHubRepos ] = useState( [] );
+	const fetchAllAvailableGitHubRepos = useCallback( async () => {
+		const response = await fetch(
+			`${ API_NAMESPACE }/github-repos`,
+			{
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-WP-NONCE': NONCE,
+				},
+			},
+		);
+		const data = await response.json();
+		if ( data?.repos ) {
+			setAllGitHubRepos( data.repos );
+		} else {
+			setAllGitHubRepos( [] );
+		}
+	}, [] );
+
+	useEffect( () => {
+		if ( SITE_TYPE === 'governing-site' ) {
+			fetchAllAvailableGitHubRepos();
+		}
+	}, [ SITE_TYPE ] );
 
 	useEffect( () => {
 		apiFetch<{ shared_sites?: BrandSite[] }>( {
@@ -208,7 +208,7 @@ const SettingsPage = () => {
 					editing={ editingIndex !== null }
 					sites={ sites }
 					originalData={ editingIndex !== null ? sites[ editingIndex ] : undefined }
-                    allGitHubRepos={ allGitHubRepos }
+					allGitHubRepos={ allGitHubRepos }
 				/>
 			) }
 		</>

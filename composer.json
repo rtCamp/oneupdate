@@ -42,13 +42,7 @@
 	"autoload": {
 		"psr-4": {
 			"OneUpdate\\": "inc/"
-		},
-		"classmap": [
-			"inc/"
-		],
-		"files": [
-			"inc/helpers/custom-functions.php"
-		]
+		}
 	},
 	"require": {
 		"php": "^8.1",

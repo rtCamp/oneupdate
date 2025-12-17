@@ -24,7 +24,7 @@ parameters:
 				- uninstall.php
 				- inc/
 		scanDirectories:
-				- vendor/woocommerce/action-scheduler
+				- vendor/aws
 		excludePaths:
 			analyse:
 				- tests/
