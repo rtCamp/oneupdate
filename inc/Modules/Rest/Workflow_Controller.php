@@ -309,7 +309,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 					continue;
 				}
 
-				$github_response['name'] = $site;
+				$github_response['name'] = $oneupdate_sites[ $site ]['name'] ?? '';
 				$response[]              = [
 					'github_response' => $github_response,
 				];
@@ -375,6 +375,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 						'headers' => [
 							'Content-Type'      => 'application/json',
 							'X-OneUpdate-Token' => $api_key,
+							'Origin'            => get_site_url(),
 						],
 						'body'    => wp_json_encode(
 							[
@@ -850,6 +851,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 					'headers' => [
 						'Content-Type'      => 'application/json',
 						'X-OneUpdate-Token' => $token,
+						'Origin'            => get_site_url(),
 					],
 					'body'    => wp_json_encode(
 						[
