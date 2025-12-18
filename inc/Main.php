@@ -28,7 +28,7 @@ final class Main {
 		Modules\Core\DB::class,
 		Modules\Core\Rest::class,
 
-		Modules\Jobs\Schedular::class,
+		Modules\Jobs\Scheduler::class,
 
 		Modules\Plugin\Admin::class,
 		Modules\Plugin\Cache::class,

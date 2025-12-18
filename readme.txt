@@ -132,8 +132,8 @@ Initial release of OneUpdate. Perfect for enterprises managing multiple WordPres
 
 == Requirements ==
 
-* WordPress 6.5 or higher
-* PHP 7.4 or higher
+* WordPress 6.8 or higher
+* PHP 8.1 or higher
 * Sites managed through CI/CD pipelines (GitHub/GitLab/Bitbucket)
 * GitHub PAT token with repository write access
 * S3 credentials for private plugin management

@@ -41,11 +41,11 @@ final class Encryptor {
 	 *
 	 * @param string $value The value to encrypt.
 	 *
-	 * @return string|bool The encrypted value.
+	 * @return string|false The encrypted value.
 	 *
 	 * @throws \RuntimeException When dependencies are missing or encryption fails.
 	 */
-	public static function encrypt( string $value ): string|bool {
+	public static function encrypt( string $value ): string|false {
 		$key = self::derive_key();
 		$iv  = random_bytes( self::IV_LENGTH );
 
@@ -63,11 +63,11 @@ final class Encryptor {
 	 *
 	 * @param string $value The value to decrypt.
 	 *
-	 * @return string|bool The decrypted value.
+	 * @return string|false The decrypted value.
 	 *
 	 * @throws \RuntimeException When dependencies are missing or the payload is invalid.
 	 */
-	public static function decrypt( string $value ): string|bool {
+	public static function decrypt( string $value ): string|false {
 		$decoded = base64_decode( $value, true );
 		if ( false === $decoded || strlen( $decoded ) < self::IV_LENGTH + self::TAG_LENGTH ) {
 			return false;

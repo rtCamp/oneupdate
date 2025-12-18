@@ -98,9 +98,9 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 		$gh_owner     = sanitize_text_field( $request['owner'] );
 		$gh_repo      = sanitize_text_field( $request['repo'] );
 		$pr_number    = filter_var( $request->get_param( 'pr_number' ), FILTER_VALIDATE_INT ) ?? 0;
-		$page         = filter_var( $request->get_param( 'page' ), FILTER_VALIDATE_INT ) ?? 1;
+		$page         = filter_var( $request->get_param( 'page' ), FILTER_VALIDATE_INT ) ?: 1;
 		$pr_state     = sanitize_text_field( $request->get_param( 'state' ) ) ?? 'all';
-		$per_page     = filter_var( $request->get_param( 'per_page' ), FILTER_VALIDATE_INT ) ?? 25;
+		$per_page     = filter_var( $request->get_param( 'per_page' ), FILTER_VALIDATE_INT ) ?: 25;
 		$search_query = sanitize_text_field( $request->get_param( 'search_query' ) ) ?? '';
 
 		// if pr_number & search query is not provided, get all pull requests.
@@ -175,8 +175,8 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 			200
 		);
 
-		$pull_requests_response->header( 'X-WP-Total', $total_count );
-		$pull_requests_response->header( 'X-WP-TotalPages', $total_pages );
+		$pull_requests_response->header( 'X-WP-Total', (string) $total_count );
+		$pull_requests_response->header( 'X-WP-TotalPages', (string) $total_pages );
 
 		return $pull_requests_response;
 	}
@@ -279,8 +279,8 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 			200
 		);
 
-		$response_data->header( 'X-WP-Total', $total_count );
-		$response_data->header( 'X-WP-TotalPages', $total_pages );
+		$response_data->header( 'X-WP-Total', (string) $total_count );
+		$response_data->header( 'X-WP-TotalPages', (string) $total_pages );
 
 		return $response_data;
 	}
@@ -340,8 +340,8 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 			200
 		);
 
-		$response_data->header( 'X-WP-Total', $total_count );
-		$response_data->header( 'X-WP-TotalPages', $total_pages );
+		$response_data->header( 'X-WP-Total', (string) $total_count );
+		$response_data->header( 'X-WP-TotalPages', (string) $total_pages );
 
 		return $response_data;
 	}
@@ -533,31 +533,26 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 	 *
 	 * @param string $endpoint GitHub API endpoint.
 	 *
-	 * @return array|\WP_Error|\WP_REST_Response
+	 * @return array|\WP_Error Response array or WP_Error on failure.
 	 */
-	private static function gh_api_request( string $endpoint ): array|\WP_Error|WP_REST_Response {
+	private static function gh_api_request( string $endpoint ): array|\WP_Error {
 		$gh_token = Plugin_Settings::get_github_token();
 
 		if ( empty( $gh_token ) ) {
-			return new WP_REST_Response(
+			return new \WP_Error(
+				401,
+				__( 'GitHub token not configured.', 'oneupdate' ),
 				[
 					'success' => false,
 					'message' => __( 'GitHub token not configured.', 'oneupdate' ),
 				],
-				401
 			);
 		}
 
 		return wp_safe_remote_get(
 			$endpoint,
 			[
-				'headers'     => [
-					'Authorization'   => "Bearer {$gh_token}",
-					'Accept'          => 'application/vnd.github.v3+json',
-					'User-Agent'      => __( 'OneUpdate Plugin Loader', 'oneupdate' ),
-					'Content-Type'    => 'application/json',
-					'Accept-Encoding' => 'identity',
-				],
+				'headers'     => self::get_github_headers( $gh_token ),
 				'httpversion' => '1.1',
 				'timeout'     => 15, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
 			],

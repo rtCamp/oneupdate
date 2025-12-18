@@ -159,6 +159,9 @@ final class Cache implements Registrable {
 					continue;
 				}
 
+				if ( ! property_exists( $update, 'update' ) ) {
+					continue;
+				}
 				$plugins[ $slug ]['update'] = $update->update;
 			}
 		}
@@ -174,7 +177,7 @@ final class Cache implements Registrable {
 		}
 
 		// set the cache for one hour.
-		set_transient( self::TRANSIENT_GET_PLUGINS, wp_json_encode( $reconstructed_plugins ), HOUR_IN_SECONDS );
+		set_transient( self::TRANSIENT_GET_PLUGINS, wp_json_encode( $reconstructed_plugins ) ?: '', HOUR_IN_SECONDS );
 
 		// Return the reconstructed plugins array for rest response.
 		return $reconstructed_plugins;
@@ -208,7 +211,7 @@ final class Cache implements Registrable {
 		$reconstructed_plugins[ $plugin_slug ]['is_active'] = $is_activation ? true : ( $is_deactivation ? false : is_plugin_active( $original_plugin_slug ) );
 
 		// set the cache for one hour.
-		set_transient( self::TRANSIENT_GET_PLUGINS, wp_json_encode( $reconstructed_plugins ), HOUR_IN_SECONDS );
+		set_transient( self::TRANSIENT_GET_PLUGINS, wp_json_encode( $reconstructed_plugins ) ?: '', HOUR_IN_SECONDS );
 	}
 
 	/**
@@ -219,7 +222,7 @@ final class Cache implements Registrable {
 	 *
 	 * @return void
 	 */
-	public static function hello_dolly_plugin( bool $is_activation, bool $is_deactivation ): void {
+	private static function hello_dolly_plugin( bool $is_activation, bool $is_deactivation ): void {
 		$original_plugin_slug = 'hello.php';
 		$existing_transient   = get_transient( self::TRANSIENT_GET_PLUGINS );
 		if ( ! $existing_transient ) {
@@ -231,6 +234,6 @@ final class Cache implements Registrable {
 		$reconstructed_plugins[ $original_plugin_slug ]['is_active'] = $is_activation ? true : ( $is_deactivation ? false : is_plugin_active( $original_plugin_slug ) );
 
 		// set the cache for one hour.
-		set_transient( self::TRANSIENT_GET_PLUGINS, wp_json_encode( $reconstructed_plugins ), HOUR_IN_SECONDS );
+		set_transient( self::TRANSIENT_GET_PLUGINS, wp_json_encode( $reconstructed_plugins ) ?: '', HOUR_IN_SECONDS );
 	}
 }

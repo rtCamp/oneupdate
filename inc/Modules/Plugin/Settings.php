@@ -116,12 +116,27 @@ final class Settings implements Registrable {
 		if ( empty( $credentials ) || ! is_array( $credentials ) ) {
 			return [];
 		}
+
+		// Decrypt access key.
+		$access_key = '';
+		if ( ! empty( $credentials['accessKey'] ) ) {
+			$decrypted  = Encryptor::decrypt( $credentials['accessKey'] );
+			$access_key = is_string( $decrypted ) ? $decrypted : '';
+		}
+
+		// Decrypt secret key.
+		$secret_key = '';
+		if ( ! empty( $credentials['secretKey'] ) ) {
+			$decrypted  = Encryptor::decrypt( $credentials['secretKey'] );
+			$secret_key = is_string( $decrypted ) ? $decrypted : '';
+		}
+
 		return [
-			'accessKey'  => isset( $credentials['accessKey'] ) ? Encryptor::decrypt( $credentials['accessKey'] ) : '',
-			'secretKey'  => isset( $credentials['secretKey'] ) ? Encryptor::decrypt( $credentials['secretKey'] ) : '',
-			'bucketName' => isset( $credentials['bucketName'] ) ? $credentials['bucketName'] : '',
-			'region'     => isset( $credentials['region'] ) ? $credentials['region'] : '',
-			'endpoint'   => isset( $credentials['endpoint'] ) ? $credentials['endpoint'] : '',
+			'accessKey'  => $access_key,
+			'secretKey'  => $secret_key,
+			'bucketName' => isset( $credentials['bucketName'] ) ? (string) $credentials['bucketName'] : '',
+			'region'     => isset( $credentials['region'] ) ? (string) $credentials['region'] : '',
+			'endpoint'   => isset( $credentials['endpoint'] ) ? (string) $credentials['endpoint'] : '',
 		];
 	}
 
@@ -152,7 +167,8 @@ final class Settings implements Registrable {
 		if ( empty( $token ) ) {
 			return '';
 		}
-		return Encryptor::decrypt( $token );
+		$decrypted_token = Encryptor::decrypt( $token );
+		return false === $decrypted_token ? '' : $decrypted_token;
 	}
 
 	/**

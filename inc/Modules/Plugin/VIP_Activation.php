@@ -33,6 +33,16 @@ final class VIP_Activation implements Registrable {
 	 * {@inheritDoc}
 	 */
 	public function register_hooks(): void {
+		// This will be triggered on plugins_loaded action.
+		self::maybe_handle_vip_activation();
+	}
+
+	/**
+	 * Handle VIP plugin activation.
+	 *
+	 * @return void
+	 */
+	private static function maybe_handle_vip_activation(): void {
 		if ( ! function_exists( 'wpcom_vip_load_plugin' ) ) {
 			return; // Ensure the function exists before proceeding.
 		}

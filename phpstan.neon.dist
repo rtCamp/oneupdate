@@ -15,7 +15,7 @@ parameters:
 		# Configuration
 		level: 8
 		phpVersion:
-			min: 80000
+			min: 80100
 			max: 80400
 		bootstrapFiles:
 				- oneupdate.php

@@ -33,6 +33,19 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	 */
 	protected $namespace = self::NAMESPACE;
 
+
+	/**
+	 * GitHub API headers.
+	 *
+	 * @var array<string, string>
+	 */
+	protected const GITHUB_API_HEADERS = [
+		'Accept'          => 'application/vnd.github.v3+json',
+		'User-Agent'      => 'OneUpdate Plugin Loader',
+		'Content-Type'    => 'application/json',
+		'Accept-Encoding' => 'identity',
+	];
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -71,10 +84,6 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	 * @return bool
 	 */
 	public function check_api_permissions( $request ): bool {
-		// check if the request is from same site.
-		if ( Settings::is_governing_site() ) {
-			return current_user_can( 'manage_options' );
-		}
 
 		// See if the `X_ONEUPDATE_TOKEN` header is present.
 		$token = $request->get_header( 'X_ONEUPDATE_TOKEN' );
@@ -120,19 +129,6 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	}
 
 	/**
-	 * Build API endpoint URL.
-	 *
-	 * @param string $site_url       The base URL of the site.
-	 * @param string $endpoint       The specific endpoint path.
-	 * @param string $rest_namespace The REST namespace. Default: oneupdate/v1).
-	 *
-	 * @return string Full API endpoint URL.
-	 */
-	protected function build_api_endpoint( string $site_url, string $endpoint, string $rest_namespace = self::NAMESPACE ): string {
-		return esc_url_raw( trailingslashit( $site_url ) ) . '/wp-json/' . $rest_namespace . '/' . ltrim( $endpoint, '/' );
-	}
-
-	/**
 	 * Check if two URLs belong to the same domain.
 	 *
 	 * @param string $url1 First URL.
@@ -140,7 +136,7 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	 *
 	 * @return bool True if both URLs belong to the same domain, false otherwise.
 	 */
-	protected static function is_same_domain( string $url1, string $url2 ): bool {
+	private static function is_same_domain( string $url1, string $url2 ): bool {
 		$parsed_url1 = wp_parse_url( $url1 );
 		$parsed_url2 = wp_parse_url( $url2 );
 
@@ -148,5 +144,18 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 			return false;
 		}
 		return hash_equals( $parsed_url1['host'], $parsed_url2['host'] );
+	}
+
+	/**
+	 * Get GitHub API headers with authorization.
+	 *
+	 * @param string $github_token GitHub personal access token.
+	 * @return array
+	 */
+	protected static function get_github_headers( string $github_token ): array {
+		return array_merge(
+			self::GITHUB_API_HEADERS,
+			[ 'Authorization' => 'Bearer ' . $github_token ]
+		);
 	}
 }

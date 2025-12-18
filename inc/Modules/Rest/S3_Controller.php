@@ -70,7 +70,7 @@ class S3_Controller extends Abstract_REST_Controller {
 	 */
 	public function s3_health_check(): WP_REST_Response|\WP_Error {
 		$s3_credentials = Plugin_Settings::get_s3_credentials();
-		if ( empty( $s3_credentials ) || ! is_array( $s3_credentials ) ) {
+		if ( empty( $s3_credentials ) ) {
 			return new WP_REST_Response( [ 'message' => 'S3 credentials not set' ], 400 );
 		}
 		$s3 = S3::get_s3_instance();
@@ -148,7 +148,7 @@ class S3_Controller extends Abstract_REST_Controller {
 			$insert_result = $wpdb->insert( // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- inserting private plugin data.
 				$table_name,
 				[
-					'file_name'     => $file['name'],
+					'file_name'     => $file['name'] ?? '',
 					's3_key'        => $s3_key,
 					'presigned_url' => $presigned_url,
 					'upload_time'   => current_time( 'mysql' ),
@@ -181,9 +181,12 @@ class S3_Controller extends Abstract_REST_Controller {
 	public function get_s3_upload_history(): WP_REST_Response|\WP_Error {
 		global $wpdb;
 		$table_name = $wpdb->prefix . DB::S3_ZIP_HISTORY_TABLE;
-		$query      = "SELECT * FROM $table_name ORDER BY upload_time DESC";
-		$results    = $wpdb->get_results( $query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.NoCaching -- Static query with no variables, caching not suitable for dynamic upload history.
-
+		$results    = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- Intentional direct query for history.
+			$wpdb->prepare(
+				'SELECT * FROM %i ORDER BY upload_time DESC',
+				$table_name
+			)
+		);
 		return new WP_REST_Response( $results ? $results : [], 200 );
 	}
 }

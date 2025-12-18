@@ -293,7 +293,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 				}
 
 				// Trigger GitHub action to update the plugin.
-				$github_response         = $this->trigger_github_action_for_pr_creation(
+				$github_response = $this->trigger_github_action_for_pr_creation(
 					$gh_repo,
 					'production',
 					$plugin_slug,
@@ -301,6 +301,14 @@ class Workflow_Controller extends Abstract_REST_Controller {
 					'add_update',
 					$oneupdate_sites[ $site ]['name'] ?? ''
 				);
+
+				if ( is_wp_error( $github_response ) ) {
+					$response[] = [
+						'error' => $github_response->get_error_message(),
+					];
+					continue;
+				}
+
 				$github_response['name'] = $site;
 				$response[]              = [
 					'github_response' => $github_response,
@@ -353,13 +361,13 @@ class Workflow_Controller extends Abstract_REST_Controller {
 				$oneupdate_sites = Settings::get_shared_sites();
 				$api_key         = $oneupdate_sites[ $site ]['api_key'] ?? '';
 
-				$request_postfix = '/wp-json/' . self::NAMESPACE . '/oneupdate-plugins-options';
-				// strip the trailing slash from the site URL.
-				$site_url = rtrim( $oneupdate_sites[ $site ]['url'], '/' );
-
 				if ( empty( $api_key ) ) {
 					continue;
 				}
+
+				$request_postfix = '/wp-json/' . self::NAMESPACE . '/oneupdate-plugins-options';
+				// strip the trailing slash from the site URL.
+				$site_url = rtrim( $oneupdate_sites[ $site ]['url'], '/' );
 
 				$response = wp_remote_post(
 					$site_url . $request_postfix,
@@ -375,7 +383,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 									'plugin_type' => $action,
 								],
 							]
-						),
+						) ?: '',
 						'timeout' => 30, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
 					]
 				);
@@ -625,11 +633,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		$response = wp_safe_remote_post(
 			$action_url,
 			[
-				'headers' => [
-					'Authorization' => 'Bearer ' . $github_token,
-					'Accept'        => 'application/vnd.github.v3+json',
-					'User-Agent'    => 'OneUpdate Plugin Loader',
-				],
+				'headers' => self::get_github_headers( $github_token ),
 				'timeout' => 30, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
 				'body'    => wp_json_encode(
 					[
@@ -638,22 +642,11 @@ class Workflow_Controller extends Abstract_REST_Controller {
 							'zip_url' => $private_plugin,
 						],
 					]
-				),
+				) ?: '',
 			],
 		);
 
-		if ( is_wp_error( $response ) || 204 !== wp_remote_retrieve_response_code( $response ) ) {
-			return new \WP_Error(
-				'github_action_error',
-				__( 'Failed to trigger GitHub action for PR creation.', 'oneupdate' ),
-				[
-					'status' => 500,
-					'error'  => is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_code( $response ),
-				]
-			);
-		}
-
-		// If the request was successful, return the response.
+		// Get the response code.
 		$response_code = wp_remote_retrieve_response_code( $response );
 
 		if ( is_wp_error( $response ) || 204 !== $response_code ) {
@@ -662,7 +655,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 				__( 'Failed to trigger GitHub action for PR creation.', 'oneupdate' ),
 				[
 					'status' => 500,
-					'error'  => is_wp_error( $response ) ? $response->get_error_message() : $response_code,
+					'error'  => is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_code( $response ),
 				]
 			);
 		}
@@ -865,7 +858,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 								'plugin_type' => $plugin_type,
 							],
 						]
-					),
+					) ?: '',
 					'timeout' => 30, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
 				]
 			);
@@ -918,11 +911,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		$response = wp_safe_remote_post(
 			$action_url,
 			[
-				'headers' => [
-					'Authorization' => 'Bearer ' . $github_token,
-					'Accept'        => 'application/vnd.github.v3+json',
-					'User-Agent'    => 'OneUpdate Plugin Loader',
-				],
+				'headers' => self::get_github_headers( $github_token ),
 				'timeout' => 30, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
 				'body'    => wp_json_encode(
 					[
@@ -934,11 +923,14 @@ class Workflow_Controller extends Abstract_REST_Controller {
 							'plugin_type' => $plugin_type,
 						],
 					]
-				),
+				) ?: '',
 			],
 		);
 
-		if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 204 ) {
+		// Get response code.
+		$response_code = wp_remote_retrieve_response_code( $response );
+
+		if ( is_wp_error( $response ) || 204 !== $response_code ) {
 			return new \WP_Error(
 				'github_action_error',
 				__( 'Failed to trigger GitHub action for PR creation.', 'oneupdate' ),
@@ -952,25 +944,6 @@ class Workflow_Controller extends Abstract_REST_Controller {
 					'wordpress_plugin_api' => $wordpress_plugin_api,
 					'response'             => $response,
 					'error'                => is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_code( $response ),
-				]
-			);
-		}
-
-		// If the request was successful, return the response.
-		$response_code = wp_remote_retrieve_response_code( $response );
-
-		if ( is_wp_error( $response ) || 204 !== $response_code ) {
-			return new \WP_Error(
-				'github_action_error',
-				__( 'Failed to trigger GitHub action for PR creation.', 'oneupdate' ),
-				[
-					'status'      => 500,
-					'plugin'      => $plugin_slug,
-					'version'     => $version,
-					'branch'      => $branch,
-					'repo'        => $repo,
-					'plugin_type' => $plugin_type,
-					'error'       => is_wp_error( $response ) ? $response->get_error_message() : $response_code,
 				]
 			);
 		}
@@ -1015,11 +988,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 		$response = wp_safe_remote_get(
 			$runs_url,
 			[
-				'headers' => [
-					'Authorization' => 'Bearer ' . $github_token,
-					'Accept'        => 'application/vnd.github.v3+json',
-					'User-Agent'    => 'OneUpdate Plugin Loader',
-				],
+				'headers' => self::get_github_headers( $github_token ),
 				'timeout' => 15, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
 			]
 		);

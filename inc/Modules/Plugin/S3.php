@@ -12,7 +12,7 @@ namespace OneUpdate\Modules\Plugin;
 use Aws\S3\S3Client;
 use OneUpdate\Contracts\Interfaces\Registrable;
 use OneUpdate\Modules\Core\DB;
-use OneUpdate\Modules\Jobs\Schedular;
+use OneUpdate\Modules\Jobs\Scheduler;
 use OneUpdate\Modules\Plugin\Settings as Plugin_Settings;
 use OneUpdate\Modules\Settings\Settings;
 
@@ -30,7 +30,7 @@ final class S3 implements Registrable {
 			return;
 		}
 
-		add_action( Schedular::S3_ZIP_CLEANUP, [ $this, 'zip_cleanup' ] );
+		add_action( Scheduler::S3_ZIP_CLEANUP, [ $this, 'zip_cleanup' ] );
 	}
 
 	/**
@@ -48,8 +48,12 @@ final class S3 implements Registrable {
 		$s3         = self::get_s3_instance();
 
 		$one_hour_ago  = gmdate( 'Y-m-d H:i:s', time() - 3600 );
-		$expired_files = $wpdb->get_results( // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- it's intended.
-			$wpdb->prepare( "SELECT s3_key FROM $table_name WHERE upload_time <= %s", $one_hour_ago ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- it's intended.
+		$expired_files = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Intentional direct query for cleanup.
+			$wpdb->prepare(
+				'SELECT s3_key FROM %i WHERE upload_time <= %s',
+				$table_name,
+				$one_hour_ago
+			)
 		);
 
 		foreach ( $expired_files as $file ) {
@@ -73,9 +77,10 @@ final class S3 implements Registrable {
 			}
 		}
 		// delete expired records from the database.
-		$wpdb->query( // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- it's intended.
+		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Intentional direct query for cleanup.
 			$wpdb->prepare(
-				"DELETE FROM $table_name WHERE upload_time <= %s", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- it's intended.
+				'DELETE FROM %i WHERE upload_time <= %s',
+				$table_name,
 				$one_hour_ago
 			)
 		);
@@ -88,7 +93,7 @@ final class S3 implements Registrable {
 	 */
 	public static function get_s3_instance(): S3Client {
 		$s3_credentials = Plugin_Settings::get_s3_credentials();
-		if ( empty( $s3_credentials ) || ! is_array( $s3_credentials ) ) {
+		if ( empty( $s3_credentials ) ) {
 			return new S3Client( [] ); // Return an empty S3Client.
 		}
 		$s3 = new S3Client(

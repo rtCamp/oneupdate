@@ -224,10 +224,6 @@ final class Settings implements Registrable {
 	}
 
 	/**
-	 * Static setters and getters for the individual settings.
-	 */
-
-	/**
 	 * Get brand sites configured for this governing site.
 	 *
 	 * @return array<string,array{
@@ -239,23 +235,34 @@ final class Settings implements Registrable {
 	 * }>
 	 */
 	public static function get_shared_sites(): array {
-		$brands = get_option( self::OPTION_GOVERNING_SHARED_SITES, null ) ?: [];
+		$brands = get_option( self::OPTION_GOVERNING_SHARED_SITES, [] );
+
+		if ( ! is_array( $brands ) ) {
+			return [];
+		}
 
 		$brands_to_return = [];
 		foreach ( $brands as $brand ) {
-			if ( empty( $brand['url'] ) ) {
+			if ( ! is_array( $brand ) || empty( $brand['url'] ) ) {
 				continue;
 			}
 
-			// trailingslashit to ensure consistent keys.
+			// Decrypt API key, ensuring we always return a string.
+			$decrypted_api_key = '';
+			if ( ! empty( $brand['api_key'] ) ) {
+				$decrypted         = Encryptor::decrypt( $brand['api_key'] );
+				$decrypted_api_key = is_string( $decrypted ) ? $decrypted : '';
+			}
+
+			// Always use a trailing-slash URL.
 			$url = trailingslashit( $brand['url'] );
 
 			$brands_to_return[ $url ] = [
-				'api_key' => $brand['api_key'] ?? '',
-				'id'      => $brand['id'] ?? '',
-				'name'    => $brand['name'] ?? '',
+				'api_key' => $decrypted_api_key,
+				'id'      => isset( $brand['id'] ) ? (string) $brand['id'] : '',
+				'name'    => isset( $brand['name'] ) ? (string) $brand['name'] : '',
 				'url'     => $url,
-				'gh_repo' => $brand['gh_repo'] ?? '',
+				'gh_repo' => isset( $brand['gh_repo'] ) ? (string) $brand['gh_repo'] : '',
 			];
 		}
 
@@ -263,57 +270,39 @@ final class Settings implements Registrable {
 	}
 
 	/**
-	 * Get a single brand site by URL
-	 *
-	 * @param string $site_url The site URL.
-	 *
-	 * @return ?array{
-	 *   api_key: string,
-	 *   id: string,
-	 *   name: string,
-	 *   url: string,
-	 *   gh_repo: string
-	 * }
-	 */
-	public static function get_shared_site_by_url( string $site_url ): ?array {
-		$brand_sites = self::get_shared_sites();
-
-		$normalized_url = trailingslashit( $site_url );
-
-		return $brand_sites[ $normalized_url ] ?? null;
-	}
-
-	/**
-	 * Get a single brand site by name
-	 *
-	 * @param string $site_name The site name.
-	 *
-	 * @return ?array{
-	 *   api_key: string,
-	 *   id: string,
-	 *   name: string,
-	 *   url: string,
-	 *   gh_repo: string
-	 * }
-	 */
-	public static function get_shared_site_by_name( string $site_name ): ?array {
-		$brand_sites = self::get_shared_sites();
-		foreach ( $brand_sites as $site ) {
-			if ( $site['name'] === $site_name ) {
-				return $site;
-			}
-		}
-		return null;
-	}
-
-	/**
 	 * Set the shared sites.
 	 *
-	 * @param array $sites The array of sites to set.
+	 * @param array<string,array<string,mixed>> $sites The sites to set.
+	 *
+	 * @phpstan-param array<string,array{
+	 *   api_key: string,
+	 *   id: string,
+	 *   name: string,
+	 *   url: string,
+	 *   gh_repo: string
+	 * }> $sites The sites to set.
 	 *
 	 * @return bool True on success, false on failure.
 	 */
 	public static function set_shared_sites( array $sites ): bool {
+		foreach ( $sites as &$site ) {
+			if ( empty( $site['api_key'] ) || empty( $site['url'] ) ) {
+				continue;
+			}
+			// Ensure URLs are trailing-slashed.
+			$site['url'] = trailingslashit( $site['url'] );
+
+			// Encrypt API keys before saving.
+			$encrypted_key = Encryptor::encrypt( $site['api_key'] );
+
+			// Bail if encryption fails.
+			if ( false === $encrypted_key ) {
+				return false;
+			}
+
+			$site['api_key'] = $encrypted_key;
+		}
+
 		return update_option( self::OPTION_GOVERNING_SHARED_SITES, array_values( $sites ), false );
 	}
 
@@ -346,17 +335,41 @@ final class Settings implements Registrable {
 	public static function get_api_key(): string {
 		$api_key = get_option( self::OPTION_CONSUMER_API_KEY, '' );
 
-		$api_key = ! empty( $api_key ) ? Encryptor::decrypt( $api_key ) : self::regenerate_api_key();
+		if ( empty( $api_key ) ) {
+			return self::regenerate_api_key();
+		}
 
-		return $api_key;
+		$decrypted = Encryptor::decrypt( $api_key );
+
+		// If decryption fails, regenerate the API key.
+		if ( false === $decrypted ) {
+			return self::regenerate_api_key();
+		}
+
+		return $decrypted;
 	}
 
 	/**
 	 * Regenerates the API key.
+	 *
+	 * @throws \RuntimeException If encryption or database update fails.
+	 *
+	 * @return string The new API key.
 	 */
 	public static function regenerate_api_key(): string {
-		$api_key = self::generate_api_key();
-		update_option( self::OPTION_CONSUMER_API_KEY, Encryptor::encrypt( $api_key ) );
+		$api_key   = self::generate_api_key();
+		$encrypted = Encryptor::encrypt( $api_key );
+
+		if ( false === $encrypted ) {
+			throw new \RuntimeException( 'Failed to encrypt API key.' );
+		}
+
+		$updated = update_option( self::OPTION_CONSUMER_API_KEY, $encrypted );
+
+		if ( false === $updated ) {
+			throw new \RuntimeException( 'Failed to save encrypted API key to database.' );
+		}
+
 		return $api_key;
 	}
 

@@ -140,11 +140,7 @@ class Governing_Controller extends Abstract_REST_Controller {
 			$response = wp_safe_remote_get(
 				$fetch_url,
 				[
-					'headers' => [
-						'Authorization' => 'Bearer ' . $github_token,
-						'Accept'        => 'application/vnd.github.v3+json',
-						'User-Agent'    => 'OneUpdate Plugin Loader',
-					],
+					'headers' => self::get_github_headers( $github_token ),
 					'timeout' => 30, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
 				]
 			);
@@ -178,14 +174,14 @@ class Governing_Controller extends Abstract_REST_Controller {
 		$filtered_repos = [];
 		foreach ( $all_repos as $repo ) {
 			$filtered_repos[] = [
-				'slug' => $repo['full_name'],
-				'name' => $repo['name'],
-				'url'  => $repo['html_url'],
+				'slug' => $repo['full_name'] ?? '',
+				'name' => $repo['name'] ?? '',
+				'url'  => $repo['html_url'] ?? '',
 			];
 		}
 
 		if ( empty( $filtered_repos ) ) {
-			return new \WP_Error( 'no_filtered_repos', __( 'No repositories found for rtCamp or wpcomvip.', 'oneupdate' ), [ 'status' => 404 ] );
+			return new \WP_Error( 'no_filtered_repos', __( 'No repositories found.', 'oneupdate' ), [ 'status' => 404 ] );
 		}
 
 		// Cache the result for 10 minutes.
@@ -286,11 +282,7 @@ class Governing_Controller extends Abstract_REST_Controller {
 		$response = wp_safe_remote_get(
 			'https://api.github.com/user',
 			[
-				'headers' => [
-					'Authorization' => 'Bearer ' . $github_token,
-					'Accept'        => 'application/vnd.github.v3+json',
-					'User-Agent'    => 'OneUpdate Plugin Loader',
-				],
+				'headers' => self::get_github_headers( $github_token ),
 				'timeout' => 30, // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- this is to avoid timeout issues.
 			]
 		);

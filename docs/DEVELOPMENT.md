@@ -200,7 +200,7 @@ You can use Docker and the `wp-env` tool to set up a local development environme
    npm run wp-env start
    ```
 
-The WordPress development site will be available at <http://localhost:8888> and the WP Admin Dashboard will be available at <http://localhost:8888/wp-admin/>. You can log in to the admin using the username `admin` and password `password`.
+  The WordPress development site will be available at <http://localhost:8888> and the WP Admin Dashboard will be available at <http://localhost:8888/wp-admin/>. You can log in to the admin using the username `admin` and password `password`.
 
 ### Useful Commands
 

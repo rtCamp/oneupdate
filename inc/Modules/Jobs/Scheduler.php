@@ -1,6 +1,6 @@
 <?php
 /**
- * Job schedular functionality.
+ * Job Scheduler functionality.
  *
  * @package OneUpdate\Modules\Jobs
  */
@@ -13,9 +13,9 @@ use OneUpdate\Contracts\Interfaces\Registrable;
 use OneUpdate\Modules\Settings\Settings;
 
 /**
- * Class Schedular
+ * Class Scheduler
  */
-final class Schedular implements Registrable {
+final class Scheduler implements Registrable {
 
 	/**
 	 * Global prefix.
