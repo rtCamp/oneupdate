@@ -1,5 +1,3 @@
-/* eslint-disable @wordpress/no-unsafe-wp-apis */
-/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * WordPress dependencies
  */
@@ -127,17 +125,17 @@ const PluginManager = () => {
 
 	const fetchPluginsFromSite = useCallback( async ( site ) => {
 		try {
-			const response = await fetch( site.siteUrl + `wp-json/oneupdate/v1/get_plugins?time=${ new Date().toISOString() }`, {
+			const response = await fetch( site.url + `wp-json/oneupdate/v1/get_plugins?time=${ new Date().toISOString() }`, {
 				method: 'GET',
 				headers: {
 					'Content-Type': 'application/json',
-					'X-OneUpdate-Plugins-Token': site.apiKey || '',
+					'X-OneUpdate-Token': site.api_key || '',
 				},
 				'cache-control': 'no-cache, no-store, must-revalidate',
 			} );
 
 			if ( ! response.ok ) {
-				throw new Error( sprintf( 'Failed to fetch plugins from site: %s', site.siteName ) );
+				throw new Error( sprintf( 'Failed to fetch plugins from site: %s', site.name ) );
 			}
 
 			const data = await response.json();
@@ -180,7 +178,7 @@ const PluginManager = () => {
 			let updateAvailableSites = 0;
 
 			// Check real plugin status on each site
-			Object.entries( sitePluginsData ).forEach( ( [ siteUrl, { site, plugins } ] ) => {
+			Object.entries( sitePluginsData ).forEach( ( [ url, { site, plugins } ] ) => {
 				// Find this plugin on the current site
 				const sitePlugin = Object.values( plugins ).find( ( p ) => p.plugin_slug === slug );
 
@@ -189,13 +187,13 @@ const PluginManager = () => {
 					const currentVersion = sitePlugin.Version || sitePlugin.version || '0.0.0';
 					const hasUpdate = sitePlugin.is_update_available || false;
 
-					sites[ siteUrl ] = {
+					sites[ url ] = {
 						plugin_path: `${ slug }/${ slug }.php`,
 						version: currentVersion,
 						is_active: isActive,
 						is_update_available: hasUpdate,
 						update_info: hasUpdate && sitePlugin.update ? sitePlugin.update : null,
-						site_name: site.siteName,
+						site_name: site.name,
 						site_id: site.id,
 						plugin_data: sitePlugin, // Keep full plugin data for modal
 					};
@@ -209,13 +207,13 @@ const PluginManager = () => {
 					}
 				} else if ( sharedPluginData.sites && sharedPluginData.sites[ site.id ] ) {
 					// Plugin exists in shared data but not found on site (might be inactive/uninstalled)
-					sites[ siteUrl ] = {
+					sites[ url ] = {
 						plugin_path: `${ slug }/${ slug }.php`,
 						version: sharedPluginData.version || '0.0.0',
 						is_active: false,
 						is_update_available: false,
 						update_info: null,
-						site_name: site.siteName,
+						site_name: site.name,
 						site_id: site.id,
 						plugin_data: null,
 					};
@@ -380,11 +378,11 @@ const PluginManager = () => {
 				setLoadingProgress( {
 					current: i + 1,
 					total: sites.length,
-					message: __( 'Fetching plugins info from', 'oneupdate' ) + ' ' + site.siteName + '…',
+					message: __( 'Fetching plugins info from', 'oneupdate' ) + ' ' + site.name + '…',
 				} );
 
 				const plugins = await fetchPluginsFromSite( site );
-				sitePluginsData[ site.siteUrl ] = {
+				sitePluginsData[ site.url ] = {
 					site,
 					plugins,
 				};
@@ -478,16 +476,16 @@ const PluginManager = () => {
 		// Step 2: Filter sites without plugin
 		const allPluginSites = plugin.sites_urls;
 		const filterSitesForInstall = allPluginSites.filter( ( site ) =>
-			! plugin.sites.hasOwnProperty( site.siteUrl ),
+			! plugin.sites.hasOwnProperty( site.url ),
 		);
 
 		// Step 3: Transform to match installed format with plugin info
 		// eslint-disable-next-line @wordpress/no-unused-vars-before-return
 		const sitesAvailableForInstall = filterSitesForInstall.map( ( site ) => [
-			site.siteUrl,
+			site.url,
 			{
 				...basePluginInfo, // Include all plugin info
-				site_name: site.siteName,
+				site_name: site.name,
 				site_id: site.id,
 				is_active: false,
 				is_update_available: false,
@@ -703,16 +701,16 @@ const PluginManager = () => {
 				default:
 					actionVerb = __( 'Executed', 'oneupdate' );
 			}
-			const siteNames = selectedSites.map( ( siteUrl ) => {
-				const site = allAvailableSites.find( ( s ) => s.siteUrl === siteUrl );
-				return site ? site.siteName : ( siteUrl );
+			const names = selectedSites.map( ( url ) => {
+				const site = allAvailableSites.find( ( s ) => s.url === url );
+				return site ? site.name : ( url );
 			} );
-			const siteNamesString = siteNames.length > 0 ? siteNames.join( ', ' ) : __( 'selected sites', 'oneupdate' );
+			const namesString = names.length > 0 ? names.join( ', ' ) : __( 'selected sites', 'oneupdate' );
 			let noticeMessage = '';
 
 			if ( 'change-version' === currentAction || 'install' === currentAction || 'update' === currentAction || 'remove' === currentAction ) {
 				noticeMessage = sprintf(
-				/* translators: %s is the plugin name, %s is the action verb, %s is the site names */
+					/* translators: %1s is the plugin name, %2s is the action verb */
 					__( '%1$s %2$s PR raised successfully.', 'oneupdate' ),
 					pluginName,
 					actionVerb,
@@ -720,19 +718,19 @@ const PluginManager = () => {
 				noticeMessage += '\n\n';
 			} else {
 				noticeMessage = sprintf(
-				/* translators: %s is the plugin name, %s is the action verb, %s is the site names */
+				/* translators: %1s is the plugin name, %2s is the action verb, %3s is the site names */
 					__( '%1$s %2$s successfully on %3$s.', 'oneupdate' ),
 					pluginName,
 					actionVerb,
-					siteNamesString,
+					namesString,
 				);
 			}
 
 			// add site name and its respective action link to message.
 			for ( const action of githubActions ) {
-				const site = allAvailableSites.find( ( s ) => s.siteUrl === action.site );
-				const siteName = site ? site.siteName : action.site;
-				noticeMessage += `${ siteName }\n${ action.run_url }`;
+				const site = allAvailableSites.find( ( s ) => s.url === action.site );
+				const name = site ? site.name : action.site;
+				noticeMessage += `${ name }\n${ action.run_url }`;
 				// add \n\n if not last item
 				if ( action !== githubActions?.[ githubActions.length - 1 ] ) {
 					noticeMessage += '\n\n';
@@ -783,7 +781,7 @@ const PluginManager = () => {
 			const getAvailableSites = ( plugin ) => {
 				return Object.entries( plugin.sites )
 					.filter( ( [ , siteInfo ] ) => siteInfo.is_update_available )
-					.map( ( [ siteUrl ] ) => siteUrl );
+					.map( ( [ url ] ) => url );
 			};
 			// get plugins latest version
 			const latestVersions = pluginsToUpdate.map( ( plugin ) => {
@@ -843,7 +841,7 @@ const PluginManager = () => {
 						version: item.github_response.version,
 						run_url: item.github_response.run_url,
 						run_id: item.github_response.run_id,
-						siteName: item.github_response.siteName,
+						name: item.github_response.name,
 					} ) );
 			};
 
@@ -855,18 +853,18 @@ const PluginManager = () => {
 			if ( githubActions.length > 0 ) {
 				// Group actions by site name
 				const groupedBySite = githubActions.reduce( ( acc, action ) => {
-					const siteName = action.siteName || 'Unknown Site';
-					if ( ! acc[ siteName ] ) {
-						acc[ siteName ] = [];
+					const name = action.name || 'Unknown Site';
+					if ( ! acc[ name ] ) {
+						acc[ name ] = [];
 					}
-					acc[ siteName ].push( action );
+					acc[ name ].push( action );
 					return acc;
 				}, {} );
 
 				// Format the message with site names and their respective URLs
-				const siteGroups = Object.entries( groupedBySite ).map( ( [ siteName, actions ] ) => {
+				const siteGroups = Object.entries( groupedBySite ).map( ( [ name, actions ] ) => {
 					const actionLinks = actions.map( ( action ) => action.run_url ).join( '\n' );
-					return `${ siteName }\n${ actionLinks }`;
+					return `${ name }\n${ actionLinks }`;
 				} );
 
 				noticeMessage += `\n\n${ siteGroups.join( '\n\n' ) }`;
@@ -888,18 +886,18 @@ const PluginManager = () => {
 	};
 
 	// Handle site selection
-	const handleSiteToggle = ( siteUrl, checked ) => {
+	const handleSiteToggle = ( url, checked ) => {
 		if ( checked ) {
-			setSelectedSites( ( prev ) => [ ...prev, siteUrl ] );
+			setSelectedSites( ( prev ) => [ ...prev, url ] );
 		} else {
-			setSelectedSites( ( prev ) => prev.filter( ( url ) => url !== siteUrl ) );
+			setSelectedSites( ( prev ) => prev.filter( ( url ) => url !== url ) );
 		}
 	};
 
 	const handleSelectAllSites = ( checked ) => {
 		if ( checked ) {
 			const availableSites = getAvailableSitesForAction( selectedPlugin, currentAction );
-			setSelectedSites( availableSites.map( ( [ siteUrl ] ) => siteUrl ) );
+			setSelectedSites( availableSites.map( ( [ url ] ) => url ) );
 		} else {
 			setSelectedSites( [] );
 		}
@@ -1331,8 +1329,8 @@ const PluginManager = () => {
 											{ label: __( 'All Sites', 'oneupdate' ), value: 'all' },
 											{ label: __( 'Common plugins', 'oneupdate' ), value: 'common-plugins' },
 											...allAvailableSites.map( ( site ) => ( {
-												label: site.siteName,
-												value: site.siteUrl,
+												label: site.name,
+												value: site.url,
 											} ) ),
 										] }
 										disabled={ isBulkUpdateProcess }
@@ -1831,9 +1829,9 @@ const PluginManager = () => {
 												</Notice>
 											) : (
 												<VStack spacing={ 2 }>
-													{ getAvailableSitesForAction( selectedPlugin, currentAction ).map( ( [ siteUrl, siteInfo ] ) => (
+													{ getAvailableSitesForAction( selectedPlugin, currentAction ).map( ( [ url, siteInfo ] ) => (
 														<div
-															key={ siteUrl }
+															key={ url }
 															style={ { padding: '8px', border: '1px solid #f0f0f1', borderRadius: '4px', cursor: 'pointer' } }
 															role="button"
 															tabIndex={ 0 }
@@ -1842,7 +1840,7 @@ const PluginManager = () => {
 																	return;
 																}
 
-																handleSiteToggle( siteUrl, ! selectedSites.includes( siteUrl ) );
+																handleSiteToggle( url, ! selectedSites.includes( url ) );
 															} }
 															onKeyDown={ ( e ) => {
 																if ( actionLoading ) {
@@ -1851,20 +1849,20 @@ const PluginManager = () => {
 																}
 																if ( e.key === 'Enter' || e.key === ' ' ) {
 																	e.preventDefault();
-																	handleSiteToggle( siteUrl, ! selectedSites.includes( siteUrl ) );
+																	handleSiteToggle( url, ! selectedSites.includes( url ) );
 																}
 															} }
-															aria-pressed={ selectedSites.includes( siteUrl ) }
+															aria-pressed={ selectedSites.includes( url ) }
 														>
 															<CheckboxControl
 																className="oneupdate-site-checkbox"
 																label={
 																	<div>
 																		<div style={ { fontWeight: '500', color: '#23282d' } }>
-																			{ siteInfo.site_name || formatSiteUrl( siteUrl ) }
+																			{ siteInfo.site_name || formatSiteUrl( url ) }
 																		</div>
 																		<div style={ { fontSize: '12px', color: '#6c757d' } }>
-																			{ ( siteUrl ) } • v{ siteInfo.version }
+																			{ ( url ) } • v{ siteInfo.version }
 																			{ siteInfo.is_active && (
 																				<span style={ { color: '#00a32a', marginLeft: '8px' } }>
 																					{ __( 'Active', 'oneupdate' ) }
@@ -1878,7 +1876,7 @@ const PluginManager = () => {
 																		</div>
 																	</div>
 																}
-																checked={ selectedSites.includes( siteUrl ) }
+																checked={ selectedSites.includes( url ) }
 																disabled={ actionLoading }
 															/>
 														</div>
@@ -2234,9 +2232,9 @@ const PluginManager = () => {
 								</p>
 
 								<div style={ { maxHeight: '400px', overflowY: 'auto' } }>
-									{ Object.entries( selectedPlugin.sites ).map( ( [ siteUrl, siteInfo ] ) => (
+									{ Object.entries( selectedPlugin.sites ).map( ( [ url, siteInfo ] ) => (
 										<Card
-											key={ siteUrl }
+											key={ url }
 											style={ {
 												marginBottom: '12px',
 												border: '1px solid #e1e5e9',
@@ -2259,10 +2257,10 @@ const PluginManager = () => {
 															</FlexItem>
 															<FlexBlock>
 																<div style={ { fontWeight: '500', color: '#23282d', fontSize: '14px' } }>
-																	{ siteInfo.site_name || formatSiteUrl( siteUrl ) }
+																	{ siteInfo.site_name || formatSiteUrl( url ) }
 																</div>
 																<div style={ { fontSize: '12px', color: '#6c757d' } }>
-																	{ ( siteUrl ) } • v{ siteInfo.version }
+																	{ ( url ) } • v{ siteInfo.version }
 																</div>
 															</FlexBlock>
 														</Flex>
@@ -2328,6 +2326,3 @@ if ( rootElement ) {
 	const root = createRoot( rootElement );
 	root.render( <PluginManager /> );
 }
-
-/* eslint-enable react-hooks/exhaustive-deps */
-/* eslint-enable @wordpress/no-unsafe-wp-apis */

@@ -2,10 +2,10 @@
 Contributors: Utsav Patel, rtCamp
 Donate link: https://rtcamp.com/
 Tags: plugin manager, CI/CD, automation, enterprise
-Requires at least: 6.5
+Requires at least: 6.8
 Tested up to: 6.8
 Stable tag: 1.0.0
-Requires PHP: 8.0
+Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -132,8 +132,8 @@ Initial release of OneUpdate. Perfect for enterprises managing multiple WordPres
 
 == Requirements ==
 
-* WordPress 6.5 or higher
-* PHP 7.4 or higher
+* WordPress 6.8 or higher
+* PHP 8.1 or higher
 * Sites managed through CI/CD pipelines (GitHub/GitLab/Bitbucket)
 * GitHub PAT token with repository write access
 * S3 credentials for private plugin management

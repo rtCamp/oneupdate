@@ -62,4 +62,4 @@ To contribute:
 4. Push to the branch: `git push origin feature/your-feature-name`
 5. Open a Pull Request
 
-We appreciate your time and contributions to the `OneUpdate` project. Your efforts help make this project better for everyone!
+Please make sure to follow our coding standards and best practices.

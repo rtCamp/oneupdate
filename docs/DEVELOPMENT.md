@@ -9,14 +9,18 @@ Code contributions, bug reports, and feature requests are welcome! The following
   - [Directory Structure](#directory-structure)
   - [Local setup](#local-setup)
     - [Prerequisites](#prerequisites)
-    - [Building OneUpdate Packages](#building-oneupdate-packages)
+    - [Installation](#installation)
+    - [Useful Commands](#useful-commands)
+    - [Running Tests](#running-tests)
+    - [Building the plugin for distribution](#building-the-plugin-for-distribution)
   - [Code Contributions (Pull Requests)](#code-contributions-pull-requests)
     - [Workflow](#workflow)
     - [Code Quality / Code Standards](#code-quality--code-standards)
+      - [PHP_CodeSniffer](#php_codesniffer)
+      - [PHPStan](#phpstan)
       - [ESLint](#eslint)
-  - [Changesets](#changesets)
+      - [Stylelint](#stylelint)
   - [Releasing](#releasing)
-    - [Release Commands](#release-commands)
 
 ## Directory Structure
 
@@ -25,103 +29,134 @@ Code contributions, bug reports, and feature requests are welcome! The following
 
 ```bash
 .
+├── .github/ # GitHub-specific files and CI/CD workflows.
+├── actions # Which needs to be added to respective repos for OneUpdate to work.
+│   ├── oneupdate-pr-creation-private.yml
+│   └── oneupdate-pr-creation.yml
+│
+├── LICENSE
+│
+│   # Non-php plugin assets.
 ├── assets
-│   ├── build
-│   │   ├── blocks
-│   │   ├── css
-│   │   │   ├── admin.css
-│   │   │   ├── admin.css.map
-│   │   │   ├── editor.css
-│   │   │   ├── editor.css.map
-│   │   │   ├── main.css
-│   │   │   ├── main.css.map
-│   │   │   ├── plugin-card.css
-│   │   │   └── plugin-card.css.map
-│   │   └── js
-│   │       ├── admin.asset.php
-│   │       ├── admin.js
-│   │       ├── main.asset.php
-│   │       ├── main.js
-│   │       ├── plugin-manager.asset.php
-│   │       ├── plugin-manager.js
-│   │       ├── plugin.asset.php
-│   │       ├── plugin.js
-│   │       ├── settings.asset.php
-│   │       └── settings.js
 │   └── src
 │       ├── admin
-│       │   ├── plugin
-│       │   │   └── index.js
+│       │   ├── onboarding
+│       │   │   ├── index.tsx
+│       │   │   └── page.tsx
 │       │   ├── plugin-manager
 │       │   │   └── index.js
+│       │   ├── pull-requests
+│       │   │   └── index.js
 │       │   └── settings
-│       │       └── index.js
+│       │       ├── index.tsx
+│       │       └── page.tsx
 │       ├── components
-│       │   ├── GitHubRepoToken.js
+│       │   ├── GitHubRepoToken.tsx
+│       │   ├── icons
+│       │   │   ├── Close.js
+│       │   │   ├── Merge.js
+│       │   │   └── View.js
 │       │   ├── PluginCard.js
 │       │   ├── PluginGrid.js
 │       │   ├── PluginsSharing.js
-│       │   ├── S3Credentials.js
+│       │   ├── S3Credentials.tsx
 │       │   ├── S3ZipUploader.js
-│       │   ├── SiteModal.js
-│       │   ├── SiteSettings.js
-│       │   └── SiteTable.js
+│       │   ├── SiteModal.tsx
+│       │   ├── SiteSettings.tsx
+│       │   └── SiteTable.tsx
 │       ├── css
 │       │   ├── admin.scss
 │       │   ├── editor.scss
 │       │   ├── main.scss
-│       │   └── plugin-card.scss
+│       │   ├── onboarding.scss
+│       │   └── plugin-manager.scss
 │       ├── images
+│       │   ├── banner.png
 │       │   └── logo.svg
 │       └── js
 │           ├── admin.js
 │           ├── editor.js
 │           ├── main.js
-│           └── utils.js
-├── babel.config.js
-├── bin
-│   └── phpcbf.sh
-├── composer.json
-├── composer.lock
-├── docs
+│           └── utils.ts
+│
+│   # Project documentation.
+├── docs/
 │   ├── CODE_OF_CONDUCT.md
-│   ├── CONTRIBUTING.md
+│   ├── CONTRIBUTING.md     # 👈 You are here.
 │   ├── DEVELOPMENT.md
+│   ├── INSTALLATION.md
 │   └── SECURITY.md
+│
+│   # PHP source files.
 ├── inc
-│   ├── classes
-│   │   ├── class-assets.php
-│   │   ├── class-cache.php
-│   │   ├── class-hooks.php
-│   │   ├── class-plugin.php
-│   │   ├── class-rest.php
-│   │   ├── class-s3-upload.php
-│   │   ├── class-settings.php
-│   │   ├── plugin-configs
-│   │   │   ├── class-db.php
-│   │   │   ├── class-secret-key.php
-│   │   │   └── class-vip-plugin-activation.php
-│   │   ├── rest
-│   │   │   ├── class-basic-options.php
-│   │   │   ├── class-s3.php
-│   │   │   └── class-workflow.php
-│   │   └── settings
-│   │       └── class-shared-sites.php
-│   ├── helpers
-│   │   └── custom-functions.php
-│   └── traits
-│       └── trait-singleton.php
+│   ├── Autoloader.php
+│   ├── Contracts
+│   │   ├── Interfaces
+│   │   │   └── Registrable.php
+│   │   └── Traits
+│   │       └── Singleton.php
+│   ├── Encryptor.php
+│   ├── Main.php
+│   └── Modules
+│       ├── Core
+│       │   ├── Assets.php
+│       │   ├── DB.php
+│       │   └── Rest.php
+│       ├── Jobs
+│       │   └── Schedular.php
+│       ├── Plugin
+│       │   ├── Admin.php
+│       │   ├── Cache.php
+│       │   ├── S3.php
+│       │   ├── Settings.php
+│       │   └── VIP_Activation.php
+│       ├── Rest
+│       │   ├── Abstract_REST_Controller.php
+│       │   ├── Basic_Options_Controller.php
+│       │   ├── GH_Pull_Request_Controller.php
+│       │   ├── S3_Controller.php
+│       │   └── Workflow_Controller.php
+│       └── Settings
+│           ├── Admin.php
+│           └── Settings.php
+│
+│   # Tests
+├── tests/
+│   ├── _output/ # Generated results and caches.
+│   ├── phpunit/ # PHPUnit tests.
+│   │
+│   └── bootstrap.php # PHPUnit bootstrapper
+│
 ├── languages
 │   └── oneupdate.pot
-├── LICENSE
-├── oneupdate.php
-├── package-lock.json
+│
+│   # Build directories
+├── build/        # assets built by webpack
+├── node_modules/ # Node.js dependencies
+├── vendor/       # Composer dependencies
+│
+├── wp-assets/    # WordPress plugin assets (banners, screenshots)
+│
+├── oneupdate.php # Root plugin entrypoint.
+├── uninstall.php # The plugin uninstaller.
+│
+│   # Important config files.
+│   # .dist suffixes mean there may be a user-customized version without the suffix.
+├── .editorconfig
+├── .eslintrc.json
+├── .nvmrc
+├── .wp-env.json
+├── babel.config.js
+├── composer.json
+├── composer.lock
 ├── package.json
+├── package-lock.json
 ├── phpcs.xml.dist
+├── phpstan.neon.dist
 ├── README.md
-├── readme.txt
-├── uninstall.php
+├── tsconfig.json
 └── webpack.config.js
+
 ```
 
 </details>
@@ -131,113 +166,177 @@ Code contributions, bug reports, and feature requests are welcome! The following
 To set up locally, clone the repository into plugins directory of your WordPress installation:
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) v20+
-- npm or yarn
-- PHP (recommended: 7.4+)
-- Composer
-- WordPress (recommended: 6.8+) (local install)
 
-### Building OneUpdate Packages
+- [Node.js](https://nodejs.org/): v22+ ([NVM](https://nvm.sh/) recommended )
+- [Docker](https://www.docker.com/)
+- Composer: (if you prefer to run the Composer tools locally)
 
-Install dependencies:
+You can use Docker and the `wp-env` tool to set up a local development environment, instead of manually installing the specific testing versions of WordPress, PHP, and Composer. For more information, see the [wp-env documentation](https://developer.wordpress.org/block-editor/packages/packages-env/).
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/rtCamp/OneUpdate.git
+   ```
+
+2. Change into the project folder and install the development dependencies:
+
+   ```bash
+   ## If you're using NVM, make sure to use the correct Node.js version:
+   nvm install && nvm use
+
+   ## Then install the NPM dependencies:
+   npm install
+
+   # And the Composer dependencies:
+   composer install
+   ```
+
+3. Start the local development environment:
+
+   ```bash
+   npm run wp-env start
+   ```
+
+   The WordPress development site will be available at <http://localhost:8888> and the WP Admin Dashboard will be available at <http://localhost:8888/wp-admin/>. You can log in to the admin using the username `admin` and password `password`.
+
+### Useful Commands
+
+#### Installing Dependencies
+
+- `composer install`: Install PHP dependencies.
+- `npm install`: Install JavaScript dependencies.
+
+#### Accessing the Local Environment
+
+- `npm run wp-env start`: Start the local development environment.
+- `npm run wp-env stop`: Stop the local development environment.
+- `npm run wp-env run tests-cli YOUR_CMD_HERE`: Run WP-CLI commands in the local environment.
+
+For more information on using `wp-env`, see the [wp-env documentation](https://developer.wordpress.org/block-editor/packages/packages-env/).
+
+#### Linting and Formatting
+
+- `npm run lint:css`:      Runs stylelint on the CSS code.
+- `npm run lint:js`:       Runs ESLint on the JavaScript code.
+- `npm run lint:js:fix`:   Autofixes ESLint issues.
+- `npm run lint:js:types`: Runs TypeScript's `tsc` to check for type errors.
+- `npm run lint:php`:      Runs PHPCS linting on the PHP code.
+- `npm run lint:php:fix`:  Autofixes PHPCS linting issues.
+- `npm run lint:php:stan`: Runs PHPStan static analysis on the PHP code.
+
+### Running Tests
+
+PHPUnit tests can be run using the following command:
+
 ```bash
-  # Navigate to the plugin directory
-  composer install
-  npm install
+npm run test:php
 ```
 
-Start the development build process:
+To generate a code coverage report, make sure to start the testing environment with coverage mode enabled:
+
 ```bash
-  npm start
+npm run wp-env start -- --xdebug=coverage
+
+npm run test:php
 ```
 
-Create a production-ready build:
-```bash
-  npm run build:prod
-```
+You should see the html coverage report in the `tests/_output/html` directory and the clover XML report in `tests/_output/php-coverage.xml`.
 
+### Building the plugin for distribution
+
+To build the plugin for distribution, you can use the following commands`:
+
+```bash
+# IMPORTANT!: Make sure you've cleaned up any dev-dependencies from Composer first:
+composer install --no-dev
+
+# Clean install of node modules.
+npm ci
+
+# Create a production-ready build:
+npm run build:prod
+
+## Create the zip file for distribution:
+npm run plugin-zip
+```
 
 ## Code Contributions (Pull Requests)
 
 ### Workflow
+
 The `develop` branch is used for active development, while `main` contains the current stable release. Always create a new branch from `develop` when working on a new feature or bug fix.
 
 Branches should be prefixed with the type of change (e.g. `feat`, `chore`, `tests`, `fix`, etc.) followed by a short description of the change. For example, a branch for a new feature called "Add new feature" could be named `feat/add-new-feature`.
 
-
 ### Code Quality / Code Standards
+
 This project uses several tools to ensure code quality and standards are maintained:
 
+#### PHP_CodeSniffer
+
+This project uses [PHP_CodeSniffer](https://github.com/PHPCSStandards/PHP_CodeSniffer/) to enforce WordPress Coding Standards. We use the [WPGraphQL Coding Standards ruleset](https://github.com/AxeWP/WPGraphQL-Coding-Standards), which is a superset of [WPCS](https://github.com/WordPress/WordPress-Coding-Standards), [VIPCS](https://github.com/Automattic/VIP-Coding-Standards), and [Slevomat Coding Standard](https://github.com/slevomat/coding-standard) tailored for the WPGraphQL ecosystem.
+
+Our specific ruleset is defined in the [`phpcs.xml.dist`](../phpcs.xml.dist) file.
+
+You can run the PHP_CodeSniffer checks using the following command:
+
+```bash
+npm run lint:php
+```
+
+PHP_CodeSniffer can automatically fix some issues. To fix issues automatically, run:
+
+```bash
+npm run lint:php:fix
+```
+
+#### PHPStan
+
+This project uses [PHPStan](https://phpstan.org/) to perform static analysis on the PHP code. PHPStan is a PHP Static Analysis Tool that focuses on finding errors in your code without actually running it.
+
+Our specific configuration is defined in the [`phpstan.neon.dist`](../phpstan.neon.dist) file.
+
+You can run PHPStan using the following command:
+
+```bash
+npm run lint:php:stan
+```
+
 #### ESLint
-This project uses [ESLint](https://eslint.org), which is a tool for identifying and reporting on patterns found in ECMAScript/JavaScript code.
 
-You can run ESLint using the following command:
+This project uses [ESLint](https://eslint.org) through `@wordpress/scripts` and `@wordpress/eslint-plugin` for JavaScript linting, following WordPress coding standards and best practices.
 
-```bash
-  npm run lint
-```
+Our specific ESLint configuration is defined in the [`.eslintrc.json`](../.eslintrc.json) file.
 
-ESLint can automatically fix some issues. To fix issues automatically, run:
+You can run ESLint on JavaScript files using:
 
 ```bash
-  npm run lint:fix
+npm run lint:js
 ```
 
-## Changesets
+To automatically fix JavaScript linting issues:
 
-This project uses [Changesets](https://github.com/changesets/changesets) for versioning and generating changelogs across the packages in the repo.
+```bash
+npm run lint:js:fix
+```
 
-To generate a Changeset (_copied and modified from [Changesets' docs](https://github.com/changesets/changesets/blob/01c037c0462540196b5d3d0c0241d8752b465b4b/docs/adding-a-changeset.md)_):
+#### Stylelint
 
-1. Run `npm run changeset` in the root of the monorepo.
-2. Select the packages you want to include in the changeset.
-    - Use `↑` and `↓` to navigate to packages.
-    - Use `space` to select a package.
-    - Hit `enter` when all desired packages are selected.
-3. You will be prompted to select a bump type for each selected package. First you will flag all the packages that should receive a `major` bump, then `minor`. The remaining packages will receive a `patch` bump.
+This project uses [Stylelint](https://stylelint.io/) through `@wordpress/scripts` for CSS linting, following WordPress coding standards and best practices.
 
-    - **Major**: Any form of breaking change.
-    - **Minor**: New (non-breaking) features or changes.
-    - **Patch**: Bug fixes.
+Our specific Stylelint configuration is defined in the [`.stylelintrc.json`](../.stylelintrc.json) file.
 
-4. Your final prompt will be to provide a message to go along with the changeset. This message will be written to the changeset when the next release is made.
+You can run Stylelint on CSS files using:
 
-   > ⚠️ **Important**
-   >
-   > Remember to follow [Conventional Commits formatting](https://www.conventionalcommits.org/en/v1.0.0/) and to use imperative language in your changeset message.
-   >
-   > For example, "feat: Add new feature" instead of "Added new feature".
-
-   After this, a new changeset will be added which is a markdown file with YAML front matter.
-
-    ```
-    -| .changeset/
-    -|-| UNIQUE_ID.md
-    ```
-
-   The message you typed can be found in the markdown file. If you want to expand on it, you can write as much markdown as you want, which will all be added to the changelog on publish. If you want to add more packages or change the bump types of any packages, that's also fine.
-
-5. Once you are happy with the changeset, commit the file to your branch.
-
+```bash
+npm run lint:css
+```
 
 ## Releasing
 1. Ensure all changes are committed and tested.
-2. Update changelogs and version numbers.
-3. Merge to main branch.
-4. Tag release and push to remote.
-5. Publish packages if needed.
-
-### Release Commands
-
-Command to create a tag and push it:
-```bash
-git tag -a vx.x.x -m "Release vx.x.x"
-git push --tags
-```
-
-Command to delete the tag (Locally) incase wanted to release same tag:
-```bash
-git tag --delete vx.x.x
-```
-
-Release will be auto generated and kept in draft once pushed a tag.
+2. Update changelogs, version numbers, and `n.e.x.t` tags.
+3. Push `develop` branch to `main`.
+4. Create a new GitHub release draft with the new tag.

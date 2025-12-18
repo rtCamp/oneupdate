@@ -1,5 +1,3 @@
-/* eslint-disable @wordpress/no-unsafe-wp-apis */
-/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * WordPress dependencies
  */
@@ -532,20 +530,20 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 	const [ selectedSite, setSelectedSite ] = useState( [] );
 	const [ selectedSiteInfo, setSelectedSiteInfo ] = useState( [] );
 
-	const handleSiteSelection = ( siteUrl ) => {
+	const handleSiteSelection = ( url ) => {
 		// Deselect if already selected else add to selected sites list
 		setSelectedSite( ( prev ) => {
-			if ( prev.includes( siteUrl ) ) {
-				return prev.filter( ( id ) => id !== siteUrl );
+			if ( prev.includes( url ) ) {
+				return prev.filter( ( id ) => id !== url );
 			}
-			return [ ...prev, siteUrl ];
+			return [ ...prev, url ];
 		} );
 	};
 
 	// based on selected sites need to get all info from sharedsites for all selected sites
 	useEffect( () => {
 		const selectedSiteFullInfo = sharedSites.filter( ( site ) =>
-			selectedSite.includes( site.siteUrl ),
+			selectedSite.includes( site.url ),
 		);
 
 		setSelectedSiteInfo( selectedSiteFullInfo );
@@ -577,18 +575,18 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 				if ( data.created_prs && Array.isArray( data.created_prs ) && data.created_prs.length > 0 ) {
 					// Group actions by site name
 					const groupedBySite = data.created_prs.reduce( ( acc, pr ) => {
-						const siteName = pr.siteName || 'Unknown Site';
-						if ( ! acc[ siteName ] ) {
-							acc[ siteName ] = [];
+						const name = pr.name || 'Unknown Site';
+						if ( ! acc[ name ] ) {
+							acc[ name ] = [];
 						}
-						acc[ siteName ].push( pr );
+						acc[ name ].push( pr );
 						return acc;
 					}, {} );
 
 					// Format the message with site names and their respective URLs (each URL on new line)
-					const siteGroups = Object.entries( groupedBySite ).map( ( [ siteName, prs ] ) => {
+					const siteGroups = Object.entries( groupedBySite ).map( ( [ name, prs ] ) => {
 						const actionLinks = prs.map( ( pr ) => pr.run_url ).join( '\n' );
-						return `${ siteName }\n${ actionLinks }`;
+						return `${ name }\n${ actionLinks }`;
 					} );
 
 					noticeMessage += `\n\n${ siteGroups.join( '\n\n' ) }`;
@@ -649,7 +647,7 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 											if ( selectedSite.length === sharedSites.length ) {
 												setSelectedSite( [] );
 											} else {
-												setSelectedSite( sharedSites.map( ( site ) => site.siteUrl ) );
+												setSelectedSite( sharedSites.map( ( site ) => site.url ) );
 											}
 										} }
 										disabled={ isApplyingPlugins }
@@ -677,7 +675,7 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 									<VStack spacing={ 2 }>
 										{ sharedSites.map( ( site ) => (
 											<div
-												key={ site?.siteUrl }
+												key={ site?.url }
 												style={ {
 													padding: '8px',
 													border: '1px solid #f0f0f1',
@@ -692,7 +690,7 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 														return;
 													}
 
-													handleSiteSelection( site.siteUrl );
+													handleSiteSelection( site.url );
 												} }
 												role="button"
 												tabIndex={ 0 }
@@ -704,25 +702,25 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 
 													if ( e.key === 'Enter' || e.key === ' ' ) {
 														e.preventDefault();
-														handleSiteSelection( site.siteUrl );
+														handleSiteSelection( site.url );
 													}
 												} }
-												aria-pressed={ selectedSite.includes( site.siteUrl ) }
+												aria-pressed={ selectedSite.includes( site.url ) }
 											>
 												<CheckboxControl
 													className="oneupdate-site-checkbox"
 													label={
 														<div>
 															<div style={ { fontWeight: '500', color: '#23282d' } }>
-																{ site?.siteName }
+																{ site?.name }
 															</div>
 															<div style={ { fontSize: '12px', color: '#6c757d' } }>
-																{ site?.siteUrl }
+																{ site?.url }
 															</div>
 														</div>
 													}
-													checked={ selectedSite.includes( site?.siteUrl ) }
-													onChange={ () => handleSiteSelection( site.siteUrl ) }
+													checked={ selectedSite.includes( site?.url ) }
+													onChange={ () => handleSiteSelection( site.url ) }
 													disabled={ isApplyingPlugins }
 												/>
 											</div>
@@ -777,6 +775,3 @@ const PluginsSharing = () => {
 };
 
 export default PluginsSharing;
-
-/* eslint-enable react-hooks/exhaustive-deps */
-/* eslint-enable @wordpress/no-unsafe-wp-apis */
