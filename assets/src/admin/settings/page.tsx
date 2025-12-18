@@ -118,12 +118,12 @@ const SettingsPage = () => {
 				throw new Error( 'No shared sites in response' );
 			}
 
-			setSites( data.shared_sites );
-
-			if ( data.shared_sites.length === 0 ) {
+			if ( data.shared_sites.length === 1 && sites.length === 0 ) {
 				// Reloading causes the menus etc to reflect the missing sites.
 				window.location.reload();
 			}
+
+			setSites( data.shared_sites );
 
 			setNotice( {
 				type: 'success',
