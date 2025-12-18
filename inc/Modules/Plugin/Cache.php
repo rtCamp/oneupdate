@@ -35,7 +35,7 @@ final class Cache implements Registrable {
 	 */
 	public function register_hooks(): void {
 
-		if ( ! Settings::is_governing_site() ) {
+		if ( ! Settings::is_consumer_site() ) {
 			return;
 		}
 
@@ -201,7 +201,7 @@ final class Cache implements Registrable {
 
 		$plugin_slug = explode( '/', $plugin_slug )[0];
 
-		$existing_transient = get_transient( 'oneupdate_get_plugins' );
+		$existing_transient = get_transient( self::TRANSIENT_GET_PLUGINS );
 		if ( ! $existing_transient ) {
 			self::build_plugins_transient();
 		}
