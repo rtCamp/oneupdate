@@ -202,10 +202,17 @@ final class Cache implements Registrable {
 		$plugin_slug = explode( '/', $plugin_slug )[0];
 
 		$existing_transient = get_transient( self::TRANSIENT_GET_PLUGINS );
-		if ( ! $existing_transient ) {
+		if ( empty( $existing_transient ) ) {
 			self::build_plugins_transient();
+			return;
 		}
 		$reconstructed_plugins = json_decode( $existing_transient, true );
+
+		// if plugin not found or data is corrupted, rebuild the entire transient.
+		if ( is_wp_error( $reconstructed_plugins ) || ! isset( $reconstructed_plugins[ $plugin_slug ] ) ) {
+			self::build_plugins_transient();
+			return;
+		}
 
 		// add is_active field to the plugin.
 		$reconstructed_plugins[ $plugin_slug ]['is_active'] = $is_activation ? true : ( $is_deactivation ? false : is_plugin_active( $original_plugin_slug ) );

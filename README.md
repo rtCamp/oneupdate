@@ -64,8 +64,8 @@ OneUpdate solves this by:
 | :---- | :---- |
 | WordPress | \>= 6.8 |
 | PHP | \>= 8.1 |
-| Tested Up to | \>= 6.8.2 |
-| Stable Tag | 1.0 |
+| Tested Up to | \>= 6.9 |
+| Stable Tag | 1.1.0-beta.1 |
 | Prerequisites | CI/CD managed sites (GitHub/GitLab/Bitbucket) |
 
 ## Installation & Setup
