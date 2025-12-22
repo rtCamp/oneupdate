@@ -209,7 +209,7 @@ final class Cache implements Registrable {
 		$reconstructed_plugins = json_decode( $existing_transient, true );
 
 		// if plugin not found or data is corrupted, rebuild the entire transient.
-		if ( is_wp_error( $reconstructed_plugins ) || ! isset( $reconstructed_plugins[ $plugin_slug ] ) ) {
+		if ( empty( $reconstructed_plugins ) || ! isset( $reconstructed_plugins[ $plugin_slug ] ) ) {
 			self::build_plugins_transient();
 			return;
 		}
