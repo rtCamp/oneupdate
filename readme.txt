@@ -3,8 +3,8 @@ Contributors: Utsav Patel, rtCamp
 Donate link: https://rtcamp.com/
 Tags: plugin manager, CI/CD, automation, enterprise
 Requires at least: 6.8
-Tested up to: 6.8
-Stable tag: 1.0.0
+Tested up to: 6.9
+Stable tag: 1.1.0-beta.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -114,7 +114,10 @@ For public plugins, you can choose from the latest 5 available versions from Wor
 
 == Changelog ==
 
-= 1.0.0 =
+= 1.1.0-beta.1 =
+Feat: Refactor for WPCS and best practices
+
+= 1.0.0-beta =
 * Initial release
 * Centralized plugin management governing
 * Support for public and private plugins
@@ -127,13 +130,11 @@ For public plugins, you can choose from the latest 5 available versions from Wor
 
 == Upgrade Notice ==
 
-= 1.0.0 =
+= 1.0.0-beta =
 Initial release of OneUpdate. Perfect for enterprises managing multiple WordPress sites through CI/CD workflows.
 
 == Requirements ==
 
-* WordPress 6.8 or higher
-* PHP 8.1 or higher
 * Sites managed through CI/CD pipelines (GitHub/GitLab/Bitbucket)
 * GitHub PAT token with repository write access
 * S3 credentials for private plugin management
