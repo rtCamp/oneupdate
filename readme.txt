@@ -130,16 +130,11 @@ Feat: Refactor for WPCS and best practices
 
 == Upgrade Notice ==
 
-= 1.1.0-beta.1 =
-Feat: Refactor for WPCS and best practices
-
 = 1.0.0-beta =
 Initial release of OneUpdate. Perfect for enterprises managing multiple WordPress sites through CI/CD workflows.
 
 == Requirements ==
 
-* WordPress 6.8 or higher
-* PHP 8.1 or higher
 * Sites managed through CI/CD pipelines (GitHub/GitLab/Bitbucket)
 * GitHub PAT token with repository write access
 * S3 credentials for private plugin management
