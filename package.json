@@ -36,7 +36,7 @@
 		"@wordpress/babel-preset-default": "^8.37.0",
 		"@wordpress/browserslist-config": "^6.36.0",
 		"@wordpress/env": "^10.37.0",
-		"@wordpress/eslint-plugin": "^22.22.0",
+		"@wordpress/eslint-plugin": "^23.0.0",
 		"@wordpress/scripts": "^31.1.0",
 		"browserslist": "^4.28.1",
 		"cross-env": "^10.1.0",
