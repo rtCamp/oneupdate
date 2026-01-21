@@ -210,4 +210,32 @@ class Assets implements Registrable {
 			$media
 		);
 	}
+
+	/**
+	 * AJAX handler for plugin search and filter.
+	 */
+	public function handle_plugin_search(): void {
+		check_ajax_referer( 'plugin_search_nonce', 'security' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( [ 'message' => 'Unauthorized' ], 403 );
+		}
+
+		$search_term = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
+		$plugins     = $this->get_plugins(); // Assume this method fetches the plugin list.
+
+		$filtered_plugins = array_filter( $plugins, function ( $plugin ) use ( $search_term ) {
+			return stripos( $plugin['name'], $search_term ) !== false ||
+			       stripos( $plugin['status'], $search_term ) !== false;
+		});
+
+		wp_send_json_success( [ 'plugins' => $filtered_plugins ] );
+	}
+
+	/**
+	 * Register AJAX actions.
+	 */
+	public function register_ajax_actions(): void {
+		add_action( 'wp_ajax_plugin_search', [ $this, 'handle_plugin_search' ] );
+	}
 }
