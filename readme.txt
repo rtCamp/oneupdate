@@ -4,7 +4,7 @@ Donate link: https://rtcamp.com/
 Tags: plugin manager, CI/CD, automation, enterprise
 Requires at least: 6.8
 Tested up to: 6.9
-Stable tag: 1.1.0-beta.1
+Stable tag: 1.1.0
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -114,19 +114,7 @@ For public plugins, you can choose from the latest 5 available versions from Wor
 
 == Changelog ==
 
-= 1.1.0-beta.1 =
-Feat: Refactor for WPCS and best practices
-
-= 1.0.0-beta =
-* Initial release
-* Centralized plugin management governing
-* Support for public and private plugins
-* GitHub Actions integration for automated PR creation
-* S3 integration for private plugin storage
-* Bulk plugin operations
-* Version management (latest 5 versions)
-* REST API with secure authentication
-* WordPress multisite and standalone support
+For the full changelog, please visit <a href="https://github.com/rtCamp/OneUpdate/blob/main/CHANGELOG.md" target="_blank">GitHub repository</a>.
 
 == Upgrade Notice ==
 
