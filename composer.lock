@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4a20299050d8f82b6388213f020b34df",
+    "content-hash": "8d9e6a3b2582c162fd3969e4a07f1a2a",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -4233,15 +4233,15 @@
         },
         {
             "name": "wpackagist-plugin/plugin-check",
-            "version": "1.6.0",
+            "version": "1.8.0",
             "source": {
                 "type": "svn",
                 "url": "https://plugins.svn.wordpress.org/plugin-check/",
-                "reference": "tags/1.6.0"
+                "reference": "tags/1.8.0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://downloads.wordpress.org/plugin/plugin-check.1.6.0.zip"
+                "url": "https://downloads.wordpress.org/plugin/plugin-check.1.8.0.zip"
             },
             "require": {
                 "composer/installers": "^1.0 || ^2.0"
