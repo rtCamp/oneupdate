@@ -4,7 +4,7 @@ Donate link: https://rtcamp.com/
 Tags: plugin manager, CI/CD, automation, enterprise
 Requires at least: 6.8
 Tested up to: 6.9
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
