@@ -33,6 +33,4 @@ parameters:
 				- node_modules (?)
 		ignoreErrors:
 				- # Too noisy for now.
-					identifier: missingType.generics
-				- # Too noisy for now.
 					identifier: missingType.iterableValue
