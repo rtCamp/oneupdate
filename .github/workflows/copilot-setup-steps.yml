@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           show-progress: ${{ runner.debug == '1' && 'true' || 'false' }}
           persist-credentials: false
@@ -34,7 +34,7 @@ jobs:
       # dependency versions are installed and cached.
       ##
       - name: Set up PHP
-        uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f # v2.35.5
+        uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # v2.36.0
         with:
           php-version: "8.3"
           coverage: none
@@ -43,7 +43,7 @@ jobs:
         uses: ramsey/composer-install@3cf229dc2919194e9e36783941438d17239e8520 # v3.1.1
 
       - name: Setup Node
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v5.0.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v5.0.0
         with:
           cache: "npm"
           node-version-file: ".nvmrc"
