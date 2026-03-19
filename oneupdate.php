@@ -10,7 +10,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain: oneupdate
  * Domain Path: /languages
- * Version: 1.1.2
+ * Version: 1.1.3
  * Requires PHP: 8.1
  * Requires at least: 6.8
  * Tested up to: 6.9
@@ -30,7 +30,7 @@ function constants(): void {
 	/**
 	 * Version of the plugin.
 	 */
-	define( 'ONEUPDATE_VERSION', '1.1.2' );
+	define( 'ONEUPDATE_VERSION', '1.1.3' );
 
 	/**
 	 * Root path to the plugin directory.
