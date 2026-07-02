@@ -1,36 +1,40 @@
-parameters:
-		# Rules
-		treatPhpDocTypesAsCertain: false
-		inferPrivatePropertyTypeFromConstructor: true
-		checkExplicitMixedMissingReturn: true
-		checkFunctionNameCase: true
-		checkInternalClassCaseSensitivity: true
-		checkTooWideReturnTypesInProtectedAndPublicMethods: true
-		polluteScopeWithAlwaysIterableForeach: false
-		polluteScopeWithLoopInitialAssignments: false
-		reportAlwaysTrueInLastCondition: true
-		reportStaticMethodSignatures: true
-		reportWrongPhpDocTypeInVarTag: true
+# https://phpstan.org/config-reference
 
-		# Configuration
-		level: 8
-		phpVersion:
-			min: 80100
-			max: 80400
-		bootstrapFiles:
-				- oneupdate.php
-		paths:
-				- oneupdate.php
-				- uninstall.php
-				- inc/
-		scanDirectories:
-				- vendor/aws
-		excludePaths:
-			analyse:
-				- tests/
-				- vendor/
-			analyseAndScan:
-				- node_modules (?)
-		ignoreErrors:
-				- # Too noisy for now.
-					identifier: missingType.iterableValue
+parameters:
+	# Rules
+	treatPhpDocTypesAsCertain: false
+	inferPrivatePropertyTypeFromConstructor: true
+	checkExplicitMixedMissingReturn: true
+	checkFunctionNameCase: true
+	checkInternalClassCaseSensitivity: true
+	checkTooWideReturnTypesInProtectedAndPublicMethods: true
+	polluteScopeWithAlwaysIterableForeach: false
+	polluteScopeWithLoopInitialAssignments: false
+	reportAlwaysTrueInLastCondition: true
+	reportStaticMethodSignatures: true
+	reportWrongPhpDocTypeInVarTag: true
+
+	# Configuration
+	level: 8
+	phpVersion:
+		min: 80100
+		max: 80400
+	bootstrapFiles:
+		- oneupdate.php
+	stubFiles:
+		- tests/phpstan/stubs/wordpress-extended.php
+	paths:
+		- oneupdate.php
+		- uninstall.php
+		- inc/
+	scanDirectories:
+		- vendor/aws
+	excludePaths:
+		analyse:
+			- tests/
+			- vendor/
+			- vendor-prefixed/
+		analyseAndScan:
+			- node_modules (?)
+
+	ignoreErrors:
