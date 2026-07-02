@@ -1,6 +1,9 @@
 /**
  * WordPress dependencies
  */
+/**
+ * External dependencies
+ */
 import { useState, useMemo } from 'react';
 import {
 	Modal,
@@ -32,19 +35,25 @@ interface GitHubRepos {
 	name: string;
 }
 
-const SiteModal = (
-	{ formData, setFormData, onSubmit, onClose, editing, sites, originalData, allGitHubRepos } :
-	{
-		formData: typeof defaultBrandSite;
-		setFormData: ( data: typeof defaultBrandSite ) => void;
-		onSubmit: () => Promise< boolean >;
-		onClose: () => void;
-		editing: boolean;
-		sites: typeof defaultBrandSite[];
-		originalData: typeof defaultBrandSite | undefined;
-		allGitHubRepos: GitHubRepos[];
-	},
-) => {
+const SiteModal = ( {
+	formData,
+	setFormData,
+	onSubmit,
+	onClose,
+	editing,
+	sites,
+	originalData,
+	allGitHubRepos,
+}: {
+	formData: typeof defaultBrandSite;
+	setFormData: ( data: typeof defaultBrandSite ) => void;
+	onSubmit: () => Promise< boolean >;
+	onClose: () => void;
+	editing: boolean;
+	sites: ( typeof defaultBrandSite )[];
+	originalData: typeof defaultBrandSite | undefined;
+	allGitHubRepos: GitHubRepos[];
+} ) => {
 	const [ errors, setErrors ] = useState< ErrorsType >( {
 		name: '',
 		url: '',
@@ -69,26 +78,38 @@ const SiteModal = (
 		);
 	}, [ editing, formData, originalData ] );
 
-	const handleSubmit = async ():Promise<void> => {
+	const handleSubmit = async (): Promise< void > => {
 		// Validate inputs
 		let urlError = '';
 		if ( ! formData.url.trim() ) {
 			urlError = __( 'Site URL is required.', 'oneupdate' );
 		} else if ( ! isValidUrl( formData.url ) ) {
-			urlError = __( 'Enter a valid URL (must start with http or https).', 'oneupdate' );
+			urlError = __(
+				'Enter a valid URL (must start with http or https).',
+				'oneupdate'
+			);
 		}
 
 		const newErrors = {
-			name: ! formData.name.trim() ? __( 'Site Name is required.', 'oneupdate' ) : '',
+			name: ! formData.name.trim()
+				? __( 'Site Name is required.', 'oneupdate' )
+				: '',
 			url: urlError,
-			api_key: ! formData.api_key.trim() ? __( 'API Key is required.', 'oneupdate' ) : '',
+			api_key: ! formData.api_key.trim()
+				? __( 'API Key is required.', 'oneupdate' )
+				: '',
 			message: '',
-			gh_repo: ! formData.gh_repo.trim() ? __( 'GitHub Repository is required.', 'oneupdate' ) : '',
+			gh_repo: ! formData.gh_repo.trim()
+				? __( 'GitHub Repository is required.', 'oneupdate' )
+				: '',
 		};
 
 		// make sure site name is under 20 characters
 		if ( formData.name.length > 20 ) {
-			newErrors.name = __( 'Site Name must be under 20 characters.', 'oneupdate' );
+			newErrors.name = __(
+				'Site Name must be under 20 characters.',
+				'oneupdate'
+			);
 		}
 
 		setErrors( newErrors );
@@ -113,14 +134,17 @@ const SiteModal = (
 						'Content-Type': 'application/json',
 						'X-OneUpdate-Token': formData.api_key,
 					},
-				},
+				}
 			);
 
 			const healthCheckData = await healthCheck.json();
 			if ( ! healthCheckData.success ) {
 				setErrors( {
 					...newErrors,
-					message: __( 'Health check failed, please verify API key and make sure there\'s no governing site connected.', 'oneupdate' ),
+					message: __(
+						"Health check failed, please verify API key and make sure there's no governing site connected.",
+						'oneupdate'
+					),
 				} );
 				setShowNotice( true );
 				setIsProcessing( false );
@@ -148,7 +172,10 @@ const SiteModal = (
 			if ( isAlreadyExists ) {
 				setErrors( {
 					...newErrors,
-					message: __( 'Site URL already exists. Please use a different URL.', 'oneupdate' ),
+					message: __(
+						'Site URL already exists. Please use a different URL.',
+						'oneupdate'
+					),
 				} );
 				setShowNotice( true );
 				setIsProcessing( false );
@@ -161,14 +188,20 @@ const SiteModal = (
 			if ( ! submitResponse ) {
 				setErrors( {
 					...newErrors,
-					message: __( 'An error occurred while saving the site. Please try again.', 'oneupdate' ),
+					message: __(
+						'An error occurred while saving the site. Please try again.',
+						'oneupdate'
+					),
 				} );
 				setShowNotice( true );
 			}
 		} catch ( error ) {
 			setErrors( {
 				...newErrors,
-				message: __( 'An unexpected error occurred. Please try again.', 'oneupdate' ),
+				message: __(
+					'An unexpected error occurred. Please try again.',
+					'oneupdate'
+				),
 			} );
 			setShowNotice( true );
 			setIsProcessing( false );
@@ -182,7 +215,8 @@ const SiteModal = (
 	// 1. Currently processing, OR
 	// 2. Required fields are empty, OR
 	// 3. In editing mode and no changes have been made
-	const isButtonDisabled = isProcessing ||
+	const isButtonDisabled =
+		isProcessing ||
 		! formData.name ||
 		! formData.url ||
 		! formData.api_key ||
@@ -191,52 +225,82 @@ const SiteModal = (
 
 	return (
 		<Modal
-			title={ editing ? __( 'Edit Brand Site', 'oneupdate' ) : __( 'Add Brand Site', 'oneupdate' ) }
+			title={
+				editing
+					? __( 'Edit Brand Site', 'oneupdate' )
+					: __( 'Add Brand Site', 'oneupdate' )
+			}
 			onRequestClose={ onClose }
 			size="medium"
-			shouldCloseOnClickOutside={ true }
+			shouldCloseOnClickOutside
 		>
 			{ showNotice && (
 				<Notice
 					status="error"
-					isDismissible={ true }
+					isDismissible
 					onRemove={ () => setShowNotice( false ) }
 				>
-					{ errors.message || errors.name || errors.url || errors.api_key }
+					{ errors.message ||
+						errors.name ||
+						errors.url ||
+						errors.api_key }
 				</Notice>
 			) }
 
 			<TextControl
 				label={ __( 'Site Name*', 'oneupdate' ) }
 				value={ formData.name }
-				onChange={ ( value ) => setFormData( { ...formData, name: value } ) }
-				help={ __( 'This is the name of the site that will be registered.', 'oneupdate' ) }
+				onChange={ ( value ) =>
+					setFormData( { ...formData, name: value } )
+				}
+				help={ __(
+					'This is the name of the site that will be registered.',
+					'oneupdate'
+				) }
 				__next40pxDefaultSize
 				__nextHasNoMarginBottom
 			/>
 			<TextControl
 				label={ __( 'Site URL*', 'oneupdate' ) }
 				value={ formData.url }
-				onChange={ ( value ) => setFormData( { ...formData, url: value } ) }
-				help={ __( 'It must start with http or https and end with /, like: https://rtcamp.com/', 'oneupdate' ) }
+				onChange={ ( value ) =>
+					setFormData( { ...formData, url: value } )
+				}
+				help={ __(
+					'It must start with http or https and end with /, like: https://rtcamp.com/',
+					'oneupdate'
+				) }
 				__next40pxDefaultSize
 				__nextHasNoMarginBottom
 			/>
 			<ComboboxControl
 				label={ __( 'GitHub Repository*', 'oneupdate' ) }
 				value={ formData.gh_repo }
-				onChange={ ( value ) => setFormData( { ...formData, gh_repo: value || '' } ) }
-				options={ allGitHubRepos.map( ( repo ) => ( { label: repo.slug, value: repo.slug } ) ) }
+				onChange={ ( value ) =>
+					setFormData( { ...formData, gh_repo: value || '' } )
+				}
+				options={ allGitHubRepos.map( ( repo ) => ( {
+					label: repo.slug,
+					value: repo.slug,
+				} ) ) }
 				placeholder={ __( 'Select a repository', 'oneupdate' ) }
-				help={ __( 'Select the GitHub repository associated with this site.', 'oneupdate' ) }
+				help={ __(
+					'Select the GitHub repository associated with this site.',
+					'oneupdate'
+				) }
 				__nextHasNoMarginBottom
 				__next40pxDefaultSize
 			/>
 			<TextareaControl
 				label={ __( 'API Key*', 'oneupdate' ) }
 				value={ formData.api_key }
-				onChange={ ( value ) => setFormData( { ...formData, api_key: value } ) }
-				help={ __( 'This is the API key that will be used to authenticate the site for OneUpdate.', 'oneupdate' ) }
+				onChange={ ( value ) =>
+					setFormData( { ...formData, api_key: value } )
+				}
+				help={ __(
+					'This is the API key that will be used to authenticate the site for OneUpdate.',
+					'oneupdate'
+				) }
 				__nextHasNoMarginBottom
 			/>
 
@@ -247,9 +311,9 @@ const SiteModal = (
 				disabled={ isButtonDisabled }
 				style={ { marginTop: '12px' } }
 			>
-				{ (
-					editing ? __( 'Update Site', 'oneupdate' ) : __( 'Add Site', 'oneupdate' )
-				) }
+				{ editing
+					? __( 'Update Site', 'oneupdate' )
+					: __( 'Add Site', 'oneupdate' ) }
 			</Button>
 		</Modal>
 	);

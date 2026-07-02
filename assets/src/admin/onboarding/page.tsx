@@ -1,6 +1,9 @@
 /**
  * WordPress dependencies
  */
+/**
+ * External dependencies
+ */
 import { useState, useEffect } from 'react';
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
@@ -32,7 +35,10 @@ const { nonce, setup_url, site_type } = window.OneUpdateOnboarding;
  */
 apiFetch.use( apiFetch.createNonceMiddleware( nonce ) );
 
-const SiteTypeSelector = ( { value, setSiteType }: {
+const SiteTypeSelector = ( {
+	value,
+	setSiteType,
+}: {
 	value: SiteType | '';
 	setSiteType: ( v: SiteType | '' ) => void;
 } ) => (
@@ -41,7 +47,7 @@ const SiteTypeSelector = ( { value, setSiteType }: {
 		value={ value }
 		help={ __(
 			"Choose your site's primary purpose. This setting cannot be changed later and affects available features and configurations.",
-			'oneupdate',
+			'oneupdate'
 		) }
 		onChange={ ( v: SiteType | '' ) => {
 			setSiteType( v );
@@ -49,18 +55,25 @@ const SiteTypeSelector = ( { value, setSiteType }: {
 		options={ [
 			{ label: __( 'Select…', 'oneupdate' ), value: '' },
 			{ label: __( 'Brand Site', 'oneupdate' ), value: BRAND_SITE },
-			{ label: __( 'Governing site', 'oneupdate' ), value: GOVERNING_SITE },
+			{
+				label: __( 'Governing site', 'oneupdate' ),
+				value: GOVERNING_SITE,
+			},
 		] }
 	/>
 );
 
 const OnboardingScreen = () => {
-	const [ siteType, setSiteType ] = useState<SiteType | ''>( site_type || '' );
-	const [ notice, setNotice ] = useState<NoticeState | null>( null );
+	const [ siteType, setSiteType ] = useState< SiteType | '' >(
+		site_type || ''
+	);
+	const [ notice, setNotice ] = useState< NoticeState | null >( null );
 	const [ isSaving, setIsSaving ] = useState( false );
 
 	useEffect( () => {
-		apiFetch<{ oneupdate_site_type?: SiteType }>( { path: '/wp/v2/settings' } )
+		apiFetch< { oneupdate_site_type?: SiteType } >( {
+			path: '/wp/v2/settings',
+		} )
 			.then( ( settings ) => {
 				if ( settings?.oneupdate_site_type ) {
 					setSiteType( settings.oneupdate_site_type );
@@ -80,7 +93,7 @@ const OnboardingScreen = () => {
 		setIsSaving( true );
 
 		try {
-			await apiFetch<{ oneupdate_site_type?: SiteType }>( {
+			await apiFetch< { oneupdate_site_type?: SiteType } >( {
 				path: '/wp/v2/settings',
 				method: 'POST',
 				data: { oneupdate_site_type: value },
@@ -111,7 +124,7 @@ const OnboardingScreen = () => {
 			{ !! notice?.message && (
 				<Notice
 					status={ notice?.type ?? 'success' }
-					isDismissible={ true }
+					isDismissible
 					onRemove={ () => setNotice( null ) }
 				>
 					{ notice?.message }

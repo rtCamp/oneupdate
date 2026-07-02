@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Class S3_Controller - this class has api endpoints for S3 uploads.
  *
@@ -18,7 +21,6 @@ use WP_REST_Server;
  * Class S3_Controller
  */
 class S3_Controller extends Abstract_REST_Controller {
-
 	/**
 	 * {@inheritDoc}
 	 */

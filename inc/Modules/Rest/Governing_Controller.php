@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * This will have routes specific to governing site other then basic options.
  *
@@ -14,7 +17,6 @@ use WP_REST_Server;
  * Class Governing_Controller
  */
 class Governing_Controller extends Abstract_REST_Controller {
-
 	/**
 	 * Prefix for transient keys
 	 *
@@ -106,8 +108,6 @@ class Governing_Controller extends Abstract_REST_Controller {
 
 	/**
 	 * Get all public and private GitHub repositories from rtCamp and wpcomvip organizations.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function get_gh_repos(): \WP_REST_Response|\WP_Error {
 
@@ -198,8 +198,6 @@ class Governing_Controller extends Abstract_REST_Controller {
 
 	/**
 	 * Get S3 credentials.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function get_s3_credentials(): \WP_REST_Response|\WP_Error {
 		$s3_credentials = Plugin_Settings::get_s3_credentials();
@@ -216,8 +214,6 @@ class Governing_Controller extends Abstract_REST_Controller {
 	 * Set S3 credentials.
 	 *
 	 * @param \WP_REST_Request $request The request object.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function set_s3_credentials( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 
@@ -249,8 +245,6 @@ class Governing_Controller extends Abstract_REST_Controller {
 
 	/**
 	 * Get the GitHub token.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function get_github_token(): \WP_REST_Response|\WP_Error {
 		$github_token = Plugin_Settings::get_github_token();
@@ -267,8 +261,6 @@ class Governing_Controller extends Abstract_REST_Controller {
 	 * Set the GitHub token.
 	 *
 	 * @param \WP_REST_Request $request The request object.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function set_github_token( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 

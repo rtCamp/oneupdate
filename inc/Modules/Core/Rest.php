@@ -15,7 +15,6 @@ use OneUpdate\Contracts\Interfaces\Registrable;
  * Class REST
  */
 final class Rest implements Registrable {
-
 	/**
 	 * {@inheritDoc}
 	 */

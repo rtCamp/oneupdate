@@ -23,9 +23,16 @@ import { upload } from '@wordpress/icons';
 const API_NAMESPACE = window.OneUpdatePlugins.restUrl + '/oneupdate/v1';
 const RestNonce = window.OneUpdatePlugins.restNonce;
 
-const PluginSelectionModal = ( { history, onClose, onNext, selectedPlugins, setSelectedPlugins } ) => {
-	const availablePlugins = history.filter( ( item ) =>
-		new Date( item.upload_time ).getTime() > Date.now() - ( 60 * 60 * 1000 ),
+const PluginSelectionModal = ( {
+	history,
+	onClose,
+	onNext,
+	selectedPlugins,
+	setSelectedPlugins,
+} ) => {
+	const availablePlugins = history.filter(
+		( item ) =>
+			new Date( item.upload_time ).getTime() > Date.now() - 60 * 60 * 1000
 	);
 
 	const handleSelectAllPlugins = () => {
@@ -34,7 +41,9 @@ const PluginSelectionModal = ( { history, onClose, onNext, selectedPlugins, setS
 			setSelectedPlugins( [] );
 		} else {
 			// Select all
-			setSelectedPlugins( availablePlugins.map( ( plugin ) => plugin.presigned_url ) );
+			setSelectedPlugins(
+				availablePlugins.map( ( plugin ) => plugin.presigned_url )
+			);
 		}
 	};
 
@@ -42,7 +51,7 @@ const PluginSelectionModal = ( { history, onClose, onNext, selectedPlugins, setS
 		<Modal
 			title={ __( 'Select Plugins to Install', 'oneupdate' ) }
 			onRequestClose={ onClose }
-			shouldCloseOnClickOutside={ true }
+			shouldCloseOnClickOutside
 			className="oneupdate-plugin-selection-modal"
 			style={ { maxWidth: '600px', minWidth: '600px' } }
 		>
@@ -50,8 +59,17 @@ const PluginSelectionModal = ( { history, onClose, onNext, selectedPlugins, setS
 				<VStack spacing={ 4 }>
 					{ /* Action Description */ }
 					<div>
-						<p style={ { margin: 0, color: '#6c757d', fontSize: '14px' } }>
-							{ __( 'Select the plugins you want to install on your sites. Only plugins uploaded within the last hour are shown.', 'oneupdate' ) }
+						<p
+							style={ {
+								margin: 0,
+								color: '#6c757d',
+								fontSize: '14px',
+							} }
+						>
+							{ __(
+								'Select the plugins you want to install on your sites. Only plugins uploaded within the last hour are shown.',
+								'oneupdate'
+							) }
 						</p>
 					</div>
 
@@ -59,18 +77,40 @@ const PluginSelectionModal = ( { history, onClose, onNext, selectedPlugins, setS
 					<div>
 						{ availablePlugins.length > 0 ? (
 							<>
-								<div style={ { marginBottom: '16px', display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' } }>
+								<div
+									style={ {
+										marginBottom: '16px',
+										display: 'flex',
+										flexDirection: 'row',
+										gap: '8px',
+										alignItems: 'center',
+									} }
+								>
 									<CheckboxControl
-										label={ __( 'Select All Plugins', 'oneupdate' ) }
-										checked={ selectedPlugins.length === availablePlugins.length && availablePlugins.length > 0 }
+										label={ __(
+											'Select All Plugins',
+											'oneupdate'
+										) }
+										checked={
+											selectedPlugins.length ===
+												availablePlugins.length &&
+											availablePlugins.length > 0
+										}
 										onChange={ handleSelectAllPlugins }
 										style={ { fontWeight: '500' } }
 									/>
 									<Button
 										variant="link"
-										onClick={ () => setSelectedPlugins( [] ) }
-										disabled={ selectedPlugins.length === 0 }
-										style={ { fontWeight: '500', marginBottom: '8px' } }
+										onClick={ () =>
+											setSelectedPlugins( [] )
+										}
+										disabled={
+											selectedPlugins.length === 0
+										}
+										style={ {
+											fontWeight: '500',
+											marginBottom: '8px',
+										} }
 									>
 										{ __( 'Clear Selection', 'oneupdate' ) }
 									</Button>
@@ -86,60 +126,116 @@ const PluginSelectionModal = ( { history, onClose, onNext, selectedPlugins, setS
 									} }
 								>
 									<VStack spacing={ 2 }>
-										{ availablePlugins.map( ( item, index ) => (
-											<div
-												key={ index }
-												style={ {
-													padding: '8px',
-													border: '1px solid #f0f0f1',
-													borderRadius: '4px',
-													cursor: 'pointer',
-												} }
-												role="button"
-												tabIndex={ 0 }
-												onKeyDown={ ( e ) => {
-													if ( e.key === 'Enter' || e.key === ' ' ) {
-														e.preventDefault();
-														setSelectedPlugins( ( prev ) =>
-															prev.includes( item.presigned_url )
-																? prev.filter( ( plugin ) => plugin !== item.presigned_url )
-																: [ ...prev, item.presigned_url ],
+										{ availablePlugins.map(
+											( item, index ) => (
+												<div
+													key={ index }
+													style={ {
+														padding: '8px',
+														border: '1px solid #f0f0f1',
+														borderRadius: '4px',
+														cursor: 'pointer',
+													} }
+													role="button"
+													tabIndex={ 0 }
+													onKeyDown={ ( e ) => {
+														if (
+															e.key === 'Enter' ||
+															e.key === ' '
+														) {
+															e.preventDefault();
+															setSelectedPlugins(
+																( prev ) =>
+																	prev.includes(
+																		item.presigned_url
+																	)
+																		? prev.filter(
+																				(
+																					plugin
+																				) =>
+																					plugin !==
+																					item.presigned_url
+																		  )
+																		: [
+																				...prev,
+																				item.presigned_url,
+																		  ]
+															);
+														}
+													} }
+													aria-pressed={ selectedPlugins.includes(
+														item.presigned_url
+													) }
+													onClick={ ( event ) => {
+														event.stopPropagation();
+														setSelectedPlugins(
+															( prev ) =>
+																prev.includes(
+																	item.presigned_url
+																)
+																	? prev.filter(
+																			(
+																				plugin
+																			) =>
+																				plugin !==
+																				item.presigned_url
+																	  )
+																	: [
+																			...prev,
+																			item.presigned_url,
+																	  ]
 														);
-													}
-												} }
-												aria-pressed={ selectedPlugins.includes( item.presigned_url ) }
-												onClick={ ( event ) => {
-													event.stopPropagation();
-													setSelectedPlugins( ( prev ) =>
-														prev.includes( item.presigned_url )
-															? prev.filter( ( plugin ) => plugin !== item.presigned_url )
-															: [ ...prev, item.presigned_url ],
-													);
-												} }
-											>
-												<CheckboxControl
-													className="oneupdate-site-checkbox"
-													label={
-														<div>
-															<div style={ { fontWeight: '500', color: '#23282d' } }>
-																{ item.file_name }
+													} }
+												>
+													<CheckboxControl
+														className="oneupdate-site-checkbox"
+														label={
+															<div>
+																<div
+																	style={ {
+																		fontWeight:
+																			'500',
+																		color: '#23282d',
+																	} }
+																>
+																	{
+																		item.file_name
+																	}
+																</div>
+																<div
+																	style={ {
+																		fontSize:
+																			'12px',
+																		color: '#6c757d',
+																	} }
+																>
+																	{ __(
+																		'Uploaded:',
+																		'oneupdate'
+																	) }{ ' ' }
+																	{ new Date(
+																		item.upload_time
+																	).toLocaleString() }
+																</div>
 															</div>
-															<div style={ { fontSize: '12px', color: '#6c757d' } }>
-																{ __( 'Uploaded:', 'oneupdate' ) } { new Date( item.upload_time ).toLocaleString() }
-															</div>
-														</div>
-													}
-													checked={ selectedPlugins.includes( item.presigned_url ) }
-												/>
-											</div>
-										) ) }
+														}
+														checked={ selectedPlugins.includes(
+															item.presigned_url
+														) }
+													/>
+												</div>
+											)
+										) }
 									</VStack>
 								</div>
 							</>
 						) : (
 							<Notice status="warning" isDismissible={ false }>
 								<p style={ { margin: 0 } }>
-									{ __( 'No plugins uploaded within the last hour.', 'oneupdate' ) }
+									{ __(
+										'No plugins uploaded within the last hour.',
+										'oneupdate'
+									) }
 								</p>
 							</Notice>
 						) }
@@ -147,10 +243,7 @@ const PluginSelectionModal = ( { history, onClose, onNext, selectedPlugins, setS
 
 					{ /* Action Buttons */ }
 					<HStack justify="flex-end" spacing={ 3 }>
-						<Button
-							variant="secondary"
-							onClick={ onClose }
-						>
+						<Button variant="secondary" onClick={ onClose }>
 							{ __( 'Cancel', 'oneupdate' ) }
 						</Button>
 						<Button
@@ -158,7 +251,10 @@ const PluginSelectionModal = ( { history, onClose, onNext, selectedPlugins, setS
 							onClick={ onNext }
 							disabled={ selectedPlugins.length === 0 }
 						>
-							<Dashicon icon="arrow-right-alt" style={ { marginRight: '8px' } } />
+							<Dashicon
+								icon="arrow-right-alt"
+								style={ { marginRight: '8px' } }
+							/>
 							{ __( 'Next: Select Sites', 'oneupdate' ) }
 						</Button>
 					</HStack>
@@ -184,12 +280,14 @@ const SiteSelectionModal = ( {
 			setSelectedSiteInfo( [] );
 		} else {
 			// Select all
-			setSelectedSiteInfo( sharedSites.map( ( site ) => ( {
-				url: site.url,
-				name: site.name,
-				api_key: site.api_key,
-				gh_repo: site.gh_repo,
-			} ) ) );
+			setSelectedSiteInfo(
+				sharedSites.map( ( site ) => ( {
+					url: site.url,
+					name: site.name,
+					api_key: site.api_key,
+					gh_repo: site.gh_repo,
+				} ) )
+			);
 		}
 	};
 
@@ -205,8 +303,22 @@ const SiteSelectionModal = ( {
 				<VStack spacing={ 4 }>
 					{ /* Action Description */ }
 					<div>
-						<p style={ { margin: 0, color: '#6c757d', fontSize: '14px' } }>
-							{ __( 'Choose the sites where you want to install the selected plugins. You have selected', 'oneupdate' ) } <strong>{ selectedPlugins.length }</strong> { selectedPlugins.length === 1 ? __( 'plugin', 'oneupdate' ) : __( 'plugins', 'oneupdate' ) }.
+						<p
+							style={ {
+								margin: 0,
+								color: '#6c757d',
+								fontSize: '14px',
+							} }
+						>
+							{ __(
+								'Choose the sites where you want to install the selected plugins. You have selected',
+								'oneupdate'
+							) }{ ' ' }
+							<strong>{ selectedPlugins.length }</strong>{ ' ' }
+							{ selectedPlugins.length === 1
+								? __( 'plugin', 'oneupdate' )
+								: __( 'plugins', 'oneupdate' ) }
+							.
 						</p>
 					</div>
 
@@ -214,19 +326,42 @@ const SiteSelectionModal = ( {
 					<div>
 						{ sharedSites.length > 0 ? (
 							<>
-								<div style={ { marginBottom: '16px', display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' } }>
+								<div
+									style={ {
+										marginBottom: '16px',
+										display: 'flex',
+										flexDirection: 'row',
+										gap: '8px',
+										alignItems: 'center',
+									} }
+								>
 									<CheckboxControl
-										label={ __( 'Select All Sites', 'oneupdate' ) }
-										checked={ selectedSiteInfo.length === sharedSites.length && sharedSites.length > 0 }
+										label={ __(
+											'Select All Sites',
+											'oneupdate'
+										) }
+										checked={
+											selectedSiteInfo.length ===
+												sharedSites.length &&
+											sharedSites.length > 0
+										}
 										onChange={ handleSelectAllSites }
 										style={ { fontWeight: '500' } }
 										disabled={ applyingPlugins }
 									/>
 									<Button
 										variant="link"
-										onClick={ () => setSelectedSiteInfo( [] ) }
-										disabled={ selectedSiteInfo.length === 0 || applyingPlugins }
-										style={ { fontWeight: '500', marginBottom: '8px' } }
+										onClick={ () =>
+											setSelectedSiteInfo( [] )
+										}
+										disabled={
+											selectedSiteInfo.length === 0 ||
+											applyingPlugins
+										}
+										style={ {
+											fontWeight: '500',
+											marginBottom: '8px',
+										} }
 									>
 										{ __( 'Clear Selection', 'oneupdate' ) }
 									</Button>
@@ -258,24 +393,42 @@ const SiteSelectionModal = ( {
 														e.preventDefault();
 														return;
 													}
-													if ( e.key === 'Enter' || e.key === ' ' ) {
+													if (
+														e.key === 'Enter' ||
+														e.key === ' '
+													) {
 														e.preventDefault();
-														setSelectedSiteInfo( ( prev ) =>
-															prev.some( ( s ) => s.url === site.url )
-																? prev.filter( ( s ) => s.url !== site.url )
-																: [
-																	...prev,
-																	{
-																		url: site.url,
-																		name: site.name,
-																		api_key: site.api_key,
-																		gh_repo: site.gh_repo,
-																	},
-																],
+														setSelectedSiteInfo(
+															( prev ) =>
+																prev.some(
+																	( s ) =>
+																		s.url ===
+																		site.url
+																)
+																	? prev.filter(
+																			(
+																				s
+																			) =>
+																				s.url !==
+																				site.url
+																	  )
+																	: [
+																			...prev,
+																			{
+																				url: site.url,
+																				name: site.name,
+																				api_key:
+																					site.api_key,
+																				gh_repo:
+																					site.gh_repo,
+																			},
+																	  ]
 														);
 													}
 												} }
-												aria-pressed={ selectedSiteInfo.includes( site.url ) }
+												aria-pressed={ selectedSiteInfo.includes(
+													site.url
+												) }
 												onClick={ ( event ) => {
 													event.stopPropagation();
 
@@ -284,35 +437,60 @@ const SiteSelectionModal = ( {
 														return;
 													}
 
-													setSelectedSiteInfo( ( prev ) =>
-														prev.some( ( s ) => s.url === site.url )
-															? prev.filter( ( s ) => s.url !== site.url )
-															: [
-																...prev,
-																{
-																	url: site.url,
-																	name: site.name,
-																	api_key: site.api_key,
-																	gh_repo: site.gh_repo,
-																},
-															],
+													setSelectedSiteInfo(
+														( prev ) =>
+															prev.some(
+																( s ) =>
+																	s.url ===
+																	site.url
+															)
+																? prev.filter(
+																		( s ) =>
+																			s.url !==
+																			site.url
+																  )
+																: [
+																		...prev,
+																		{
+																			url: site.url,
+																			name: site.name,
+																			api_key:
+																				site.api_key,
+																			gh_repo:
+																				site.gh_repo,
+																		},
+																  ]
 													);
-												}
-												}
+												} }
 											>
 												<CheckboxControl
 													className="oneupdate-site-checkbox"
 													label={
 														<div>
-															<div style={ { fontWeight: '500', color: '#23282d' } }>
+															<div
+																style={ {
+																	fontWeight:
+																		'500',
+																	color: '#23282d',
+																} }
+															>
 																{ site.name }
 															</div>
-															<div style={ { fontSize: '12px', color: '#6c757d' } }>
+															<div
+																style={ {
+																	fontSize:
+																		'12px',
+																	color: '#6c757d',
+																} }
+															>
 																{ site.url }
 															</div>
 														</div>
 													}
-													checked={ selectedSiteInfo.some( ( s ) => s.url === site.url ) }
+													checked={ selectedSiteInfo.some(
+														( s ) =>
+															s.url === site.url
+													) }
 													disabled={ applyingPlugins }
 												/>
 											</div>
@@ -323,7 +501,10 @@ const SiteSelectionModal = ( {
 						) : (
 							<Notice status="warning" isDismissible={ false }>
 								<p style={ { margin: 0 } }>
-									{ __( 'No sites available for plugin installation.', 'oneupdate' ) }
+									{ __(
+										'No sites available for plugin installation.',
+										'oneupdate'
+									) }
 								</p>
 							</Notice>
 						) }
@@ -336,7 +517,10 @@ const SiteSelectionModal = ( {
 							onClick={ onBack }
 							disabled={ applyingPlugins }
 						>
-							<Dashicon icon="arrow-left-alt" style={ { marginRight: '8px' } } />
+							<Dashicon
+								icon="arrow-left-alt"
+								style={ { marginRight: '8px' } }
+							/>
 							{ __( 'Back', 'oneupdate' ) }
 						</Button>
 						<Button
@@ -349,10 +533,17 @@ const SiteSelectionModal = ( {
 						<Button
 							variant="primary"
 							onClick={ onInstall }
-							disabled={ selectedPlugins.length === 0 || selectedSiteInfo.length === 0 || applyingPlugins }
+							disabled={
+								selectedPlugins.length === 0 ||
+								selectedSiteInfo.length === 0 ||
+								applyingPlugins
+							}
 							isBusy={ applyingPlugins }
 						>
-							<Dashicon icon="admin-plugins" style={ { marginRight: '8px' } } />
+							<Dashicon
+								icon="admin-plugins"
+								style={ { marginRight: '8px' } }
+							/>
 							{ applyingPlugins
 								? __( 'Installing…', 'oneupdate' )
 								: __( 'Install Plugins', 'oneupdate' ) }
@@ -364,7 +555,13 @@ const SiteSelectionModal = ( {
 	);
 };
 
-const ApplyPluginsModal = ( { history, setShowApplyPluginsModal, setCurrentNotice, applyingPlugins, setApplyingPlugins } ) => {
+const ApplyPluginsModal = ( {
+	history,
+	setShowApplyPluginsModal,
+	setCurrentNotice,
+	applyingPlugins,
+	setApplyingPlugins,
+} ) => {
 	const [ selectedPlugins, setSelectedPlugins ] = useState( [] );
 	const [ selectedSiteInfo, setSelectedSiteInfo ] = useState( [] );
 	const [ sharedSites, setSharedSites ] = useState( [] );
@@ -395,42 +592,62 @@ const ApplyPluginsModal = ( { history, setShowApplyPluginsModal, setCurrentNotic
 	const applySelectedPlugins = useCallback( async () => {
 		setApplyingPlugins( true );
 		try {
-			const response = await fetch( `${ API_NAMESPACE }/apply-private-plugins`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-WP-Nonce': RestNonce,
-				},
-				body: JSON.stringify( {
-					sites: selectedSiteInfo,
-					plugins: selectedPlugins,
-				} ),
-			} );
+			const response = await fetch(
+				`${ API_NAMESPACE }/apply-private-plugins`,
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-WP-Nonce': RestNonce,
+					},
+					body: JSON.stringify( {
+						sites: selectedSiteInfo,
+						plugins: selectedPlugins,
+					} ),
+				}
+			);
 			if ( ! response.ok ) {
-				setCurrentNotice( { status: 'error', message: __( 'Network response was not ok', 'oneupdate' ) } );
+				setCurrentNotice( {
+					status: 'error',
+					message: __( 'Network response was not ok', 'oneupdate' ),
+				} );
 				throw new Error( 'Network response was not ok' );
 			}
 			const data = await response.json();
 			if ( data.success ) {
 				// Group results by site name and format message
-				let noticeMessage = __( 'Plugins applied successfully.', 'oneupdate' );
+				let noticeMessage = __(
+					'Plugins applied successfully.',
+					'oneupdate'
+				);
 
-				if ( data.results && Array.isArray( data.results ) && data.results.length > 0 ) {
+				if (
+					data.results &&
+					Array.isArray( data.results ) &&
+					data.results.length > 0
+				) {
 					// Group actions by site name
-					const groupedBySite = data.results.reduce( ( acc, result ) => {
-						const name = result.name || 'Unknown Site';
-						if ( ! acc[ name ] ) {
-							acc[ name ] = [];
-						}
-						acc[ name ].push( result );
-						return acc;
-					}, {} );
+					const groupedBySite = data.results.reduce(
+						( acc, result ) => {
+							const name = result.name || 'Unknown Site';
+							if ( ! acc[ name ] ) {
+								acc[ name ] = [];
+							}
+							acc[ name ].push( result );
+							return acc;
+						},
+						{}
+					);
 
 					// Format the message with site names and their respective URLs (each URL on new line)
-					const siteGroups = Object.entries( groupedBySite ).map( ( [ name, results ] ) => {
-						const actionLinks = results.map( ( result ) => result.run_url ).join( '\n' );
-						return `${ name }\n${ actionLinks }`;
-					} );
+					const siteGroups = Object.entries( groupedBySite ).map(
+						( [ name, results ] ) => {
+							const actionLinks = results
+								.map( ( result ) => result.run_url )
+								.join( '\n' );
+							return `${ name }\n${ actionLinks }`;
+						}
+					);
 
 					noticeMessage += `\n\n${ siteGroups.join( '\n\n' ) }`;
 				}
@@ -443,15 +660,28 @@ const ApplyPluginsModal = ( { history, setShowApplyPluginsModal, setCurrentNotic
 			} else {
 				setCurrentNotice( {
 					status: 'error',
-					message: __( 'Failed to apply plugins:', 'oneupdate' ) + data.message,
+					message:
+						__( 'Failed to apply plugins:', 'oneupdate' ) +
+						data.message,
 				} );
 			}
 		} catch ( error ) {
-			setCurrentNotice( { status: 'error', message: __( 'An error occurred while applying plugins.', 'oneupdate' ) } );
+			setCurrentNotice( {
+				status: 'error',
+				message: __(
+					'An error occurred while applying plugins.',
+					'oneupdate'
+				),
+			} );
 		} finally {
 			setApplyingPlugins( false );
 		}
-	}, [ selectedPlugins, setShowApplyPluginsModal, selectedSiteInfo, setCurrentNotice ] );
+	}, [
+		selectedPlugins,
+		setShowApplyPluginsModal,
+		selectedSiteInfo,
+		setCurrentNotice,
+	] );
 
 	const handleClose = () => {
 		setShowApplyPluginsModal( false );
@@ -472,7 +702,10 @@ const ApplyPluginsModal = ( { history, setShowApplyPluginsModal, setCurrentNotic
 		if ( selectedPlugins.length === 0 ) {
 			setCurrentNotice( {
 				status: 'error',
-				message: __( 'Please select at least one plugin to apply.', 'oneupdate' ),
+				message: __(
+					'Please select at least one plugin to apply.',
+					'oneupdate'
+				),
 			} );
 			return;
 		}
@@ -480,7 +713,10 @@ const ApplyPluginsModal = ( { history, setShowApplyPluginsModal, setCurrentNotic
 		if ( selectedSiteInfo.length === 0 ) {
 			setCurrentNotice( {
 				status: 'error',
-				message: __( 'Please select at least one site to install plugins on.', 'oneupdate' ),
+				message: __(
+					'Please select at least one site to install plugins on.',
+					'oneupdate'
+				),
 			} );
 			return;
 		}
@@ -521,11 +757,18 @@ const S3ZipUploader = () => {
 	const [ uploading, setUploading ] = useState( false );
 	const [ history, setHistory ] = useState( [] );
 	const [ loadingHistory, setLoadingHistory ] = useState( true );
-	const [ showApplyPluginsModal, setShowApplyPluginsModal ] = useState( false );
-	const [ showSiteSelectionModal, setShowSiteSelectionModal ] = useState( false );
-	const [ currentNotice, setCurrentNotice ] = useState( { status: '', message: '' } );
+	const [ showApplyPluginsModal, setShowApplyPluginsModal ] =
+		useState( false );
+	const [ showSiteSelectionModal, setShowSiteSelectionModal ] =
+		useState( false );
+	const [ currentNotice, setCurrentNotice ] = useState( {
+		status: '',
+		message: '',
+	} );
 	const [ buttonTexts, setButtonTexts ] = useState( {} );
-	const [ selectedSitesForUpload, setSelectedSitesForUpload ] = useState( [] );
+	const [ selectedSitesForUpload, setSelectedSitesForUpload ] = useState(
+		[]
+	);
 	const [ sharedSites, setSharedSites ] = useState( [] );
 	const [ applyingPlugins, setApplyingPlugins ] = useState( false );
 
@@ -559,7 +802,10 @@ const S3ZipUploader = () => {
 				// Initialize button texts for each history item
 				const initialButtonTexts = {};
 				data.forEach( ( item ) => {
-					initialButtonTexts[ item.presigned_url ] = __( 'Copy URL', 'oneupdate' );
+					initialButtonTexts[ item.presigned_url ] = __(
+						'Copy URL',
+						'oneupdate'
+					);
 				} );
 				setButtonTexts( initialButtonTexts );
 				setLoadingHistory( false );
@@ -582,7 +828,10 @@ const S3ZipUploader = () => {
 	// Handle upload private plugin button click - show site selection modal
 	const handleUploadPrivatePlugin = () => {
 		if ( ! file ) {
-			setCurrentNotice( { status: 'error', message: __( 'Please select a ZIP file.', 'oneupdate' ) } );
+			setCurrentNotice( {
+				status: 'error',
+				message: __( 'Please select a ZIP file.', 'oneupdate' ),
+			} );
 			return;
 		}
 		setShowSiteSelectionModal( true );
@@ -591,7 +840,10 @@ const S3ZipUploader = () => {
 	// Handle actual file upload after site selection
 	const handleConfirmUpload = async () => {
 		if ( selectedSitesForUpload.length === 0 ) {
-			setCurrentNotice( { status: 'error', message: __( 'Please select at least one site.', 'oneupdate' ) } );
+			setCurrentNotice( {
+				status: 'error',
+				message: __( 'Please select at least one site.', 'oneupdate' ),
+			} );
 			return;
 		}
 
@@ -602,16 +854,13 @@ const S3ZipUploader = () => {
 			const formData = new FormData();
 			formData.append( 'file', file );
 
-			let uploadResponse = await fetch(
-				`${ API_NAMESPACE }/upload`,
-				{
-					method: 'POST',
-					headers: {
-						'X-WP-Nonce': RestNonce,
-					},
-					body: formData,
+			let uploadResponse = await fetch( `${ API_NAMESPACE }/upload`, {
+				method: 'POST',
+				headers: {
+					'X-WP-Nonce': RestNonce,
 				},
-			);
+				body: formData,
+			} );
 
 			uploadResponse = await uploadResponse.json();
 
@@ -628,21 +877,26 @@ const S3ZipUploader = () => {
 			const presignedUrl = uploadResponse.presigned_url;
 
 			if ( ! presignedUrl ) {
-				throw new Error( 'No presigned URL received from upload response' );
+				throw new Error(
+					'No presigned URL received from upload response'
+				);
 			}
 
 			// Now trigger GitHub actions with the presigned URL
-			const applyResponse = await fetch( `${ API_NAMESPACE }/apply-private-plugins`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-WP-Nonce': RestNonce,
-				},
-				body: JSON.stringify( {
-					sites: selectedSitesForUpload,
-					plugins: [ presignedUrl ],
-				} ),
-			} );
+			const applyResponse = await fetch(
+				`${ API_NAMESPACE }/apply-private-plugins`,
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-WP-Nonce': RestNonce,
+					},
+					body: JSON.stringify( {
+						sites: selectedSitesForUpload,
+						plugins: [ presignedUrl ],
+					} ),
+				}
+			);
 
 			if ( ! applyResponse.ok ) {
 				throw new Error( 'Failed to apply plugin to selected sites' );
@@ -652,24 +906,38 @@ const S3ZipUploader = () => {
 
 			if ( applyData.success ) {
 				// Group results by site name and format message
-				let noticeMessage = __( 'Plugin uploaded and applied successfully!', 'oneupdate' );
+				let noticeMessage = __(
+					'Plugin uploaded and applied successfully!',
+					'oneupdate'
+				);
 
-				if ( applyData.results && Array.isArray( applyData.results ) && applyData.results.length > 0 ) {
+				if (
+					applyData.results &&
+					Array.isArray( applyData.results ) &&
+					applyData.results.length > 0
+				) {
 					// Group actions by site name
-					const groupedBySite = applyData.results.reduce( ( acc, result ) => {
-						const name = result.name || 'Unknown Site';
-						if ( ! acc[ name ] ) {
-							acc[ name ] = [];
-						}
-						acc[ name ].push( result );
-						return acc;
-					}, {} );
+					const groupedBySite = applyData.results.reduce(
+						( acc, result ) => {
+							const name = result.name || 'Unknown Site';
+							if ( ! acc[ name ] ) {
+								acc[ name ] = [];
+							}
+							acc[ name ].push( result );
+							return acc;
+						},
+						{}
+					);
 
 					// Format the message with site names and their respective URLs (each URL on new line)
-					const siteGroups = Object.entries( groupedBySite ).map( ( [ name, results ] ) => {
-						const actionLinks = results.map( ( result ) => result.run_url ).join( '\n' );
-						return `${ name }\n${ actionLinks }`;
-					} );
+					const siteGroups = Object.entries( groupedBySite ).map(
+						( [ name, results ] ) => {
+							const actionLinks = results
+								.map( ( result ) => result.run_url )
+								.join( '\n' );
+							return `${ name }\n${ actionLinks }`;
+						}
+					);
 
 					noticeMessage += `\n\n${ siteGroups.join( '\n\n' ) }`;
 				}
@@ -681,7 +949,11 @@ const S3ZipUploader = () => {
 			} else {
 				setCurrentNotice( {
 					status: 'error',
-					message: __( 'Plugin uploaded but failed to apply:', 'oneupdate' ) + applyData.message,
+					message:
+						__(
+							'Plugin uploaded but failed to apply:',
+							'oneupdate'
+						) + applyData.message,
 				} );
 			}
 
@@ -731,8 +1003,10 @@ const S3ZipUploader = () => {
 				{ currentNotice.message.length > 0 && (
 					<Notice
 						status={ currentNotice.status ?? 'success' }
-						isDismissible={ true }
-						onRemove={ () => setCurrentNotice( { status: '', message: '' } ) }
+						isDismissible
+						onRemove={ () =>
+							setCurrentNotice( { status: '', message: '' } )
+						}
 						style={ { marginTop: '16px', marginBottom: '16px' } }
 					>
 						{ currentNotice.message }
@@ -753,7 +1027,13 @@ const S3ZipUploader = () => {
 							{ __( 'Upload & Install Plugin', 'oneupdate' ) }
 						</Button>
 					</CardHeader>
-					<CardBody style={ { display: 'flex', flexDirection: 'column', gap: '10px' } }>
+					<CardBody
+						style={ {
+							display: 'flex',
+							flexDirection: 'column',
+							gap: '10px',
+						} }
+					>
 						<div
 							className="file-upload-wrapper"
 							style={ {
@@ -763,7 +1043,10 @@ const S3ZipUploader = () => {
 							} }
 						>
 							<FormFileUpload
-								label={ __( 'Choose plugin zip file', 'oneupdate' ) }
+								label={ __(
+									'Choose plugin zip file',
+									'oneupdate'
+								) }
 								accept="application/zip"
 								onChange={ handleFileChange }
 								__nextHasNoMarginBottom
@@ -774,19 +1057,25 @@ const S3ZipUploader = () => {
 									padding: '10px',
 									borderRadius: '4px',
 									opacity: uploading ? 0.6 : 1,
-									cursor: uploading ? 'not-allowed' : 'pointer',
+									cursor: uploading
+										? 'not-allowed'
+										: 'pointer',
 								} }
 								disabled={ uploading }
 							>
 								{ __( 'Choose plugin zip file', 'oneupdate' ) }
 							</FormFileUpload>
-							{
-								file && (
-									<div style={ { marginLeft: '10px', color: '#000' } }>
-										{ __( 'Selected file:', 'oneupdate' ) } { file.name }
-									</div>
-								)
-							}
+							{ file && (
+								<div
+									style={ {
+										marginLeft: '10px',
+										color: '#000',
+									} }
+								>
+									{ __( 'Selected file:', 'oneupdate' ) }{ ' ' }
+									{ file.name }
+								</div>
+							) }
 						</div>
 					</CardBody>
 				</Card>
@@ -794,7 +1083,10 @@ const S3ZipUploader = () => {
 				{ /* Site Selection Modal for Upload */ }
 				{ showSiteSelectionModal && (
 					<Modal
-						title={ __( 'Select Sites for Plugin Installation', 'oneupdate' ) }
+						title={ __(
+							'Select Sites for Plugin Installation',
+							'oneupdate'
+						) }
 						onRequestClose={ () => {
 							setShowSiteSelectionModal( false );
 						} }
@@ -805,45 +1097,86 @@ const S3ZipUploader = () => {
 						<div style={ { paddingTop: '24px' } }>
 							<VStack spacing={ 4 }>
 								<div>
-									<p style={ { margin: 0, color: '#6c757d', fontSize: '14px' } }>
-										{ __( 'Select the sites where you want to install this plugin.', 'oneupdate' ) }
+									<p
+										style={ {
+											margin: 0,
+											color: '#6c757d',
+											fontSize: '14px',
+										} }
+									>
+										{ __(
+											'Select the sites where you want to install this plugin.',
+											'oneupdate'
+										) }
 									</p>
 								</div>
 
-								{
-									sharedSites.length > 0 && (
-										<div style={ { marginBottom: '16px', display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' } }>
-											<CheckboxControl
-												label={ __( 'Select All Sites', 'oneupdate' ) }
-												checked={ selectedSitesForUpload.length === sharedSites.length }
-												onChange={ () => {
-													if ( selectedSitesForUpload.length === sharedSites.length ) {
-														setSelectedSitesForUpload( [] );
-													} else {
-														setSelectedSitesForUpload(
-															sharedSites.map( ( site ) => ( {
+								{ sharedSites.length > 0 && (
+									<div
+										style={ {
+											marginBottom: '16px',
+											display: 'flex',
+											flexDirection: 'row',
+											gap: '8px',
+											alignItems: 'center',
+										} }
+									>
+										<CheckboxControl
+											label={ __(
+												'Select All Sites',
+												'oneupdate'
+											) }
+											checked={
+												selectedSitesForUpload.length ===
+												sharedSites.length
+											}
+											onChange={ () => {
+												if (
+													selectedSitesForUpload.length ===
+													sharedSites.length
+												) {
+													setSelectedSitesForUpload(
+														[]
+													);
+												} else {
+													setSelectedSitesForUpload(
+														sharedSites.map(
+															( site ) => ( {
 																url: site.url,
 																name: site.name,
-																api_key: site.api_key,
-																gh_repo: site.gh_repo,
-															} ) ),
-														);
-													}
-												} }
-												disabled={ uploading }
-												style={ { fontWeight: '500' } }
-											/>
-											<Button
-												variant="link"
-												onClick={ () => setSelectedSitesForUpload( [] ) }
-												disabled={ selectedSitesForUpload.length === 0 || uploading }
-												style={ { fontWeight: '500', marginBottom: '8px' } }
-											>
-												{ __( 'Clear Selection', 'oneupdate' ) }
-											</Button>
-										</div>
-									)
-								}
+																api_key:
+																	site.api_key,
+																gh_repo:
+																	site.gh_repo,
+															} )
+														)
+													);
+												}
+											} }
+											disabled={ uploading }
+											style={ { fontWeight: '500' } }
+										/>
+										<Button
+											variant="link"
+											onClick={ () =>
+												setSelectedSitesForUpload( [] )
+											}
+											disabled={
+												selectedSitesForUpload.length ===
+													0 || uploading
+											}
+											style={ {
+												fontWeight: '500',
+												marginBottom: '8px',
+											} }
+										>
+											{ __(
+												'Clear Selection',
+												'oneupdate'
+											) }
+										</Button>
+									</div>
+								) }
 
 								<div>
 									{ sharedSites.length > 0 ? (
@@ -857,87 +1190,167 @@ const S3ZipUploader = () => {
 											} }
 										>
 											<VStack spacing={ 2 }>
-												{ sharedSites.map( ( site, index ) => (
-													<div
-														key={ index }
-														style={ {
-															padding: '8px',
-															border: '1px solid #f0f0f1',
-															borderRadius: '4px',
-															cursor: 'pointer',
-														} }
-														role="button"
-														tabIndex={ 0 }
-														onKeyDown={ ( e ) => {
-															if ( uploading ) {
-																e.preventDefault();
-																return;
-															}
+												{ sharedSites.map(
+													( site, index ) => (
+														<div
+															key={ index }
+															style={ {
+																padding: '8px',
+																border: '1px solid #f0f0f1',
+																borderRadius:
+																	'4px',
+																cursor: 'pointer',
+															} }
+															role="button"
+															tabIndex={ 0 }
+															onKeyDown={ (
+																e
+															) => {
+																if (
+																	uploading
+																) {
+																	e.preventDefault();
+																	return;
+																}
 
-															if ( e.key === 'Enter' || e.key === ' ' ) {
-																e.preventDefault();
-																setSelectedSitesForUpload( ( prev ) =>
-																	prev.some( ( s ) => s.url === site.url )
-																		? prev.filter( ( s ) => s.url !== site.url )
-																		: [
-																			...prev,
-																			{
-																				url: site.url,
-																				name: site.name,
-																				api_key: site.api_key,
-																				gh_repo: site.gh_repo,
-																			},
-																		],
+																if (
+																	e.key ===
+																		'Enter' ||
+																	e.key ===
+																		' '
+																) {
+																	e.preventDefault();
+																	setSelectedSitesForUpload(
+																		(
+																			prev
+																		) =>
+																			prev.some(
+																				(
+																					s
+																				) =>
+																					s.url ===
+																					site.url
+																			)
+																				? prev.filter(
+																						(
+																							s
+																						) =>
+																							s.url !==
+																							site.url
+																				  )
+																				: [
+																						...prev,
+																						{
+																							url: site.url,
+																							name: site.name,
+																							api_key:
+																								site.api_key,
+																							gh_repo:
+																								site.gh_repo,
+																						},
+																				  ]
+																	);
+																}
+															} }
+															aria-pressed={ selectedSitesForUpload.some(
+																( s ) =>
+																	s.url ===
+																	site.url
+															) }
+															onClick={ (
+																event
+															) => {
+																event.stopPropagation();
+
+																if (
+																	uploading
+																) {
+																	event.preventDefault();
+																	return;
+																}
+
+																setSelectedSitesForUpload(
+																	( prev ) =>
+																		prev.some(
+																			(
+																				s
+																			) =>
+																				s.url ===
+																				site.url
+																		)
+																			? prev.filter(
+																					(
+																						s
+																					) =>
+																						s.url !==
+																						site.url
+																			  )
+																			: [
+																					...prev,
+																					{
+																						url: site.url,
+																						name: site.name,
+																						api_key:
+																							site.api_key,
+																						gh_repo:
+																							site.gh_repo,
+																					},
+																			  ]
 																);
-															}
-														} }
-														aria-pressed={ selectedSitesForUpload.some( ( s ) => s.url === site.url ) }
-														onClick={ ( event ) => {
-															event.stopPropagation();
-
-															if ( uploading ) {
-																event.preventDefault();
-																return;
-															}
-
-															setSelectedSitesForUpload( ( prev ) =>
-																prev.some( ( s ) => s.url === site.url )
-																	? prev.filter( ( s ) => s.url !== site.url )
-																	: [
-																		...prev,
-																		{
-																			url: site.url,
-																			name: site.name,
-																			api_key: site.api_key,
-																			gh_repo: site.gh_repo,
-																		},
-																	],
-															);
-														} }
-													>
-														<CheckboxControl
-															className="oneupdate-site-checkbox"
-															label={
-																<div>
-																	<div style={ { fontWeight: '500', color: '#23282d' } }>
-																		{ site.name }
+															} }
+														>
+															<CheckboxControl
+																className="oneupdate-site-checkbox"
+																label={
+																	<div>
+																		<div
+																			style={ {
+																				fontWeight:
+																					'500',
+																				color: '#23282d',
+																			} }
+																		>
+																			{
+																				site.name
+																			}
+																		</div>
+																		<div
+																			style={ {
+																				fontSize:
+																					'12px',
+																				color: '#6c757d',
+																			} }
+																		>
+																			{
+																				site.url
+																			}
+																		</div>
 																	</div>
-																	<div style={ { fontSize: '12px', color: '#6c757d' } }>
-																		{ site.url }
-																	</div>
-																</div>
-															}
-															checked={ selectedSitesForUpload.some( ( s ) => s.url === site.url ) }
-															disabled={ uploading }
-														/>
-													</div>
-												) ) }
+																}
+																checked={ selectedSitesForUpload.some(
+																	( s ) =>
+																		s.url ===
+																		site.url
+																) }
+																disabled={
+																	uploading
+																}
+															/>
+														</div>
+													)
+												) }
 											</VStack>
 										</div>
 									) : (
-										<Notice status="warning" isDismissible={ false }>
+										<Notice
+											status="warning"
+											isDismissible={ false }
+										>
 											<p style={ { margin: 0 } }>
-												{ __( 'No sites available. Please add sites first.', 'oneupdate' ) }
+												{ __(
+													'No sites available. Please add sites first.',
+													'oneupdate'
+												) }
 											</p>
 										</Notice>
 									) }
@@ -956,11 +1369,22 @@ const S3ZipUploader = () => {
 									<Button
 										variant="primary"
 										onClick={ handleConfirmUpload }
-										disabled={ selectedSitesForUpload.length === 0 || uploading }
+										disabled={
+											selectedSitesForUpload.length ===
+												0 || uploading
+										}
 										isBusy={ uploading }
 									>
-										<Dashicon icon="admin-plugins" style={ { marginRight: '8px' } } />
-										{ uploading ? __( 'Installing…', 'oneupdate' ) : __( 'Install Plugin', 'oneupdate' ) }
+										<Dashicon
+											icon="admin-plugins"
+											style={ { marginRight: '8px' } }
+										/>
+										{ uploading
+											? __( 'Installing…', 'oneupdate' )
+											: __(
+													'Install Plugin',
+													'oneupdate'
+											  ) }
 									</Button>
 								</HStack>
 							</VStack>
@@ -974,9 +1398,16 @@ const S3ZipUploader = () => {
 						<div className="oneupdate-apply-plugins">
 							<Button
 								variant="primary"
-								onClick={ () => setShowApplyPluginsModal( true ) }
-								style={ { marginTop: '20px' } }s
-								disabled={ filteredHistory.length === 0 || loadingHistory || applyingPlugins }
+								onClick={ () =>
+									setShowApplyPluginsModal( true )
+								}
+								style={ { marginTop: '20px' } }
+								s
+								disabled={
+									filteredHistory.length === 0 ||
+									loadingHistory ||
+									applyingPlugins
+								}
 								isBusy={ applyingPlugins }
 							>
 								{ __( 'Install Plugins', 'oneupdate' ) }
@@ -985,15 +1416,26 @@ const S3ZipUploader = () => {
 					</CardHeader>
 					<CardBody>
 						{ loadingHistory ? (
-							<div style={ { textAlign: 'center', padding: '20px' } }>
-								<Spinner style={ { width: '40px', height: '40px' } } />
+							<div
+								style={ {
+									textAlign: 'center',
+									padding: '20px',
+								} }
+							>
+								<Spinner
+									style={ { width: '40px', height: '40px' } }
+								/>
 							</div>
 						) : (
 							<table className="wp-list-table widefat fixed striped">
 								<thead>
 									<tr>
-										<th>{ __( 'File Name', 'oneupdate' ) }</th>
-										<th>{ __( 'Upload Time', 'oneupdate' ) }</th>
+										<th>
+											{ __( 'File Name', 'oneupdate' ) }
+										</th>
+										<th>
+											{ __( 'Upload Time', 'oneupdate' ) }
+										</th>
 										<th>{ __( 'Action', 'oneupdate' ) }</th>
 										<th>{ __( 'Status', 'oneupdate' ) }</th>
 									</tr>
@@ -1001,62 +1443,115 @@ const S3ZipUploader = () => {
 								<tbody>
 									{ filteredHistory.length === 0 ? (
 										<tr>
-											<td colSpan="4" style={ { textAlign: 'center' } }>
-												{ __( 'No uploads yet.', 'oneupdate' ) }
+											<td
+												colSpan="4"
+												style={ {
+													textAlign: 'center',
+												} }
+											>
+												{ __(
+													'No uploads yet.',
+													'oneupdate'
+												) }
 											</td>
 										</tr>
 									) : (
-										filteredHistory?.map( ( item, index ) => (
-											<tr key={ index }>
-												<td>{ item.file_name }</td>
-												<td>{ new Date( item.upload_time ).toLocaleString() }</td>
-												<td>
-													<Button
-														variant="secondary"
-														onClick={ () => handleCopyUrl( item.presigned_url ) }
-														disabled={ new Date( item.upload_time ).getTime() < Date.now() - ( 60 * 60 * 1000 ) }
+										filteredHistory?.map(
+											( item, index ) => (
+												<tr key={ index }>
+													<td>{ item.file_name }</td>
+													<td>
+														{ new Date(
+															item.upload_time
+														).toLocaleString() }
+													</td>
+													<td>
+														<Button
+															variant="secondary"
+															onClick={ () =>
+																handleCopyUrl(
+																	item.presigned_url
+																)
+															}
+															disabled={
+																new Date(
+																	item.upload_time
+																).getTime() <
+																Date.now() -
+																	60 *
+																		60 *
+																		1000
+															}
+														>
+															{ buttonTexts[
+																item
+																	.presigned_url
+															] ||
+																__(
+																	'Copy URL',
+																	'oneupdate'
+																) }
+														</Button>
+													</td>
+													<td
+														style={ {
+															alignContent:
+																'center',
+														} }
 													>
-														{ buttonTexts[ item.presigned_url ] || __( 'Copy URL', 'oneupdate' ) }
-													</Button>
-												</td>
-												<td
-													style={ {
-														alignContent: 'center',
-													} }
-												>
-													{ ( () => {
-														const uploadDate = new Date( item.upload_time );
-														const oneHourInMs = 60 * 60 * 1000;
-														const isExpired = uploadDate.getTime() < Date.now() - oneHourInMs;
-														return isExpired ? (
-															<span
-																className="status status-error"
-																style={ {
-																	color: 'white',
-																	padding: '0.5rem',
-																	background: '#ff3333',
-																	borderRadius: '4px',
-																} }
-															>
-																{ __( 'Expired', 'oneupdate' ) }
-															</span>
-														) : (
-															<span
-																className="status status-success"
-																style={ {
-																	color: 'white',
-																	padding: '0.5rem',
-																	background: '#ab3a6c',
-																	borderRadius: '4px',
-																} }
-															>
-																{ __( 'Active', 'oneupdate' ) }
-															</span>
-														);
-													} )() }
-												</td>
-											</tr>
-										) )
+														{ ( () => {
+															const uploadDate =
+																new Date(
+																	item.upload_time
+																);
+															const oneHourInMs =
+																60 * 60 * 1000;
+															const isExpired =
+																uploadDate.getTime() <
+																Date.now() -
+																	oneHourInMs;
+															return isExpired ? (
+																<span
+																	className="status status-error"
+																	style={ {
+																		color: 'white',
+																		padding:
+																			'0.5rem',
+																		background:
+																			'#ff3333',
+																		borderRadius:
+																			'4px',
+																	} }
+																>
+																	{ __(
+																		'Expired',
+																		'oneupdate'
+																	) }
+																</span>
+															) : (
+																<span
+																	className="status status-success"
+																	style={ {
+																		color: 'white',
+																		padding:
+																			'0.5rem',
+																		background:
+																			'#ab3a6c',
+																		borderRadius:
+																			'4px',
+																	} }
+																>
+																	{ __(
+																		'Active',
+																		'oneupdate'
+																	) }
+																</span>
+															);
+														} )() }
+													</td>
+												</tr>
+											)
+										)
 									) }
 								</tbody>
 							</table>

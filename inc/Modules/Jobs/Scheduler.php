@@ -16,7 +16,6 @@ use OneUpdate\Modules\Settings\Settings;
  * Class Scheduler
  */
 final class Scheduler implements Registrable {
-
 	/**
 	 * Global prefix.
 	 *
@@ -46,8 +45,6 @@ final class Scheduler implements Registrable {
 
 	/**
 	 * Register scheduled jobs.
-	 *
-	 * @return void
 	 */
 	public static function register_jobs(): void {
 		// Schedule cron jobs - clear any existing schedules first.

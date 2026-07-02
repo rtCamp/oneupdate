@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Class Workflow_Controller - this contains the REST API endpoints for managing GitHub workflows.
  *
@@ -16,7 +19,6 @@ use OneUpdate\Modules\Settings\Settings;
  * Class Workflow_Controller
  */
 class Workflow_Controller extends Abstract_REST_Controller {
-
 	/**
 	 * Active plugins options key.
 	 *
@@ -227,8 +229,6 @@ class Workflow_Controller extends Abstract_REST_Controller {
 
 	/**
 	 * Webhook permission callback.
-	 *
-	 * @return bool
 	 */
 	public function webhook_permission_callback(): bool {
 		$secret       = isset( $_GET['secret'] ) ? sanitize_text_field( wp_unslash( $_GET['secret'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- no need for nonce as its called from webhook like vip or github.
@@ -238,8 +238,6 @@ class Workflow_Controller extends Abstract_REST_Controller {
 
 	/**
 	 * Webhook to trigger transient rebuild.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function webhook_rebuild_transient(): \WP_REST_Response|\WP_Error {
 
@@ -261,8 +259,6 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	 * Bulk plugin update.
 	 *
 	 * @param \WP_REST_Request $request The request object.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function bulk_plugin_update( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$body         = $request->get_body();
@@ -329,8 +325,6 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	 * Execute plugin action.
 	 *
 	 * @param \WP_REST_Request $request The request object.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function execute_plugin_action( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$body             = $request->get_body();
@@ -426,7 +420,7 @@ class Workflow_Controller extends Abstract_REST_Controller {
 							[
 								'status'   => 500,
 								'response' => $response,
-								'error'    => isset( $decoded_body['message'] ) ? $decoded_body['message'] : __( 'Unknown error occurred.', 'oneupdate' ),
+								'error'    => $decoded_body['message'] ?? __( 'Unknown error occurred.', 'oneupdate' ),
 							]
 						);
 					}
@@ -566,8 +560,6 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	 * Apply plugins to selected sites.
 	 *
 	 * @param \WP_REST_Request $request The request object.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function apply_private_plugins_to_selected_sites( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$body         = $request->get_body();
@@ -618,8 +610,6 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	 * @param string $private_plugin The private plugin zip URL.
 	 * @param string $branch         The branch to create PR against.
 	 * @param string $site_name      The site name for which the action is triggered.
-	 *
-	 * @return array|\WP_Error
 	 */
 	private function trigger_github_action_for_private_plugin( string $repo, string $private_plugin, string $branch, string $site_name ): array|\WP_Error {
 		$github_token = Plugin_Settings::get_github_token();
@@ -681,8 +671,6 @@ class Workflow_Controller extends Abstract_REST_Controller {
 
 	/**
 	 * Get onpress plugins options.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function get_oneupdate_plugins_options(): \WP_REST_Response|\WP_Error {
 		$options = VIP_Activation::get_plugins_options();
@@ -699,8 +687,6 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	 * Update oneupdate plugins options.
 	 *
 	 * @param \WP_REST_Request $request The request object.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function update_oneupdate_plugins_options( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$body            = $request->get_body();
@@ -773,8 +759,6 @@ class Workflow_Controller extends Abstract_REST_Controller {
 
 	/**
 	 * Get all plugins.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function get_plugins(): \WP_REST_Response|\WP_Error {
 
@@ -803,8 +787,6 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	 * Apply plugins to selected sites.
 	 *
 	 * @param \WP_REST_Request $request The request object.
-	 *
-	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function apply_plugins_to_selected_sites( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$body         = $request->get_body();
@@ -894,8 +876,6 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	 * @param string $version The plugin version.
 	 * @param string $plugin_type The type of plugin action (add_update, deactivate, remove).
 	 * @param string $site_name The site name for which the action is triggered.
-	 *
-	 * @return array|\WP_Error
 	 */
 	private function trigger_github_action_for_pr_creation( string $repo, string $branch, string $plugin_slug, string $version, string $plugin_type, string $site_name ): array|\WP_Error {
 		$github_token = Plugin_Settings::get_github_token();

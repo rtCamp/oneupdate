@@ -50,8 +50,6 @@ final class Cache implements Registrable {
 	 * Plugin activation hook.
 	 *
 	 * @param string $plugin The plugin being activated.
-	 *
-	 * @return void
 	 */
 	public function plugin_activation( $plugin ): void {
 		// Clear the cache for the plugin being activated.
@@ -62,8 +60,6 @@ final class Cache implements Registrable {
 	 * Plugin deactivation hook.
 	 *
 	 * @param string $plugin The plugin being deactivated.
-	 *
-	 * @return void
 	 */
 	public function plugin_deactivation( $plugin ): void {
 		// Clear the cache for the plugin being deactivated.
@@ -72,8 +68,6 @@ final class Cache implements Registrable {
 
 	/**
 	 * Remove a plugin from the transient cache.
-	 *
-	 * @return void
 	 */
 	public function remove_plugin_from_transient(): void {
 		// delete transient.
@@ -85,8 +79,6 @@ final class Cache implements Registrable {
 	 *
 	 * @param \WP_Upgrader $upgrader The upgrader instance.
 	 * @param array        $hook_extra Extra hook data.
-	 *
-	 * @return void
 	 */
 	public function clear_update_plugin_cache( $upgrader, $hook_extra ): void {
 		// Check if the plugin being updated is the OneUpdate plugin.
@@ -100,8 +92,6 @@ final class Cache implements Registrable {
 
 	/**
 	 * Build the plugins transient.
-	 *
-	 * @return array|\WP_Error
 	 */
 	public static function build_plugins_transient(): array|\WP_Error {
 		if ( ! function_exists( 'get_plugins' ) ) {
@@ -226,8 +216,6 @@ final class Cache implements Registrable {
 	 *
 	 * @param bool $is_activation Whether the plugin is being activated.
 	 * @param bool $is_deactivation Whether the plugin is being deactivated.
-	 *
-	 * @return void
 	 */
 	private static function hello_dolly_plugin( bool $is_activation, bool $is_deactivation ): void {
 		$original_plugin_slug = 'hello.php';

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types = 1);
+
 /**
  * Settings class.
  * This class handles the settings page for the OneUpdate plugin,
