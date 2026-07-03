@@ -144,7 +144,6 @@ final class Settings implements Registrable {
 	 * Set S3 credentials.
 	 *
 	 * @param array<string,string> $credentials Credentials.
-	 * @return bool
 	 */
 	public static function set_s3_credentials( array $credentials ): bool {
 		$sanitized_credentials = [
@@ -159,8 +158,6 @@ final class Settings implements Registrable {
 
 	/**
 	 * Get GitHub token.
-	 *
-	 * @return string
 	 */
 	public static function get_github_token(): string {
 		$token = get_option( self::OPTION_GITHUB_TOKEN, '' );
@@ -175,7 +172,6 @@ final class Settings implements Registrable {
 	 * Set GitHub token.
 	 *
 	 * @param string $token Token.
-	 * @return bool
 	 */
 	public static function set_github_token( string $token ): bool {
 		$sanitized_token = Encryptor::encrypt( sanitize_text_field( $token ) );

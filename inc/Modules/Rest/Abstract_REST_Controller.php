@@ -14,7 +14,6 @@ namespace OneUpdate\Modules\Rest;
 use OneUpdate\Contracts\Interfaces\Registrable;
 use OneUpdate\Modules\Settings\Settings;
 
-
 /**
  * Class - Abstract_REST_Controller
  */
@@ -32,7 +31,6 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	 * @var string
 	 */
 	protected $namespace = self::NAMESPACE;
-
 
 	/**
 	 * GitHub API headers.
@@ -156,7 +154,6 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	 * Get GitHub API headers with authorization.
 	 *
 	 * @param string $github_token GitHub personal access token.
-	 * @return array
 	 */
 	protected static function get_github_headers( string $github_token ): array {
 		return array_merge(

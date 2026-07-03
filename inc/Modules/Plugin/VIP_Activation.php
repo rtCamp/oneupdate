@@ -39,8 +39,6 @@ final class VIP_Activation implements Registrable {
 
 	/**
 	 * Handle VIP plugin activation.
-	 *
-	 * @return void
 	 */
 	private static function maybe_handle_vip_activation(): void {
 		if ( ! function_exists( 'wpcom_vip_load_plugin' ) ) {

@@ -1,7 +1,13 @@
 /**
  * WordPress dependencies
  */
-import { createRoot, useCallback, useState, useEffect, useMemo } from '@wordpress/element';
+import {
+	createRoot,
+	useCallback,
+	useState,
+	useEffect,
+	useMemo,
+} from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import {
 	Button,
@@ -29,6 +35,9 @@ import {
 } from '@wordpress/components';
 import { decodeEntities } from '@wordpress/html-entities';
 import { arrowLeft, plus, loop } from '@wordpress/icons';
+/**
+ * Internal dependencies
+ */
 import PluginsSharing from '../../components/PluginsSharing';
 import S3ZipUploader from '../../components/S3ZipUploader';
 import { PurifyElement } from '../../js/utils';
@@ -41,7 +50,11 @@ const RestNonce = OneUpdatePlugins.restNonce;
 const PluginManager = () => {
 	const [ combinedPluginsBySlug, setCombinedPluginsBySlug ] = useState( {} );
 	const [ loading, setLoading ] = useState( true );
-	const [ loadingProgress, setLoadingProgress ] = useState( { current: 0, total: 0, message: '' } );
+	const [ loadingProgress, setLoadingProgress ] = useState( {
+		current: 0,
+		total: 0,
+		message: '',
+	} );
 
 	// Filter states
 	const [ searchQuery, setSearchQuery ] = useState( '' );
@@ -54,7 +67,8 @@ const PluginManager = () => {
 	const [ selectedPlugin, setSelectedPlugin ] = useState( null );
 	const [ showPluginModal, setShowPluginModal ] = useState( false );
 	const [ showSitesModal, setShowSitesModal ] = useState( false );
-	const [ showSiteSelectionModal, setShowSiteSelectionModal ] = useState( false );
+	const [ showSiteSelectionModal, setShowSiteSelectionModal ] =
+		useState( false );
 	const [ currentAction, setCurrentAction ] = useState( null ); // 'activate', 'deactivate', 'update', 'change-version', 'remove'
 	const [ selectedSites, setSelectedSites ] = useState( [] );
 	const [ selectedVersion, setSelectedVersion ] = useState( '' );
@@ -81,10 +95,12 @@ const PluginManager = () => {
 						'Content-Type': 'application/json',
 						'X-WP-NONCE': RestNonce,
 					},
-				},
+				}
 			);
 			if ( ! response.ok ) {
-				throw new Error( __( 'Failed to perform S3 health check.', 'oneupdate' ) );
+				throw new Error(
+					__( 'Failed to perform S3 health check.', 'oneupdate' )
+				);
 			}
 			const data = await response.json();
 			if ( data?.status === 'success' ) {
@@ -103,16 +119,21 @@ const PluginManager = () => {
 
 	const fetchSitesWithPluginLoader = useCallback( async () => {
 		try {
-			const response = await fetch( `${ API_NAMESPACE }/shared-sites?time=${ new Date().toISOString() }`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-WP-Nonce': RestNonce,
-				},
-			} );
+			const response = await fetch(
+				`${ API_NAMESPACE }/shared-sites?time=${ new Date().toISOString() }`,
+				{
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-WP-Nonce': RestNonce,
+					},
+				}
+			);
 
 			if ( ! response.ok ) {
-				throw new Error( __( 'Failed to fetch sites data.', 'oneupdate' ) );
+				throw new Error(
+					__( 'Failed to fetch sites data.', 'oneupdate' )
+				);
 			}
 
 			const data = await response.json();
@@ -125,17 +146,26 @@ const PluginManager = () => {
 
 	const fetchPluginsFromSite = useCallback( async ( site ) => {
 		try {
-			const response = await fetch( site.url + `wp-json/oneupdate/v1/get_plugins?time=${ new Date().toISOString() }`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-OneUpdate-Token': site.api_key || '',
-				},
-				'cache-control': 'no-cache, no-store, must-revalidate',
-			} );
+			const response = await fetch(
+				site.url +
+					`wp-json/oneupdate/v1/get_plugins?time=${ new Date().toISOString() }`,
+				{
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-OneUpdate-Token': site.api_key || '',
+					},
+					'cache-control': 'no-cache, no-store, must-revalidate',
+				}
+			);
 
 			if ( ! response.ok ) {
-				throw new Error( sprintf( 'Failed to fetch plugins from site: %s', site.name ) );
+				throw new Error(
+					sprintf(
+						'Failed to fetch plugins from site: %s',
+						site.name
+					)
+				);
 			}
 
 			const data = await response.json();
@@ -145,213 +175,300 @@ const PluginManager = () => {
 		}
 	}, [] );
 
-	const transformRealTimePluginsData = useCallback( ( sharedPluginsData, sitePluginsData, allSites ) => {
-		const transformedPlugins = {};
+	const transformRealTimePluginsData = useCallback(
+		( sharedPluginsData, sitePluginsData, allSites ) => {
+			const transformedPlugins = {};
 
-		// First, collect all unique plugins from all sites
-		const allPluginSlugs = new Set();
+			// First, collect all unique plugins from all sites
+			const allPluginSlugs = new Set();
 
-		// Add plugins from shared data
-		if ( sharedPluginsData && typeof sharedPluginsData === 'object' ) {
-			Object?.keys( sharedPluginsData )?.forEach( ( slug ) => allPluginSlugs?.add( slug ) );
+			// Add plugins from shared data
+			if ( sharedPluginsData && typeof sharedPluginsData === 'object' ) {
+				Object?.keys( sharedPluginsData )?.forEach( ( slug ) =>
+					allPluginSlugs?.add( slug )
+				);
 
-			// Add plugins found on sites
-		}
-		if ( sitePluginsData && typeof sitePluginsData === 'object' ) {
-			// Iterate through each site's plugins
-			Object?.values( sitePluginsData )?.forEach( ( { plugins } ) => {
-				Object?.values( plugins )?.forEach( ( plugin ) => {
-					if ( plugin.plugin_slug ) {
-						allPluginSlugs?.add( plugin.plugin_slug );
-					}
-				} );
-			} );
-		}
-
-		// Process each unique plugin
-		allPluginSlugs.forEach( ( slug ) => {
-			const sharedPluginData = sharedPluginsData?.[ slug ] || {};
-			const sites = {};
-
-			let totalSites = 0;
-			let activeSites = 0;
-			let updateAvailableSites = 0;
-
-			// Check real plugin status on each site
-			Object.entries( sitePluginsData ).forEach( ( [ url, { site, plugins } ] ) => {
-				// Find this plugin on the current site
-				const sitePlugin = Object.values( plugins ).find( ( p ) => p.plugin_slug === slug );
-
-				if ( sitePlugin ) {
-					const isActive = sitePlugin.is_active || false;
-					const currentVersion = sitePlugin.Version || sitePlugin.version || '0.0.0';
-					const hasUpdate = sitePlugin.is_update_available || false;
-
-					sites[ url ] = {
-						plugin_path: `${ slug }/${ slug }.php`,
-						version: currentVersion,
-						is_active: isActive,
-						is_update_available: hasUpdate,
-						update_info: hasUpdate && sitePlugin.update ? sitePlugin.update : null,
-						site_name: site.name,
-						site_id: site.id,
-						plugin_data: sitePlugin, // Keep full plugin data for modal
-					};
-
-					totalSites++;
-					if ( isActive ) {
-						activeSites++;
-					}
-					if ( hasUpdate ) {
-						updateAvailableSites++;
-					}
-				} else if ( sharedPluginData.sites && sharedPluginData.sites[ site.id ] ) {
-					// Plugin exists in shared data but not found on site (might be inactive/uninstalled)
-					sites[ url ] = {
-						plugin_path: `${ slug }/${ slug }.php`,
-						version: sharedPluginData.version || '0.0.0',
-						is_active: false,
-						is_update_available: false,
-						update_info: null,
-						site_name: site.name,
-						site_id: site.id,
-						plugin_data: null,
-					};
-					totalSites++;
-				}
-			} );
-
-			// Only include plugins that exist on at least one site
-			if ( totalSites > 0 ) {
-				// Get the most complete plugin info available
-				const sampleSitePlugin = Object.values( sites ).find( ( s ) => s.plugin_data )?.plugin_data;
-				let pluginInfo = ( sharedPluginData.is_public !== undefined && sharedPluginData.is_public === true && sharedPluginData.plugin_info.versions !== undefined ) ? sharedPluginData?.plugin_info : sampleSitePlugin?.plugin_info || {};
-				if ( Object.keys( pluginInfo ).length === 0 ) {
-					pluginInfo = sharedPluginData.plugin_info || {};
-				}
-
-				// Get the best available icon
-				const getPluginIcon = () => {
-					// First check plugin_info.icons (from WordPress.org API)
-					if ( pluginInfo.icons ) {
-						if ( pluginInfo.icons[ '2x' ] ) {
-							return pluginInfo.icons[ '2x' ];
-						}
-						if ( pluginInfo.icons[ '1x' ] ) {
-							return pluginInfo.icons[ '1x' ];
-						}
-						if ( pluginInfo.icons.svg ) {
-							return pluginInfo.icons.svg;
-						}
-						if ( pluginInfo.icons.default ) {
-							return pluginInfo.icons.default;
-						}
-					}
-
-					// Then check site plugin data icons
-					if ( sampleSitePlugin?.plugin_info?.icons ) {
-						if ( sampleSitePlugin.plugin_info.icons[ '2x' ] ) {
-							return sampleSitePlugin.plugin_info.icons[ '2x' ];
-						}
-						if ( sampleSitePlugin.plugin_info.icons[ '1x' ] ) {
-							return sampleSitePlugin.plugin_info.icons[ '1x' ];
-						}
-						if ( sampleSitePlugin.plugin_info.icons.svg ) {
-							return sampleSitePlugin.plugin_info.icons.svg;
-						}
-						if ( sampleSitePlugin.plugin_info.icons.default ) {
-							return sampleSitePlugin.plugin_info.icons.default;
-						}
-					}
-
-					// Fallback to update icons if available
-					if ( sampleSitePlugin?.update?.icons ) {
-						if ( sampleSitePlugin.update.icons[ '2x' ] ) {
-							return sampleSitePlugin.update.icons[ '2x' ];
-						}
-						if ( sampleSitePlugin.update.icons[ '1x' ] ) {
-							return sampleSitePlugin.update.icons[ '1x' ];
-						}
-						if ( sampleSitePlugin.update.icons.svg ) {
-							return sampleSitePlugin.update.icons.svg;
-						}
-						if ( sampleSitePlugin.update.icons.default ) {
-							return sampleSitePlugin.update.icons.default;
-						}
-					}
-
-					return null;
-				};
-
-				transformedPlugins[ slug ] = {
-					plugin_info: {
-						name: decodeEntities( sampleSitePlugin?.Name || pluginInfo.name || slug ),
-						description: decodeEntities(
-							sampleSitePlugin?.Description ||
-							PurifyElement( pluginInfo.sections?.description )?.substring( 0, 200 ) + '...' ||
-							pluginInfo.short_description ||
-							'No description available.',
-						),
-						author: decodeEntities( sampleSitePlugin?.Author || PurifyElement( pluginInfo.author ) || 'Unknown' ),
-						version: sharedPluginData.version || sampleSitePlugin?.Version || pluginInfo.version || '0.0.0',
-						plugin_uri: sampleSitePlugin?.PluginURI || pluginInfo.homepage || '',
-						is_public: sampleSitePlugin?.is_public !== undefined ? sampleSitePlugin.is_public : Boolean( pluginInfo.download_link ),
-						plugin_slug: slug,
-						is_active: activeSites > 0,
-						is_update_available: updateAvailableSites > 0,
-						update_info: updateAvailableSites > 0 ? { new_version: pluginInfo.version } : null,
-						last_updated: sharedPluginData.updated_at || pluginInfo.last_updated,
-						created_at: sharedPluginData.created_at || pluginInfo.added,
-						rating: pluginInfo.rating || 0,
-						num_ratings: pluginInfo.num_ratings || 0,
-						downloaded: pluginInfo.downloaded || 0,
-						icon: getPluginIcon(),
-						// Keep all additional plugin info
-						full_description: decodeEntities( pluginInfo.sections?.description || sampleSitePlugin?.Description || '' ),
-						changelog: pluginInfo.sections?.changelog,
-						installation: pluginInfo.sections?.installation,
-						faq: pluginInfo.sections?.faq,
-						screenshots: pluginInfo.screenshots,
-						tags: pluginInfo.tags,
-						contributors: pluginInfo.contributors,
-						donate_link: pluginInfo.donate_link,
-						requires: pluginInfo.requires || sampleSitePlugin?.RequiresWP,
-						tested: pluginInfo.tested,
-						requires_php: pluginInfo.requires_php || sampleSitePlugin?.RequiresPHP,
-						requires_plugins: pluginInfo.requires_plugins || sampleSitePlugin?.RequiresPlugins,
-						compatibility: pluginInfo.compatibility,
-						added: pluginInfo.added,
-						homepage: pluginInfo.homepage,
-						short_description: decodeEntities( pluginInfo.short_description || '' ),
-						// Store available versions for version selection (only for public plugins)
-						available_versions: sampleSitePlugin?.is_public !== false && pluginInfo.versions ? pluginInfo.versions : {},
-						plugin_path_info: sampleSitePlugin?.plugin_path_info ?? sharedPluginData?.plugin_path_info ?? `${ slug }/${ slug }.php`,
-					},
-					sites,
-					total_sites: totalSites,
-					active_sites: activeSites,
-					update_available_sites: updateAvailableSites,
-					plugin_path_info: sampleSitePlugin?.plugin_path_info ?? sharedPluginData?.plugin_path_info ?? `${ slug }/${ slug }.php`,
-				};
-				// all all sites urls to plugin data as sites_urls not just current plugin site but all sites to which we are connected
-				transformedPlugins[ slug ].sites_urls = allSites;
+				// Add plugins found on sites
 			}
-		} );
+			if ( sitePluginsData && typeof sitePluginsData === 'object' ) {
+				// Iterate through each site's plugins
+				Object?.values( sitePluginsData )?.forEach( ( { plugins } ) => {
+					Object?.values( plugins )?.forEach( ( plugin ) => {
+						if ( plugin.plugin_slug ) {
+							allPluginSlugs?.add( plugin.plugin_slug );
+						}
+					} );
+				} );
+			}
 
-		return transformedPlugins;
-	}, [ ] );
+			// Process each unique plugin
+			allPluginSlugs.forEach( ( slug ) => {
+				const sharedPluginData = sharedPluginsData?.[ slug ] || {};
+				const sites = {};
+
+				let totalSites = 0;
+				let activeSites = 0;
+				let updateAvailableSites = 0;
+
+				// Check real plugin status on each site
+				Object.entries( sitePluginsData ).forEach(
+					( [ url, { site, plugins } ] ) => {
+						// Find this plugin on the current site
+						const sitePlugin = Object.values( plugins ).find(
+							( p ) => p.plugin_slug === slug
+						);
+
+						if ( sitePlugin ) {
+							const isActive = sitePlugin.is_active || false;
+							const currentVersion =
+								sitePlugin.Version ||
+								sitePlugin.version ||
+								'0.0.0';
+							const hasUpdate =
+								sitePlugin.is_update_available || false;
+
+							sites[ url ] = {
+								plugin_path: `${ slug }/${ slug }.php`,
+								version: currentVersion,
+								is_active: isActive,
+								is_update_available: hasUpdate,
+								update_info:
+									hasUpdate && sitePlugin.update
+										? sitePlugin.update
+										: null,
+								site_name: site.name,
+								site_id: site.id,
+								plugin_data: sitePlugin, // Keep full plugin data for modal
+							};
+
+							totalSites++;
+							if ( isActive ) {
+								activeSites++;
+							}
+							if ( hasUpdate ) {
+								updateAvailableSites++;
+							}
+						} else if (
+							sharedPluginData.sites &&
+							sharedPluginData.sites[ site.id ]
+						) {
+							// Plugin exists in shared data but not found on site (might be inactive/uninstalled)
+							sites[ url ] = {
+								plugin_path: `${ slug }/${ slug }.php`,
+								version: sharedPluginData.version || '0.0.0',
+								is_active: false,
+								is_update_available: false,
+								update_info: null,
+								site_name: site.name,
+								site_id: site.id,
+								plugin_data: null,
+							};
+							totalSites++;
+						}
+					}
+				);
+
+				// Only include plugins that exist on at least one site
+				if ( totalSites > 0 ) {
+					// Get the most complete plugin info available
+					const sampleSitePlugin = Object.values( sites ).find(
+						( s ) => s.plugin_data
+					)?.plugin_data;
+					let pluginInfo =
+						sharedPluginData.is_public !== undefined &&
+						sharedPluginData.is_public === true &&
+						sharedPluginData.plugin_info.versions !== undefined
+							? sharedPluginData?.plugin_info
+							: sampleSitePlugin?.plugin_info || {};
+					if ( Object.keys( pluginInfo ).length === 0 ) {
+						pluginInfo = sharedPluginData.plugin_info || {};
+					}
+
+					// Get the best available icon
+					const getPluginIcon = () => {
+						// First check plugin_info.icons (from WordPress.org API)
+						if ( pluginInfo.icons ) {
+							if ( pluginInfo.icons[ '2x' ] ) {
+								return pluginInfo.icons[ '2x' ];
+							}
+							if ( pluginInfo.icons[ '1x' ] ) {
+								return pluginInfo.icons[ '1x' ];
+							}
+							if ( pluginInfo.icons.svg ) {
+								return pluginInfo.icons.svg;
+							}
+							if ( pluginInfo.icons.default ) {
+								return pluginInfo.icons.default;
+							}
+						}
+
+						// Then check site plugin data icons
+						if ( sampleSitePlugin?.plugin_info?.icons ) {
+							if ( sampleSitePlugin.plugin_info.icons[ '2x' ] ) {
+								return sampleSitePlugin.plugin_info.icons[
+									'2x'
+								];
+							}
+							if ( sampleSitePlugin.plugin_info.icons[ '1x' ] ) {
+								return sampleSitePlugin.plugin_info.icons[
+									'1x'
+								];
+							}
+							if ( sampleSitePlugin.plugin_info.icons.svg ) {
+								return sampleSitePlugin.plugin_info.icons.svg;
+							}
+							if ( sampleSitePlugin.plugin_info.icons.default ) {
+								return sampleSitePlugin.plugin_info.icons
+									.default;
+							}
+						}
+
+						// Fallback to update icons if available
+						if ( sampleSitePlugin?.update?.icons ) {
+							if ( sampleSitePlugin.update.icons[ '2x' ] ) {
+								return sampleSitePlugin.update.icons[ '2x' ];
+							}
+							if ( sampleSitePlugin.update.icons[ '1x' ] ) {
+								return sampleSitePlugin.update.icons[ '1x' ];
+							}
+							if ( sampleSitePlugin.update.icons.svg ) {
+								return sampleSitePlugin.update.icons.svg;
+							}
+							if ( sampleSitePlugin.update.icons.default ) {
+								return sampleSitePlugin.update.icons.default;
+							}
+						}
+
+						return null;
+					};
+
+					transformedPlugins[ slug ] = {
+						plugin_info: {
+							name: decodeEntities(
+								sampleSitePlugin?.Name ||
+									pluginInfo.name ||
+									slug
+							),
+							description: decodeEntities(
+								sampleSitePlugin?.Description ||
+									PurifyElement(
+										pluginInfo.sections?.description
+									)?.substring( 0, 200 ) + '...' ||
+									pluginInfo.short_description ||
+									'No description available.'
+							),
+							author: decodeEntities(
+								sampleSitePlugin?.Author ||
+									PurifyElement( pluginInfo.author ) ||
+									'Unknown'
+							),
+							version:
+								sharedPluginData.version ||
+								sampleSitePlugin?.Version ||
+								pluginInfo.version ||
+								'0.0.0',
+							plugin_uri:
+								sampleSitePlugin?.PluginURI ||
+								pluginInfo.homepage ||
+								'',
+							is_public:
+								sampleSitePlugin?.is_public !== undefined
+									? sampleSitePlugin.is_public
+									: Boolean( pluginInfo.download_link ),
+							plugin_slug: slug,
+							is_active: activeSites > 0,
+							is_update_available: updateAvailableSites > 0,
+							update_info:
+								updateAvailableSites > 0
+									? { new_version: pluginInfo.version }
+									: null,
+							last_updated:
+								sharedPluginData.updated_at ||
+								pluginInfo.last_updated,
+							created_at:
+								sharedPluginData.created_at || pluginInfo.added,
+							rating: pluginInfo.rating || 0,
+							num_ratings: pluginInfo.num_ratings || 0,
+							downloaded: pluginInfo.downloaded || 0,
+							icon: getPluginIcon(),
+							// Keep all additional plugin info
+							full_description: decodeEntities(
+								pluginInfo.sections?.description ||
+									sampleSitePlugin?.Description ||
+									''
+							),
+							changelog: pluginInfo.sections?.changelog,
+							installation: pluginInfo.sections?.installation,
+							faq: pluginInfo.sections?.faq,
+							screenshots: pluginInfo.screenshots,
+							tags: pluginInfo.tags,
+							contributors: pluginInfo.contributors,
+							donate_link: pluginInfo.donate_link,
+							requires:
+								pluginInfo.requires ||
+								sampleSitePlugin?.RequiresWP,
+							tested: pluginInfo.tested,
+							requires_php:
+								pluginInfo.requires_php ||
+								sampleSitePlugin?.RequiresPHP,
+							requires_plugins:
+								pluginInfo.requires_plugins ||
+								sampleSitePlugin?.RequiresPlugins,
+							compatibility: pluginInfo.compatibility,
+							added: pluginInfo.added,
+							homepage: pluginInfo.homepage,
+							short_description: decodeEntities(
+								pluginInfo.short_description || ''
+							),
+							// Store available versions for version selection (only for public plugins)
+							available_versions:
+								sampleSitePlugin?.is_public !== false &&
+								pluginInfo.versions
+									? pluginInfo.versions
+									: {},
+							plugin_path_info:
+								sampleSitePlugin?.plugin_path_info ??
+								sharedPluginData?.plugin_path_info ??
+								`${ slug }/${ slug }.php`,
+						},
+						sites,
+						total_sites: totalSites,
+						active_sites: activeSites,
+						update_available_sites: updateAvailableSites,
+						plugin_path_info:
+							sampleSitePlugin?.plugin_path_info ??
+							sharedPluginData?.plugin_path_info ??
+							`${ slug }/${ slug }.php`,
+					};
+					// all all sites urls to plugin data as sites_urls not just current plugin site but all sites to which we are connected
+					transformedPlugins[ slug ].sites_urls = allSites;
+				}
+			} );
+
+			return transformedPlugins;
+		},
+		[]
+	);
 
 	const fetchRealTimePluginsData = useCallback( async () => {
 		try {
 			// setLoading( true ); to avoid flickering of loading state
 			setActionLoading( true ); // when calling from action to halt closing modal
-			setLoadingProgress( { current: 0, total: 0, message: __( 'Fetching sites…', 'oneupdate' ) } );
+			setLoadingProgress( {
+				current: 0,
+				total: 0,
+				message: __( 'Fetching sites…', 'oneupdate' ),
+			} );
 
 			// Step 1: Fetch all sites
 			const sites = await fetchSitesWithPluginLoader();
 
 			if ( ! sites || sites.length === 0 ) {
-				setLoadingProgress( { current: 0, total: 0, message: __( 'No sites found.', 'oneupdate' ) } );
+				setLoadingProgress( {
+					current: 0,
+					total: 0,
+					message: __( 'No sites found.', 'oneupdate' ),
+				} );
 				return;
 			}
 			setLoadingProgress( {
@@ -378,7 +495,11 @@ const PluginManager = () => {
 				setLoadingProgress( {
 					current: i + 1,
 					total: sites.length,
-					message: __( 'Fetching plugins info from', 'oneupdate' ) + ' ' + site.name + '…',
+					message:
+						__( 'Fetching plugins info from', 'oneupdate' ) +
+						' ' +
+						site.name +
+						'…',
 				} );
 
 				const plugins = await fetchPluginsFromSite( site );
@@ -388,7 +509,11 @@ const PluginManager = () => {
 				};
 			}
 			// Step 4: Transform and combine the data
-			const transformedData = transformRealTimePluginsData( sharedPluginsData, sitePluginsData, sites );
+			const transformedData = transformRealTimePluginsData(
+				sharedPluginsData,
+				sitePluginsData,
+				sites
+			);
 			setCombinedPluginsBySlug( transformedData );
 		} catch ( error ) {
 			setGlobalNotice( {
@@ -396,7 +521,7 @@ const PluginManager = () => {
 				message: sprintf(
 					/* translators: %s is the error message */
 					__( 'Error fetching plugins data: %s', 'oneupdate' ),
-					error.message || __( 'Unknown error', 'oneupdate' ),
+					error.message || __( 'Unknown error', 'oneupdate' )
 				),
 			} );
 		} finally {
@@ -404,7 +529,11 @@ const PluginManager = () => {
 			setLoadingProgress( { current: 0, total: 0, message: '' } );
 			setActionLoading( false ); // reset action loading state
 		}
-	}, [ fetchSitesWithPluginLoader, fetchPluginsFromSite, transformRealTimePluginsData ] );
+	}, [
+		fetchSitesWithPluginLoader,
+		fetchPluginsFromSite,
+		transformRealTimePluginsData,
+	] );
 
 	// Filter plugins based on search and filters
 	const filteredPlugins = useMemo( () => {
@@ -412,30 +541,54 @@ const PluginManager = () => {
 
 		return plugins.filter( ( plugin ) => {
 			const matchesSearch =
-					plugin.plugin_info.name.toLowerCase().includes( searchQuery.toLowerCase() ) ||
-					plugin.plugin_info.description.toLowerCase().includes( searchQuery.toLowerCase() );
+				plugin.plugin_info.name
+					.toLowerCase()
+					.includes( searchQuery.toLowerCase() ) ||
+				plugin.plugin_info.description
+					.toLowerCase()
+					.includes( searchQuery.toLowerCase() );
 
 			const matchesStatus =
-					statusFilter === 'all' ||
-					( statusFilter === 'active' && plugin.active_sites > 0 ) ||
-					( statusFilter === 'inactive' && plugin.active_sites >= 0 && plugin.active_sites < plugin.total_sites );
+				statusFilter === 'all' ||
+				( statusFilter === 'active' && plugin.active_sites > 0 ) ||
+				( statusFilter === 'inactive' &&
+					plugin.active_sites >= 0 &&
+					plugin.active_sites < plugin.total_sites );
 
 			const matchesType =
-					typeFilter === 'all' ||
-					( typeFilter === 'public' && plugin.plugin_info.is_public ) ||
-					( typeFilter === 'private' && ! plugin.plugin_info.is_public );
+				typeFilter === 'all' ||
+				( typeFilter === 'public' && plugin.plugin_info.is_public ) ||
+				( typeFilter === 'private' && ! plugin.plugin_info.is_public );
 
 			const matchesUpdate =
-					updateFilter === 'all' || ( updateFilter === 'available' && plugin.update_available_sites > 0 );
+				updateFilter === 'all' ||
+				( updateFilter === 'available' &&
+					plugin.update_available_sites > 0 );
 
 			const matchesSite =
 				siteFilter === 'all' ||
-				( siteFilter === 'common-plugins' && Object.keys( plugin.sites ).length === allAvailableSites.length ) ||
-				( siteFilter !== 'all' && Object.keys( plugin.sites ).includes( siteFilter ) );
+				( siteFilter === 'common-plugins' &&
+					Object.keys( plugin.sites ).length ===
+						allAvailableSites.length ) ||
+				( siteFilter !== 'all' &&
+					Object.keys( plugin.sites ).includes( siteFilter ) );
 
-			return matchesSearch && matchesStatus && matchesType && matchesUpdate && matchesSite;
+			return (
+				matchesSearch &&
+				matchesStatus &&
+				matchesType &&
+				matchesUpdate &&
+				matchesSite
+			);
 		} );
-	}, [ combinedPluginsBySlug, searchQuery, statusFilter, typeFilter, updateFilter, siteFilter ] );
+	}, [
+		combinedPluginsBySlug,
+		searchQuery,
+		statusFilter,
+		typeFilter,
+		updateFilter,
+		siteFilter,
+	] );
 
 	const getUpdateTooltipText = ( plugin ) => {
 		const updateSites = Object.entries( plugin.sites )
@@ -445,7 +598,7 @@ const PluginManager = () => {
 		return sprintf(
 			/* translators: %s is the list of sites with updates available */
 			__( 'Updates available on: %s', 'oneupdate' ),
-			updateSites.join( ', ' ),
+			updateSites.join( ', ' )
 		);
 	};
 
@@ -466,7 +619,10 @@ const PluginManager = () => {
 		const existingPluginData = Object.values( plugin.sites )[ 0 ]; // Get first installed site's plugin data
 		const basePluginInfo = {
 			plugin_path: existingPluginData.plugin_path,
-			version: existingPluginData.version || existingPluginData.Version || '0.0.0',
+			version:
+				existingPluginData.version ||
+				existingPluginData.Version ||
+				'0.0.0',
 			is_active: false,
 			is_update_available: false,
 			update_info: null,
@@ -475,36 +631,44 @@ const PluginManager = () => {
 
 		// Step 2: Filter sites without plugin
 		const allPluginSites = plugin.sites_urls;
-		const filterSitesForInstall = allPluginSites.filter( ( site ) =>
-			! plugin.sites.hasOwnProperty( site.url ),
+		const filterSitesForInstall = allPluginSites.filter(
+			( site ) => ! plugin.sites.hasOwnProperty( site.url )
 		);
 
 		// Step 3: Transform to match installed format with plugin info
 		// eslint-disable-next-line @wordpress/no-unused-vars-before-return
-		const sitesAvailableForInstall = filterSitesForInstall.map( ( site ) => [
-			site.url,
-			{
-				...basePluginInfo, // Include all plugin info
-				site_name: site.name,
-				site_id: site.id,
-				is_active: false,
-				is_update_available: false,
-				update_info: null,
-			},
-		] );
+		const sitesAvailableForInstall = filterSitesForInstall.map(
+			( site ) => [
+				site.url,
+				{
+					...basePluginInfo, // Include all plugin info
+					site_name: site.name,
+					site_id: site.id,
+					is_active: false,
+					is_update_available: false,
+					update_info: null,
+				},
+			]
+		);
 
 		const sites = Object.entries( plugin.sites );
 
 		switch ( action ) {
 			case 'activate':
-				return sites.filter( ( [ , siteInfo ] ) => ! siteInfo.is_active );
+				return sites.filter(
+					( [ , siteInfo ] ) => ! siteInfo.is_active
+				);
 			case 'deactivate':
 				return sites.filter( ( [ , siteInfo ] ) => siteInfo.is_active );
 			case 'update':
-				return sites.filter( ( [ , siteInfo ] ) => siteInfo.is_update_available );
+				return sites.filter(
+					( [ , siteInfo ] ) => siteInfo.is_update_available
+				);
 			case 'install':
 				// For install, we want sites where the plugin is not installed
-				return sitesAvailableForInstall.length > 0 ? sitesAvailableForInstall : [];
+				return sitesAvailableForInstall.length > 0
+					? sitesAvailableForInstall
+					: [];
 			case 'change-version':
 			case 'remove':
 				return sites;
@@ -515,7 +679,11 @@ const PluginManager = () => {
 
 	// Get available versions for a plugin (latest 5 stable versions)
 	const getAvailableVersions = ( plugin ) => {
-		if ( ! plugin || ! plugin.plugin_info.is_public || ! plugin.plugin_info.available_versions ) {
+		if (
+			! plugin ||
+			! plugin.plugin_info.is_public ||
+			! plugin.plugin_info.available_versions
+		) {
 			return [];
 		}
 
@@ -545,7 +713,11 @@ const PluginManager = () => {
 			const aParts = a.split( '.' ).map( Number );
 			const bParts = b.split( '.' ).map( Number );
 
-			for ( let i = 0; i < Math.max( aParts.length, bParts.length ); i++ ) {
+			for (
+				let i = 0;
+				i < Math.max( aParts.length, bParts.length );
+				i++
+			) {
 				const aPart = aParts[ i ] || 0;
 				const bPart = bParts[ i ] || 0;
 
@@ -557,10 +729,12 @@ const PluginManager = () => {
 		} );
 
 		// Return latest 5 stable versions
-		const pluginVersions = sortedVersions.slice( 0, 5 ).map( ( version ) => ( {
-			label: `${ version }`,
-			value: version,
-		} ) );
+		const pluginVersions = sortedVersions
+			.slice( 0, 5 )
+			.map( ( version ) => ( {
+				label: `${ version }`,
+				value: version,
+			} ) );
 
 		// add (latest) label to the latest version
 		if ( pluginVersions.length > 0 ) {
@@ -584,7 +758,10 @@ const PluginManager = () => {
 				// Show notice that no sites are available for this action
 				setGlobalNotice( {
 					status: 'error',
-					message: __( 'No sites available for installation.', 'oneupdate' ),
+					message: __(
+						'No sites available for installation.',
+						'oneupdate'
+					),
 				} );
 				return;
 			}
@@ -615,7 +792,11 @@ const PluginManager = () => {
 
 	// Execute the selected action
 	const executeAction = async () => {
-		if ( ! selectedPlugin || ! currentAction || selectedSites.length === 0 ) {
+		if (
+			! selectedPlugin ||
+			! currentAction ||
+			selectedSites.length === 0
+		) {
 			return;
 		}
 
@@ -626,8 +807,11 @@ const PluginManager = () => {
 				action: currentAction,
 				slug: selectedPlugin.plugin_info.plugin_slug,
 				sites: selectedSites,
-				plugin_version: selectedVersion || selectedPlugin.plugin_info.version,
-				plugin_type: selectedPlugin.plugin_info.is_public ? 'public' : 'private',
+				plugin_version:
+					selectedVersion || selectedPlugin.plugin_info.version,
+				plugin_type: selectedPlugin.plugin_info.is_public
+					? 'public'
+					: 'private',
 				plugin_path_info: selectedPlugin.plugin_path_info,
 			};
 
@@ -640,15 +824,19 @@ const PluginManager = () => {
 						'X-WP-Nonce': RestNonce,
 					},
 					body: JSON.stringify( actionData ),
-				},
+				}
 			);
 
 			if ( ! response.ok ) {
-				throw new Error( __( 'Failed to execute action.', 'oneupdate' ) );
+				throw new Error(
+					__( 'Failed to execute action.', 'oneupdate' )
+				);
 			}
 			const result = await response.json();
 			if ( ! result.success ) {
-				throw new Error( result.message || __( 'Action failed.', 'oneupdate' ) );
+				throw new Error(
+					result.message || __( 'Action failed.', 'oneupdate' )
+				);
 			}
 
 			// Extract GitHub Actions runner URLs
@@ -658,10 +846,11 @@ const PluginManager = () => {
 				}
 
 				return result.output
-					.filter( ( item ) =>
-						item.response &&
-						item.response.success &&
-						item.response.run_url,
+					.filter(
+						( item ) =>
+							item.response &&
+							item.response.success &&
+							item.response.run_url
 					)
 					.map( ( item ) => ( {
 						repo: item.response.repo,
@@ -677,7 +866,9 @@ const PluginManager = () => {
 			const githubActions = extractGitHubActionUrls();
 
 			// Create formatted message with GitHub Actions links
-			const pluginName = selectedPlugin.plugin_info.name || selectedPlugin.plugin_info.plugin_slug;
+			const pluginName =
+				selectedPlugin.plugin_info.name ||
+				selectedPlugin.plugin_info.plugin_slug;
 			let actionVerb = '';
 			switch ( currentAction ) {
 				case 'activate':
@@ -703,32 +894,42 @@ const PluginManager = () => {
 			}
 			const names = selectedSites.map( ( url ) => {
 				const site = allAvailableSites.find( ( s ) => s.url === url );
-				return site ? site.name : ( url );
+				return site ? site.name : url;
 			} );
-			const namesString = names.length > 0 ? names.join( ', ' ) : __( 'selected sites', 'oneupdate' );
+			const namesString =
+				names.length > 0
+					? names.join( ', ' )
+					: __( 'selected sites', 'oneupdate' );
 			let noticeMessage = '';
 
-			if ( 'change-version' === currentAction || 'install' === currentAction || 'update' === currentAction || 'remove' === currentAction ) {
+			if (
+				'change-version' === currentAction ||
+				'install' === currentAction ||
+				'update' === currentAction ||
+				'remove' === currentAction
+			) {
 				noticeMessage = sprintf(
 					/* translators: %1s is the plugin name, %2s is the action verb */
 					__( '%1$s %2$s PR raised successfully.', 'oneupdate' ),
 					pluginName,
-					actionVerb,
+					actionVerb
 				);
 				noticeMessage += '\n\n';
 			} else {
 				noticeMessage = sprintf(
-				/* translators: %1s is the plugin name, %2s is the action verb, %3s is the site names */
+					/* translators: %1s is the plugin name, %2s is the action verb, %3s is the site names */
 					__( '%1$s %2$s successfully on %3$s.', 'oneupdate' ),
 					pluginName,
 					actionVerb,
-					namesString,
+					namesString
 				);
 			}
 
 			// add site name and its respective action link to message.
 			for ( const action of githubActions ) {
-				const site = allAvailableSites.find( ( s ) => s.url === action.site );
+				const site = allAvailableSites.find(
+					( s ) => s.url === action.site
+				);
 				const name = site ? site.name : action.site;
 				noticeMessage += `${ name }\n${ action.run_url }`;
 				// add \n\n if not last item
@@ -750,7 +951,7 @@ const PluginManager = () => {
 				status: 'error',
 				message: sprintf(
 					'Failed to execute %s action.',
-					currentAction,
+					currentAction
 				),
 			} );
 		} finally {
@@ -774,26 +975,34 @@ const PluginManager = () => {
 		// get all plugins that have updates available
 		try {
 			setIsBulkUpdateProcess( true );
-			const pluginsToUpdate = Object.values( combinedPluginsBySlug ).filter( ( plugin ) => plugin.update_available_sites > 0 );
+			const pluginsToUpdate = Object.values(
+				combinedPluginsBySlug
+			).filter( ( plugin ) => plugin.update_available_sites > 0 );
 			if ( pluginsToUpdate.length === 0 ) {
 				return;
 			}
 			const getAvailableSites = ( plugin ) => {
 				return Object.entries( plugin.sites )
-					.filter( ( [ , siteInfo ] ) => siteInfo.is_update_available )
+					.filter(
+						( [ , siteInfo ] ) => siteInfo.is_update_available
+					)
 					.map( ( [ url ] ) => url );
 			};
 			// get plugins latest version
 			const latestVersions = pluginsToUpdate.map( ( plugin ) => {
 				const versions = getAvailableVersions( plugin );
-				return versions.length > 0 ? versions[ 0 ].value : plugin.plugin_info.version || '';
+				return versions.length > 0
+					? versions[ 0 ].value
+					: plugin.plugin_info.version || '';
 			} );
 
 			const plugins = pluginsToUpdate.map( ( plugin, index ) => ( {
 				slug: plugin.plugin_info.plugin_slug,
 				version: latestVersions[ index ],
 				sites: getAvailableSites( plugin ),
-				plugin_type: plugin.plugin_info.is_public ? 'public' : 'private',
+				plugin_type: plugin.plugin_info.is_public
+					? 'public'
+					: 'private',
 			} ) );
 
 			// Log the update action
@@ -809,7 +1018,7 @@ const PluginManager = () => {
 						'X-WP-Nonce': RestNonce,
 					},
 					body: JSON.stringify( updateActionData ),
-				},
+				}
 			);
 			if ( ! response.ok ) {
 				setGlobalNotice( {
@@ -822,7 +1031,9 @@ const PluginManager = () => {
 			if ( ! result.success ) {
 				setGlobalNotice( {
 					status: 'error',
-					message: result.message || __( 'Failed to update plugins.', 'oneupdate' ),
+					message:
+						result.message ||
+						__( 'Failed to update plugins.', 'oneupdate' ),
 				} );
 				return;
 			}
@@ -834,7 +1045,12 @@ const PluginManager = () => {
 				}
 
 				return result.response
-					.filter( ( item ) => item.github_response && item.github_response.success && item.github_response.run_url )
+					.filter(
+						( item ) =>
+							item.github_response &&
+							item.github_response.success &&
+							item.github_response.run_url
+					)
 					.map( ( item ) => ( {
 						repo: item.github_response.repo,
 						plugin: item.github_response.plugin,
@@ -848,7 +1064,10 @@ const PluginManager = () => {
 			const githubActions = extractGitHubActionUrls();
 
 			// Create formatted message with GitHub Actions links grouped by site name
-			let noticeMessage = __( 'Plugins update\'s PR raised successfully.', 'oneupdate' );
+			let noticeMessage = __(
+				"Plugins update's PR raised successfully.",
+				'oneupdate'
+			);
 
 			if ( githubActions.length > 0 ) {
 				// Group actions by site name
@@ -862,10 +1081,14 @@ const PluginManager = () => {
 				}, {} );
 
 				// Format the message with site names and their respective URLs
-				const siteGroups = Object.entries( groupedBySite ).map( ( [ name, actions ] ) => {
-					const actionLinks = actions.map( ( action ) => action.run_url ).join( '\n' );
-					return `${ name }\n${ actionLinks }`;
-				} );
+				const siteGroups = Object.entries( groupedBySite ).map(
+					( [ name, actions ] ) => {
+						const actionLinks = actions
+							.map( ( action ) => action.run_url )
+							.join( '\n' );
+						return `${ name }\n${ actionLinks }`;
+					}
+				);
 
 				noticeMessage += `\n\n${ siteGroups.join( '\n\n' ) }`;
 			}
@@ -890,13 +1113,18 @@ const PluginManager = () => {
 		if ( checked ) {
 			setSelectedSites( ( prev ) => [ ...prev, url ] );
 		} else {
-			setSelectedSites( ( prev ) => prev.filter( ( url ) => url !== url ) );
+			setSelectedSites( ( prev ) =>
+				prev.filter( ( url ) => url !== url )
+			);
 		}
 	};
 
 	const handleSelectAllSites = ( checked ) => {
 		if ( checked ) {
-			const availableSites = getAvailableSitesForAction( selectedPlugin, currentAction );
+			const availableSites = getAvailableSitesForAction(
+				selectedPlugin,
+				currentAction
+			);
 			setSelectedSites( availableSites.map( ( [ url ] ) => url ) );
 		} else {
 			setSelectedSites( [] );
@@ -909,42 +1137,66 @@ const PluginManager = () => {
 			case 'activate':
 				return {
 					title: __( 'Activate Plugin', 'oneupdate' ),
-					description: __( 'Select sites where you want to activate this plugin.', 'oneupdate' ),
+					description: __(
+						'Select sites where you want to activate this plugin.',
+						'oneupdate'
+					),
 					buttonText: __( 'Activate on Selected Sites', 'oneupdate' ),
 					icon: 'yes-alt',
 				};
 			case 'deactivate':
 				return {
 					title: __( 'Deactivate Plugin', 'oneupdate' ),
-					description: __( 'Select sites where you want to deactivate this plugin.', 'oneupdate' ),
-					buttonText: __( 'Deactivate on Selected Sites', 'oneupdate' ),
+					description: __(
+						'Select sites where you want to deactivate this plugin.',
+						'oneupdate'
+					),
+					buttonText: __(
+						'Deactivate on Selected Sites',
+						'oneupdate'
+					),
 					icon: 'dismiss',
 				};
 			case 'update':
 				return {
 					title: __( 'Update Plugin', 'oneupdate' ),
-					description: __( 'Select sites where you want to update this plugin.', 'oneupdate' ),
+					description: __(
+						'Select sites where you want to update this plugin.',
+						'oneupdate'
+					),
 					buttonText: __( 'Update on Selected Sites', 'oneupdate' ),
 					icon: 'update',
 				};
 			case 'change-version':
 				return {
 					title: __( 'Change Plugin Version', 'oneupdate' ),
-					description: __( 'Choose plugin version and select sites where you want to change/update version.', 'oneupdate' ),
-					buttonText: __( 'Change Version on Selected Sites', 'oneupdate' ),
+					description: __(
+						'Choose plugin version and select sites where you want to change/update version.',
+						'oneupdate'
+					),
+					buttonText: __(
+						'Change Version on Selected Sites',
+						'oneupdate'
+					),
 					icon: 'admin-tools',
 				};
 			case 'remove':
 				return {
 					title: __( 'Remove Plugin', 'oneupdate' ),
-					description: __( 'Select sites where you want to remove this plugin.', 'oneupdate' ),
+					description: __(
+						'Select sites where you want to remove this plugin.',
+						'oneupdate'
+					),
 					buttonText: __( 'Remove from Selected Sites', 'oneupdate' ),
 					icon: 'trash',
 				};
 			default:
 				return {
 					title: __( 'Plugin Action', 'oneupdate' ),
-					description: __( 'Select sites for this action.', 'oneupdate' ),
+					description: __(
+						'Select sites for this action.',
+						'oneupdate'
+					),
 					buttonText: __( 'Execute Action', 'oneupdate' ),
 					icon: 'admin-generic',
 				};
@@ -969,36 +1221,78 @@ const PluginManager = () => {
 								onClick={ () => {
 									setShowAddPluginModal( false );
 									setShowBackButton( false );
-									setGlobalNotice( { status: '', message: '' } );
+									setGlobalNotice( {
+										status: '',
+										message: '',
+									} );
 								} }
-								style={ { marginTop: '16px', marginBottom: '16px' } }
+								style={ {
+									marginTop: '16px',
+									marginBottom: '16px',
+								} }
 							>
 								{ __( 'Back', 'oneupdate' ) }
 							</Button>
 						) }
-						<VStack gap={ 4 } style={ { maxWidth: '600px', minWidth: '600px', margin: '0 auto', padding: '20px' } }>
-							<h2 style={ { textAlign: 'center', fontSize: '24px', fontWeight: '600' } }>
+						<VStack
+							gap={ 4 }
+							style={ {
+								maxWidth: '600px',
+								minWidth: '600px',
+								margin: '0 auto',
+								padding: '20px',
+							} }
+						>
+							<h2
+								style={ {
+									textAlign: 'center',
+									fontSize: '24px',
+									fontWeight: '600',
+								} }
+							>
 								{ __( 'Add Plugin', 'oneupdate' ) }
 							</h2>
-							<p style={ { textAlign: 'center', color: '#6c757d' } }>
-								{ __( 'Choose how you want to add a plugin to your sites.', 'oneupdate' ) }
+							<p
+								style={ {
+									textAlign: 'center',
+									color: '#6c757d',
+								} }
+							>
+								{ __(
+									'Choose how you want to add a plugin to your sites.',
+									'oneupdate'
+								) }
 							</p>
 							<Grid columns={ 2 } gap={ 4 }>
 								<Card
 									onClick={ () => {
 										setAddPluginType( 'public' );
 										setShowBackButton( true );
-										setGlobalNotice( { status: '', message: '' } );
+										setGlobalNotice( {
+											status: '',
+											message: '',
+										} );
 									} }
 									style={ {
 										cursor: 'pointer',
 										borderRadius: '12px',
-										boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+										boxShadow:
+											'0 2px 8px rgba(0, 0, 0, 0.1)',
 									} }
 								>
 									<CardBody>
-										<h3>{ __( 'Public Plugin', 'oneupdate' ) }</h3>
-										<p>{ __( 'Add a plugin from the WordPress.org repository.', 'oneupdate' ) }</p>
+										<h3>
+											{ __(
+												'Public Plugin',
+												'oneupdate'
+											) }
+										</h3>
+										<p>
+											{ __(
+												'Add a plugin from the WordPress.org repository.',
+												'oneupdate'
+											) }
+										</p>
 									</CardBody>
 								</Card>
 								<Card
@@ -1006,24 +1300,41 @@ const PluginManager = () => {
 										if ( isValidS3Credentials === false ) {
 											setGlobalNotice( {
 												status: 'error',
-												message: __( 'Invalid S3 credentials. Please check your settings.', 'oneupdate' ),
+												message: __(
+													'Invalid S3 credentials. Please check your settings.',
+													'oneupdate'
+												),
 											} );
 											return;
 										}
 										setAddPluginType( 'private' );
 										setShowBackButton( true );
-										setGlobalNotice( { status: '', message: '' } );
+										setGlobalNotice( {
+											status: '',
+											message: '',
+										} );
 									} }
 									style={ {
 										cursor: 'pointer',
 										borderRadius: '12px',
-										boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+										boxShadow:
+											'0 2px 8px rgba(0, 0, 0, 0.1)',
 									} }
 									disabled={ isValidS3Credentials === false }
 								>
 									<CardBody>
-										<h3>{ __( 'Private Plugin', 'oneupdate' ) }</h3>
-										<p>{ __( 'Upload a custom plugin from your computer.', 'oneupdate' ) }</p>
+										<h3>
+											{ __(
+												'Private Plugin',
+												'oneupdate'
+											) }
+										</h3>
+										<p>
+											{ __(
+												'Upload a custom plugin from your computer.',
+												'oneupdate'
+											) }
+										</p>
 									</CardBody>
 								</Card>
 							</Grid>
@@ -1049,7 +1360,10 @@ const PluginManager = () => {
 								setShowBackButton( true );
 								setGlobalNotice( { status: '', message: '' } );
 							} }
-							style={ { marginBottom: '16px', marginTop: '16px' } }
+							style={ {
+								marginBottom: '16px',
+								marginTop: '16px',
+							} }
 						>
 							{ __( 'Back', 'oneupdate' ) }
 						</Button>
@@ -1076,7 +1390,10 @@ const PluginManager = () => {
 								setShowBackButton( true );
 								setGlobalNotice( { status: '', message: '' } );
 							} }
-							style={ { marginBottom: '16px', marginTop: '16px' } }
+							style={ {
+								marginBottom: '16px',
+								marginTop: '16px',
+							} }
 						>
 							{ __( 'Back', 'oneupdate' ) }
 						</Button>
@@ -1099,11 +1416,25 @@ const PluginManager = () => {
 			<div style={ { textAlign: 'center', padding: '60px 20px' } }>
 				<Spinner style={ { width: '40px', height: '40px' } } />
 				<Spacer marginTop={ 4 } />
-				<p style={ { color: '#6c757d', margin: '16px 0 0 0', fontSize: '16px' } }>
-					{ loadingProgress.message || __( 'Loading plugins…', 'oneupdate' ) }
+				<p
+					style={ {
+						color: '#6c757d',
+						margin: '16px 0 0 0',
+						fontSize: '16px',
+					} }
+				>
+					{ loadingProgress.message ||
+						__( 'Loading plugins…', 'oneupdate' ) }
 				</p>
 				{ loadingProgress.total > 0 && (
-					<div style={ { marginTop: '16px', maxWidth: '300px', margin: '16px auto 0', minWidth: '300px' } }>
+					<div
+						style={ {
+							marginTop: '16px',
+							maxWidth: '300px',
+							margin: '16px auto 0',
+							minWidth: '300px',
+						} }
+					>
 						<div
 							style={ {
 								background: '#f1f1f1',
@@ -1116,13 +1447,24 @@ const PluginManager = () => {
 								style={ {
 									background: '#3858e9',
 									height: '100%',
-									width: `${ ( loadingProgress.current / loadingProgress.total ) * 100 }%`,
+									width: `${
+										( loadingProgress.current /
+											loadingProgress.total ) *
+										100
+									}%`,
 									transition: 'width 0.3s ease',
 								} }
 							/>
 						</div>
-						<p style={ { color: '#6c757d', margin: '8px 0 0 0', fontSize: '14px' } }>
-							{ loadingProgress.current } of { loadingProgress.total }
+						<p
+							style={ {
+								color: '#6c757d',
+								margin: '8px 0 0 0',
+								fontSize: '14px',
+							} }
+						>
+							{ loadingProgress.current } of{ ' ' }
+							{ loadingProgress.total }
 						</p>
 					</div>
 				) }
@@ -1131,18 +1473,31 @@ const PluginManager = () => {
 	}
 
 	const totalPlugins = Object.keys( combinedPluginsBySlug ).length;
-	const activePlugins = Object.values( combinedPluginsBySlug ).filter( ( p ) => p.active_sites > 0 ).length;
-	const updatesAvailable = Object.values( combinedPluginsBySlug ).filter( ( p ) => p.update_available_sites > 0 ).length;
-	const privatePlugins = Object.values( combinedPluginsBySlug ).filter( ( p ) => ! p.plugin_info.is_public ).length;
+	const activePlugins = Object.values( combinedPluginsBySlug ).filter(
+		( p ) => p.active_sites > 0
+	).length;
+	const updatesAvailable = Object.values( combinedPluginsBySlug ).filter(
+		( p ) => p.update_available_sites > 0
+	).length;
+	const privatePlugins = Object.values( combinedPluginsBySlug ).filter(
+		( p ) => ! p.plugin_info.is_public
+	).length;
 
 	return (
 		<>
-			{ globalNotice.message && actionLoading === false && (
-				globalNotice.type !== 'snackbar' ? (
+			{ globalNotice.message &&
+				actionLoading === false &&
+				( globalNotice.type !== 'snackbar' ? (
 					<Notice
 						status={ globalNotice.status }
 						isDismissible={ globalNotice.isDismissible }
-						onRemove={ () => setGlobalNotice( { status: '', isDismissible: false, message: '' } ) }
+						onRemove={ () =>
+							setGlobalNotice( {
+								status: '',
+								isDismissible: false,
+								message: '',
+							} )
+						}
 						style={ { marginBottom: '20px' } }
 						type={ globalNotice.type || 'default' }
 					>
@@ -1152,15 +1507,24 @@ const PluginManager = () => {
 					<Snackbar
 						status={ globalNotice.status }
 						isDismissible={ globalNotice.isDismissible }
-						onRemove={ () => setGlobalNotice( { status: '', isDismissible: false, message: '' } ) }
+						onRemove={ () =>
+							setGlobalNotice( {
+								status: '',
+								isDismissible: false,
+								message: '',
+							} )
+						}
 						style={ { marginBottom: '20px' } }
 						type={ globalNotice.type || 'default' }
-						className={ globalNotice?.status === 'error' ? 'oneupdate-error-notice' : 'oneupdate-success-notice' }
+						className={
+							globalNotice?.status === 'error'
+								? 'oneupdate-error-notice'
+								: 'oneupdate-success-notice'
+						}
 					>
 						{ globalNotice.message }
 					</Snackbar>
-				)
-			) }
+				) ) }
 			{ showAddPluginModal ? (
 				<AddPluginScreen />
 			) : (
@@ -1168,7 +1532,8 @@ const PluginManager = () => {
 					{ /* Header */ }
 					<div
 						style={ {
-							background: 'linear-gradient(135deg, #fff 0%, #f8fbff 100%)',
+							background:
+								'linear-gradient(135deg, #fff 0%, #f8fbff 100%)',
 							padding: '32px',
 							marginBottom: '24px',
 							border: '1px solid #e1e5e9',
@@ -1185,10 +1550,22 @@ const PluginManager = () => {
 										fontWeight: '600',
 									} }
 								>
-									{ __( 'OneUpdate - Plugin Manager', 'oneupdate' ) }
+									{ __(
+										'OneUpdate - Plugin Manager',
+										'oneupdate'
+									) }
 								</h1>
-								<p style={ { margin: 0, color: '#50575e', fontSize: '16px' } }>
-									{ __( 'Manage plugins across all your WordPress sites', 'oneupdate' ) }
+								<p
+									style={ {
+										margin: 0,
+										color: '#50575e',
+										fontSize: '16px',
+									} }
+								>
+									{ __(
+										'Manage plugins across all your WordPress sites',
+										'oneupdate'
+									) }
 								</p>
 							</FlexBlock>
 							<FlexItem>
@@ -1197,9 +1574,16 @@ const PluginManager = () => {
 										<Button
 											variant="secondary"
 											onClick={ handleUpdateAll }
-											disabled={ updatesAvailable === 0 || isBulkUpdateProcess }
+											disabled={
+												updatesAvailable === 0 ||
+												isBulkUpdateProcess
+											}
 											icon={ loop }
-											className={ ( isBulkUpdateProcess ) ? 'is-busy' : '' }
+											className={
+												isBulkUpdateProcess
+													? 'is-busy'
+													: ''
+											}
 										>
 											{ __( 'Update All', 'oneupdate' ) }
 										</Button>
@@ -1220,32 +1604,62 @@ const PluginManager = () => {
 					</div>
 
 					<>
-						<Grid columns={ 4 } gap={ 6 } style={ { marginBottom: '24px' } }>
+						<Grid
+							columns={ 4 }
+							gap={ 6 }
+							style={ { marginBottom: '24px' } }
+						>
 							{ [
-								{ value: totalPlugins, label: 'Total Plugins', color: '#0073aa' },
-								{ value: activePlugins, label: 'Active', color: '#00a32a' },
-								{ value: updatesAvailable, label: 'Updates', color: '#dba617' },
-								{ value: privatePlugins, label: 'Private', color: '#826eb4' },
+								{
+									value: totalPlugins,
+									label: 'Total Plugins',
+									color: '#0073aa',
+								},
+								{
+									value: activePlugins,
+									label: 'Active',
+									color: '#00a32a',
+								},
+								{
+									value: updatesAvailable,
+									label: 'Updates',
+									color: '#dba617',
+								},
+								{
+									value: privatePlugins,
+									label: 'Private',
+									color: '#826eb4',
+								},
 							].map( ( stat, index ) => (
 								<Card
 									key={ index }
 									style={ {
 										border: '1px solid #e1e5e9',
 										borderRadius: '12px',
-										boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+										boxShadow:
+											'0 2px 8px rgba(0, 0, 0, 0.08)',
 										background: '#fff',
 										transition: 'all 0.3s ease',
 									} }
 									onMouseEnter={ ( e ) => {
-										e.currentTarget.style.transform = 'translateY(-2px)';
-										e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.12)';
+										e.currentTarget.style.transform =
+											'translateY(-2px)';
+										e.currentTarget.style.boxShadow =
+											'0 8px 25px rgba(0, 0, 0, 0.12)';
 									} }
 									onMouseLeave={ ( e ) => {
-										e.currentTarget.style.transform = 'translateY(0)';
-										e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
+										e.currentTarget.style.transform =
+											'translateY(0)';
+										e.currentTarget.style.boxShadow =
+											'0 2px 8px rgba(0, 0, 0, 0.08)';
 									} }
 								>
-									<CardBody style={ { textAlign: 'center', padding: '24px' } }>
+									<CardBody
+										style={ {
+											textAlign: 'center',
+											padding: '24px',
+										} }
+									>
 										<div
 											style={ {
 												fontSize: '32px',
@@ -1257,7 +1671,13 @@ const PluginManager = () => {
 										>
 											{ stat.value }
 										</div>
-										<div style={ { color: '#6c757d', fontSize: '14px', fontWeight: '500' } }>
+										<div
+											style={ {
+												color: '#6c757d',
+												fontSize: '14px',
+												fontWeight: '500',
+											} }
+										>
 											{ stat.label }
 										</div>
 									</CardBody>
@@ -1278,10 +1698,16 @@ const PluginManager = () => {
 								<Grid columns={ 7 } gap={ 4 }>
 									<div style={ { gridColumn: 'span 3' } }>
 										<TextControl
-											label={ __( 'Search Plugins', 'oneupdate' ) }
+											label={ __(
+												'Search Plugins',
+												'oneupdate'
+											) }
 											value={ searchQuery }
 											onChange={ setSearchQuery }
-											placeholder={ __( 'Search by name or description…', 'oneupdate' ) }
+											placeholder={ __(
+												'Search by name or description…',
+												'oneupdate'
+											) }
 											style={ {
 												fontSize: '14px',
 											} }
@@ -1293,9 +1719,27 @@ const PluginManager = () => {
 										value={ statusFilter }
 										onChange={ setStatusFilter }
 										options={ [
-											{ label: __( 'All Status', 'oneupdate' ), value: 'all' },
-											{ label: __( 'Active', 'oneupdate' ), value: 'active' },
-											{ label: __( 'Inactive', 'oneupdate' ), value: 'inactive' },
+											{
+												label: __(
+													'All Status',
+													'oneupdate'
+												),
+												value: 'all',
+											},
+											{
+												label: __(
+													'Active',
+													'oneupdate'
+												),
+												value: 'active',
+											},
+											{
+												label: __(
+													'Inactive',
+													'oneupdate'
+												),
+												value: 'inactive',
+											},
 										] }
 										disabled={ isBulkUpdateProcess }
 									/>
@@ -1304,9 +1748,27 @@ const PluginManager = () => {
 										value={ typeFilter }
 										onChange={ setTypeFilter }
 										options={ [
-											{ label: __( 'All Types', 'oneupdate' ), value: 'all' },
-											{ label: __( 'Public', 'oneupdate' ), value: 'public' },
-											{ label: __( 'Private', 'oneupdate' ), value: 'private' },
+											{
+												label: __(
+													'All Types',
+													'oneupdate'
+												),
+												value: 'all',
+											},
+											{
+												label: __(
+													'Public',
+													'oneupdate'
+												),
+												value: 'public',
+											},
+											{
+												label: __(
+													'Private',
+													'oneupdate'
+												),
+												value: 'private',
+											},
 										] }
 										disabled={ isBulkUpdateProcess }
 									/>
@@ -1315,23 +1777,52 @@ const PluginManager = () => {
 										value={ updateFilter }
 										onChange={ setUpdateFilter }
 										options={ [
-											{ label: __( 'All Updates', 'oneupdate' ), value: 'all' },
-											{ label: __( 'Updates Available', 'oneupdate' ), value: 'available' },
+											{
+												label: __(
+													'All Updates',
+													'oneupdate'
+												),
+												value: 'all',
+											},
+											{
+												label: __(
+													'Updates Available',
+													'oneupdate'
+												),
+												value: 'available',
+											},
 										] }
 										disabled={ isBulkUpdateProcess }
 									/>
 									{ /* Site specific filter */ }
 									<SelectControl
-										label={ __( 'Filter By Site', 'oneupdate' ) }
+										label={ __(
+											'Filter By Site',
+											'oneupdate'
+										) }
 										value={ siteFilter }
 										onChange={ setSiteFilter }
 										options={ [
-											{ label: __( 'All Sites', 'oneupdate' ), value: 'all' },
-											{ label: __( 'Common plugins', 'oneupdate' ), value: 'common-plugins' },
-											...allAvailableSites.map( ( site ) => ( {
-												label: site.name,
-												value: site.url,
-											} ) ),
+											{
+												label: __(
+													'All Sites',
+													'oneupdate'
+												),
+												value: 'all',
+											},
+											{
+												label: __(
+													'Common plugins',
+													'oneupdate'
+												),
+												value: 'common-plugins',
+											},
+											...allAvailableSites.map(
+												( site ) => ( {
+													label: site.name,
+													value: site.url,
+												} )
+											),
 										] }
 										disabled={ isBulkUpdateProcess }
 									/>
@@ -1341,11 +1832,19 @@ const PluginManager = () => {
 					</>
 
 					{ /* Results */ }
-					<p style={ { marginBottom: '20px', color: '#6c757d', fontSize: '14px', fontWeight: '500' } }>
+					<p
+						style={ {
+							marginBottom: '20px',
+							color: '#6c757d',
+							fontSize: '14px',
+							fontWeight: '500',
+						} }
+					>
 						{ sprintf(
 							/* translators: %1$d is the number of filtered plugins, %2$d is the total number of plugins */
 							__( 'Showing %1$d of %2$d plugins', 'oneupdate' ),
-							filteredPlugins.length, totalPlugins,
+							filteredPlugins.length,
+							totalPlugins
 						) }
 					</p>
 
@@ -1353,7 +1852,8 @@ const PluginManager = () => {
 					<div
 						style={ {
 							display: 'grid',
-							gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+							gridTemplateColumns:
+								'repeat(auto-fill, minmax(340px, 1fr))',
 							gap: '24px',
 							padding: '0',
 						} }
@@ -1375,26 +1875,47 @@ const PluginManager = () => {
 								} }
 							>
 								{ /* Plugin Header */ }
-								<div style={ { display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' } }>
-									<div style={ { flexShrink: 0, position: 'relative', height: '56px' } }>
+								<div
+									style={ {
+										display: 'flex',
+										alignItems: 'flex-start',
+										gap: '16px',
+										marginBottom: '16px',
+									} }
+								>
+									<div
+										style={ {
+											flexShrink: 0,
+											position: 'relative',
+											height: '56px',
+										} }
+									>
 										<div
 											style={ {
 												width: '56px',
 												height: '56px',
 												borderRadius: '12px',
-												background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+												background:
+													'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
 												border: '2px solid #f1f3f4',
 												display: 'flex',
 												alignItems: 'center',
 												justifyContent: 'center',
-												transition: 'border-color 0.2s ease',
+												transition:
+													'border-color 0.2s ease',
 												overflow: 'hidden',
 											} }
 										>
 											{ plugin.plugin_info.icon ? (
 												<img
-													src={ plugin.plugin_info.icon || '/placeholder.svg' }
-													alt={ plugin.plugin_info.name }
+													src={
+														plugin.plugin_info
+															.icon ||
+														'/placeholder.svg'
+													}
+													alt={
+														plugin.plugin_info.name
+													}
 													style={ {
 														width: '100%',
 														height: '100%',
@@ -1402,8 +1923,10 @@ const PluginManager = () => {
 														borderRadius: '10px',
 													} }
 													onError={ ( e ) => {
-														e.target.style.display = 'none';
-														e.target.nextSibling.style.display = 'flex';
+														e.target.style.display =
+															'none';
+														e.target.nextSibling.style.display =
+															'flex';
 													} }
 												/>
 											) : null }
@@ -1412,7 +1935,10 @@ const PluginManager = () => {
 												style={ {
 													fontSize: '24px',
 													color: '#6c757d',
-													display: plugin.plugin_info.icon ? 'none' : 'flex',
+													display: plugin.plugin_info
+														.icon
+														? 'none'
+														: 'flex',
 													alignItems: 'center',
 													justifyContent: 'center',
 												} }
@@ -1432,12 +1958,30 @@ const PluginManager = () => {
 												whiteSpace: 'nowrap',
 											} }
 										>
-											{ decodeEntities( plugin.plugin_info.name ) }
+											{ decodeEntities(
+												plugin.plugin_info.name
+											) }
 										</h3>
-										<p style={ { margin: '0 0 8px 0', color: '#6c757d', fontSize: '13px' } }>
-											by { decodeEntities( plugin.plugin_info.author ) }
+										<p
+											style={ {
+												margin: '0 0 8px 0',
+												color: '#6c757d',
+												fontSize: '13px',
+											} }
+										>
+											by{ ' ' }
+											{ decodeEntities(
+												plugin.plugin_info.author
+											) }
 										</p>
-										<Flex gap={ 2 } style={ { marginBottom: '8px', justifyContent: 'flex-start', width: 'max-content' } }>
+										<Flex
+											gap={ 2 }
+											style={ {
+												marginBottom: '8px',
+												justifyContent: 'flex-start',
+												width: 'max-content',
+											} }
+										>
 											<FlexItem>
 												<div
 													style={ {
@@ -1452,15 +1996,26 @@ const PluginManager = () => {
 														width: 'max-content',
 													} }
 												>
-													<span style={ { color: '#6c757d', fontWeight: '500' } }>Current version</span>
+													<span
+														style={ {
+															color: '#6c757d',
+															fontWeight: '500',
+														} }
+													>
+														Current version
+													</span>
 													<span
 														style={ {
 															color: '#495057',
 															fontWeight: '500',
-															fontFamily: "SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace",
+															fontFamily:
+																"SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace",
 														} }
 													>
-														{ plugin.plugin_info.version }
+														{
+															plugin.plugin_info
+																.version
+														}
 													</span>
 												</div>
 											</FlexItem>
@@ -1468,7 +2023,9 @@ const PluginManager = () => {
 												<span
 													style={ {
 														display: 'inline-block',
-														background: plugin.plugin_info.is_public
+														background: plugin
+															.plugin_info
+															.is_public
 															? 'linear-gradient(135deg, #00a32a 0%, #008a20 100%)'
 															: 'linear-gradient(135deg, #826eb4 0%, #6c5b7b 100%)',
 														color: '#fff',
@@ -1478,9 +2035,16 @@ const PluginManager = () => {
 														fontWeight: '500',
 													} }
 												>
-													{ plugin.plugin_info.is_public
-														? __( 'Public', 'oneupdate' )
-														: __( 'Private', 'oneupdate' ) }
+													{ plugin.plugin_info
+														.is_public
+														? __(
+																'Public',
+																'oneupdate'
+														  )
+														: __(
+																'Private',
+																'oneupdate'
+														  ) }
 												</span>
 											</FlexItem>
 										</Flex>
@@ -1488,96 +2052,149 @@ const PluginManager = () => {
 									<div>
 										<DropdownMenu
 											icon="ellipsis"
-											label={ __( 'Plugin Actions', 'oneupdate' ) }
-											popoverProps={ { position: 'bottom left' } }
+											label={ __(
+												'Plugin Actions',
+												'oneupdate'
+											) }
+											popoverProps={ {
+												position: 'bottom left',
+											} }
 											className="oneupdate-plugin-action-dropdown"
 											disabled={ isBulkUpdateProcess }
-											style={
-												{
-													pointerEvents: isBulkUpdateProcess ? 'none' : 'auto',
-													opacity: isBulkUpdateProcess ? 0.6 : 1,
-												}
-											}
+											style={ {
+												pointerEvents:
+													isBulkUpdateProcess
+														? 'none'
+														: 'auto',
+												opacity: isBulkUpdateProcess
+													? 0.6
+													: 1,
+											} }
 										>
 											{ ( { onClose } ) => {
 												return (
 													<>
 														<MenuGroup>
 															{ /* Change Version - only show for public plugins */ }
-															{ plugin.plugin_info.is_public && (
+															{ plugin.plugin_info
+																.is_public && (
 																<MenuItem
 																	icon="admin-tools"
 																	onClick={ () => {
-																		handlePluginAction( plugin, 'change-version' );
+																		handlePluginAction(
+																			plugin,
+																			'change-version'
+																		);
 																		onClose();
 																	} }
 																>
-																	{ __( 'Change version/update', 'oneupdate' ) }
+																	{ __(
+																		'Change version/update',
+																		'oneupdate'
+																	) }
 																</MenuItem>
 															) }
 
 															{ /* Activate Plugin - only show if plugin is inactive on some sites */ }
-															{ plugin.active_sites < plugin.total_sites && (
+															{ plugin.active_sites <
+																plugin.total_sites && (
 																<MenuItem
 																	icon="yes-alt"
 																	onClick={ () => {
-																		handlePluginAction( plugin, 'activate' );
+																		handlePluginAction(
+																			plugin,
+																			'activate'
+																		);
 																		onClose();
 																	} }
 																>
-																	{ __( 'Activate on sites', 'oneupdate' ) }
+																	{ __(
+																		'Activate on sites',
+																		'oneupdate'
+																	) }
 																</MenuItem>
 															) }
 
 															{ /* Deactivate Plugin - only show if plugin is active on some sites */ }
-															{ plugin.active_sites > 0 && (
+															{ plugin.active_sites >
+																0 && (
 																<MenuItem
 																	icon="dismiss"
 																	onClick={ () => {
-																		handlePluginAction( plugin, 'deactivate' );
+																		handlePluginAction(
+																			plugin,
+																			'deactivate'
+																		);
 																		onClose();
 																	} }
 																>
-																	{ __( 'Deactivate on sites', 'oneupdate' ) }
+																	{ __(
+																		'Deactivate on sites',
+																		'oneupdate'
+																	) }
 																</MenuItem>
 															) }
-
 														</MenuGroup>
 
 														<MenuGroup>
 															{ /* Add menu item called install on sites which only shows for public plugin and sites on which current plugin is not present */ }
-															{ plugin.plugin_info.is_public && getAvailableSitesForAction( plugin, 'install' ).length !== 0 && (
-																<MenuItem
-																	icon="admin-plugins"
-																	onClick={ () => {
-																		handlePluginAction( plugin, 'install' );
-																		onClose();
-																	} }
-																>
-																	{ __( 'Install on sites', 'oneupdate' ) }
-																</MenuItem>
-															) }
+															{ plugin.plugin_info
+																.is_public &&
+																getAvailableSitesForAction(
+																	plugin,
+																	'install'
+																).length !==
+																	0 && (
+																	<MenuItem
+																		icon="admin-plugins"
+																		onClick={ () => {
+																			handlePluginAction(
+																				plugin,
+																				'install'
+																			);
+																			onClose();
+																		} }
+																	>
+																		{ __(
+																			'Install on sites',
+																			'oneupdate'
+																		) }
+																	</MenuItem>
+																) }
 															<MenuItem
 																icon="trash"
 																onClick={ () => {
-																	handlePluginAction( plugin, 'remove' );
+																	handlePluginAction(
+																		plugin,
+																		'remove'
+																	);
 																	onClose();
 																} }
 																isDestructive
 															>
-																{ __( 'Uninstall from sites', 'oneupdate' ) }
+																{ __(
+																	'Uninstall from sites',
+																	'oneupdate'
+																) }
 															</MenuItem>
 														</MenuGroup>
 														<MenuGroup>
 															<MenuItem
 																icon="info"
 																onClick={ () => {
-																	setSelectedPlugin( plugin );
-																	setShowPluginModal( true );
+																	setSelectedPlugin(
+																		plugin
+																	);
+																	setShowPluginModal(
+																		true
+																	);
 																	onClose();
 																} }
 															>
-																{ __( 'Plugin Details', 'oneupdate' ) }
+																{ __(
+																	'Plugin Details',
+																	'oneupdate'
+																) }
 															</MenuItem>
 														</MenuGroup>
 													</>
@@ -1588,7 +2205,9 @@ const PluginManager = () => {
 								</div>
 
 								{ /* Plugin Body */ }
-								<div style={ { flex: 1, marginBottom: '20px' } }>
+								<div
+									style={ { flex: 1, marginBottom: '20px' } }
+								>
 									<p
 										style={ {
 											margin: 0,
@@ -1601,7 +2220,9 @@ const PluginManager = () => {
 											overflow: 'hidden',
 										} }
 									>
-										{ decodeEntities( plugin.plugin_info.description ) }
+										{ decodeEntities(
+											plugin.plugin_info.description
+										) }
 									</p>
 								</div>
 
@@ -1610,72 +2231,127 @@ const PluginManager = () => {
 									{ /* Status Badge with Tooltip */ }
 									<div style={ { marginBottom: '12px' } }>
 										{ /* Show all sites name if available */ }
-										{ plugin.sites && Object.keys( plugin.sites ).length > 0 && (
-											<div
-												style={ {
-													marginTop: '8px',
-													padding: '8px',
-													backgroundColor: '#f8f9fa',
-													borderRadius: '6px',
-													border: '1px solid #e9ecef',
-												} }
-											>
+										{ plugin.sites &&
+											Object.keys( plugin.sites ).length >
+												0 && (
 												<div
 													style={ {
-														fontSize: '11px',
-														color: '#495057',
-														fontWeight: '600',
-														marginBottom: '6px',
-														display: 'flex',
-														alignItems: 'center',
-														gap: '4px',
+														marginTop: '8px',
+														padding: '8px',
+														backgroundColor:
+															'#f8f9fa',
+														borderRadius: '6px',
+														border: '1px solid #e9ecef',
 													} }
 												>
-													<span>🌐</span>
-													Installed on { Object.keys( plugin.sites ).length } site{ Object.keys( plugin.sites ).length !== 1 ? 's' : '' }
+													<div
+														style={ {
+															fontSize: '11px',
+															color: '#495057',
+															fontWeight: '600',
+															marginBottom: '6px',
+															display: 'flex',
+															alignItems:
+																'center',
+															gap: '4px',
+														} }
+													>
+														<span>🌐</span>
+														Installed on{ ' ' }
+														{
+															Object.keys(
+																plugin.sites
+															).length
+														}{ ' ' }
+														site
+														{ Object.keys(
+															plugin.sites
+														).length !== 1
+															? 's'
+															: '' }
+													</div>
+													<div
+														style={ {
+															display: 'flex',
+															flexWrap: 'wrap',
+															gap: '4px',
+														} }
+													>
+														{ Object.values(
+															plugin.sites
+														).map(
+															( site, index ) => (
+																<span
+																	key={
+																		index
+																	}
+																	style={ {
+																		fontSize:
+																			'10px',
+																		backgroundColor:
+																			site.is_active
+																				? '#d1ecf1'
+																				: '#f8d7da',
+																		color: site.is_active
+																			? '#0c5460'
+																			: '#721c24',
+																		padding:
+																			'3px 8px',
+																		borderRadius:
+																			'12px',
+																		display:
+																			'inline-flex',
+																		alignItems:
+																			'center',
+																		gap: '4px',
+																		border: `1px solid ${
+																			site.is_active
+																				? '#bee5eb'
+																				: '#f5c6cb'
+																		}`,
+																		fontWeight:
+																			'500',
+																		cursor: 'help',
+																	} }
+																	title={ `${
+																		site.is_active
+																			? 'Active'
+																			: 'Inactive'
+																	} - Version: ${
+																		site.version
+																	}` }
+																>
+																	{ site.site_name.trim() }
+																	{ site.is_update_available && (
+																		<span
+																			style={ {
+																				color: '#e67e22',
+																				fontSize:
+																					'9px',
+																			} }
+																		>
+																			●
+																		</span>
+																	) }
+																</span>
+															)
+														) }
+													</div>
 												</div>
-												<div
-													style={ {
-														display: 'flex',
-														flexWrap: 'wrap',
-														gap: '4px',
-													} }
-												>
-													{ Object.values( plugin.sites ).map( ( site, index ) => (
-														<span
-															key={ index }
-															style={ {
-																fontSize: '10px',
-																backgroundColor: site.is_active ? '#d1ecf1' : '#f8d7da',
-																color: site.is_active ? '#0c5460' : '#721c24',
-																padding: '3px 8px',
-																borderRadius: '12px',
-																display: 'inline-flex',
-																alignItems: 'center',
-																gap: '4px',
-																border: `1px solid ${ site.is_active ? '#bee5eb' : '#f5c6cb' }`,
-																fontWeight: '500',
-																cursor: 'help',
-															} }
-															title={ `${ site.is_active ? 'Active' : 'Inactive' } - Version: ${ site.version }` }
-														>
-															{ site.site_name.trim() }
-															{ site.is_update_available && (
-																<span style={ { color: '#e67e22', fontSize: '9px' } }>●</span>
-															) }
-														</span>
-													) ) }
-												</div>
-											</div>
-										) }
+											) }
 									</div>
 
 									{ /* Update Notice */ }
 									{ plugin.update_available_sites > 0 && (
-										<Tooltip text={ getUpdateTooltipText( plugin ) }>
+										<Tooltip
+											text={ getUpdateTooltipText(
+												plugin
+											) }
+										>
 											<div
 												style={ {
-													background: 'linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%)',
+													background:
+														'linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%)',
 													border: '1px solid #ffeaa7',
 													borderRadius: '8px',
 													padding: '8px 12px',
@@ -1687,15 +2363,25 @@ const PluginManager = () => {
 													cursor: 'help',
 												} }
 											>
-												<Dashicon icon="warning" style={ { flexShrink: 0 } } />
+												<Dashicon
+													icon="warning"
+													style={ { flexShrink: 0 } }
+												/>
 												<span>
-													{ plugin.update_available_sites === 1
-														? __( '1 site needs update', 'oneupdate' )
+													{ plugin.update_available_sites ===
+													1
+														? __(
+																'1 site needs update',
+																'oneupdate'
+														  )
 														: sprintf(
-															/* translators: %d is the number of sites needing updates */
-															__( '%d sites need updates', 'oneupdate' ),
-															plugin.update_available_sites,
-														) }
+																/* translators: %d is the number of sites needing updates */
+																__(
+																	'%d sites need updates',
+																	'oneupdate'
+																),
+																plugin.update_available_sites
+														  ) }
 												</span>
 											</div>
 										</Tooltip>
@@ -1721,220 +2407,479 @@ const PluginManager = () => {
 								gap: '0',
 							} }
 						>
-							<Dashicon icon="admin-plugins" style={ { fontSize: '64px', color: '#c3c4c7', marginBottom: '20px', display: 'flex', alignContent: 'center', justifyContent: 'center' } } />
-							<h3 style={ { color: '#6c757d', marginBottom: '12px', fontSize: '20px' } }>
+							<Dashicon
+								icon="admin-plugins"
+								style={ {
+									fontSize: '64px',
+									color: '#c3c4c7',
+									marginBottom: '20px',
+									display: 'flex',
+									alignContent: 'center',
+									justifyContent: 'center',
+								} }
+							/>
+							<h3
+								style={ {
+									color: '#6c757d',
+									marginBottom: '12px',
+									fontSize: '20px',
+								} }
+							>
 								{ __( 'No plugins found', 'oneupdate' ) }
 							</h3>
-							<p style={ { color: '#6c757d', margin: 0, lineHeight: '1.5' } }>
+							<p
+								style={ {
+									color: '#6c757d',
+									margin: 0,
+									lineHeight: '1.5',
+								} }
+							>
 								{ __(
 									'No plugins found matching your filters. Try adjusting your search criteria.',
-									'oneupdate',
+									'oneupdate'
 								) }
 							</p>
 						</div>
 					) }
 
 					{ /* Site Selection Modal */ }
-					{ showSiteSelectionModal && selectedPlugin && currentAction && (
-						<Modal
-							title={ getActionInfo( currentAction ).title }
-							onRequestClose={ () => setShowSiteSelectionModal( false ) }
-							style={ { maxWidth: '600px', minWidth: '600px' } }
-							shouldCloseOnClickOutside={ actionLoading ? false : true }
-						>
-							<div style={ { paddingTop: '24px' } }>
-								<VStack spacing={ 4 }>
-									{ /* Action Description */ }
-									<div>
-										<p style={ { margin: '0 0 16px 0', color: '#50575e', fontSize: '14px' } }>
-											<strong>{ decodeEntities( selectedPlugin.plugin_info.name ) }</strong>
-										</p>
-										<p style={ { margin: 0, color: '#6c757d', fontSize: '14px' } }>
-											{ getActionInfo( currentAction ).description }
-										</p>
-									</div>
-
-									{ /* Version Selection for Change Version Action */ }
-									{ currentAction === 'change-version' && (
+					{ showSiteSelectionModal &&
+						selectedPlugin &&
+						currentAction && (
+							<Modal
+								title={ getActionInfo( currentAction ).title }
+								onRequestClose={ () =>
+									setShowSiteSelectionModal( false )
+								}
+								style={ {
+									maxWidth: '600px',
+									minWidth: '600px',
+								} }
+								shouldCloseOnClickOutside={
+									actionLoading ? false : true
+								}
+							>
+								<div style={ { paddingTop: '24px' } }>
+									<VStack spacing={ 4 }>
+										{ /* Action Description */ }
 										<div>
-											{ getAvailableVersions( selectedPlugin ).length > 0 ? (
-												<SelectControl
-													label={ __( 'Select Version', 'oneupdate' ) }
-													value={ selectedVersion === '' ? selectedPlugin.plugin_info.version : selectedVersion }
-													onChange={ setSelectedVersion }
-													options={ [
-														{ label: __( 'Select a version…', 'oneupdate' ), value: '' },
-														...getAvailableVersions( selectedPlugin, selectedVersion ),
-													] }
-													help={ __( 'Choose from the latest 5 stable versions available', 'oneupdate' ) }
+											<p
+												style={ {
+													margin: '0 0 16px 0',
+													color: '#50575e',
+													fontSize: '14px',
+												} }
+											>
+												<strong>
+													{ decodeEntities(
+														selectedPlugin
+															.plugin_info.name
+													) }
+												</strong>
+											</p>
+											<p
+												style={ {
+													margin: 0,
+													color: '#6c757d',
+													fontSize: '14px',
+												} }
+											>
+												{
+													getActionInfo(
+														currentAction
+													).description
+												}
+											</p>
+										</div>
+
+										{ /* Version Selection for Change Version Action */ }
+										{ currentAction ===
+											'change-version' && (
+											<div>
+												{ getAvailableVersions(
+													selectedPlugin
+												).length > 0 ? (
+													<SelectControl
+														label={ __(
+															'Select Version',
+															'oneupdate'
+														) }
+														value={
+															selectedVersion ===
+															''
+																? selectedPlugin
+																		.plugin_info
+																		.version
+																: selectedVersion
+														}
+														onChange={
+															setSelectedVersion
+														}
+														options={ [
+															{
+																label: __(
+																	'Select a version…',
+																	'oneupdate'
+																),
+																value: '',
+															},
+															...getAvailableVersions(
+																selectedPlugin,
+																selectedVersion
+															),
+														] }
+														help={ __(
+															'Choose from the latest 5 stable versions available',
+															'oneupdate'
+														) }
+														disabled={
+															actionLoading
+														}
+													/>
+												) : (
+													<Notice
+														status="warning"
+														isDismissible={ false }
+													>
+														<p
+															style={ {
+																margin: 0,
+															} }
+														>
+															{ __(
+																'No stable versions available for this plugin.',
+																'oneupdate'
+															) }
+														</p>
+													</Notice>
+												) }
+											</div>
+										) }
+
+										{ /* Action is install then show sites on which plugin is not present */ }
+
+										{ /* Site Selection */ }
+										<div>
+											<div
+												style={ {
+													marginBottom: '16px',
+													display: 'flex',
+													flexDirection: 'row',
+													gap: '8px',
+													alignItems: 'center',
+												} }
+											>
+												<CheckboxControl
+													label={ __(
+														'Select All Sites',
+														'oneupdate'
+													) }
+													checked={
+														selectedSites.length ===
+														getAvailableSitesForAction(
+															selectedPlugin,
+															currentAction
+														).length
+													}
+													onChange={
+														handleSelectAllSites
+													}
+													style={ {
+														fontWeight: '500',
+													} }
 													disabled={ actionLoading }
 												/>
-											) : (
-												<Notice status="warning" isDismissible={ false }>
-													<p style={ { margin: 0 } }>
-														{ __( 'No stable versions available for this plugin.', 'oneupdate' ) }
-													</p>
-												</Notice>
-											) }
-										</div>
-									) }
+												<Button
+													variant="link"
+													onClick={ () =>
+														setSelectedSites( [] )
+													}
+													disabled={
+														selectedSites.length ===
+															0 || actionLoading
+													}
+													style={ {
+														fontWeight: '500',
+														marginBottom: '8px',
+													} }
+												>
+													{ __(
+														'Clear Selection',
+														'oneupdate'
+													) }
+												</Button>
+											</div>
 
-									{ /* Action is install then show sites on which plugin is not present */ }
-
-									{ /* Site Selection */ }
-									<div>
-										<div style={ { marginBottom: '16px', display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' } }>
-											<CheckboxControl
-												label={ __( 'Select All Sites', 'oneupdate' ) }
-												checked={ selectedSites.length === getAvailableSitesForAction( selectedPlugin, currentAction ).length }
-												onChange={ handleSelectAllSites }
-												style={ { fontWeight: '500' } }
-												disabled={ actionLoading }
-											/>
-											<Button
-												variant="link"
-												onClick={ () => setSelectedSites( [] ) }
-												disabled={ selectedSites.length === 0 || actionLoading }
-												style={ { fontWeight: '500', marginBottom: '8px' } }
+											<div
+												style={ {
+													maxHeight: '300px',
+													overflowY: 'auto',
+													border: '1px solid #e1e5e9',
+													borderRadius: '8px',
+													padding: '16px',
+												} }
 											>
-												{ __( 'Clear Selection', 'oneupdate' ) }
-											</Button>
-										</div>
-
-										<div
-											style={ {
-												maxHeight: '300px',
-												overflowY: 'auto',
-												border: '1px solid #e1e5e9',
-												borderRadius: '8px',
-												padding: '16px',
-											} }
-										>
-											{ getAvailableSitesForAction( selectedPlugin, currentAction ).length === 0 ? (
-												<Notice status="warning" isDismissible={ false }>
-													<p style={ { margin: 0 } }>
-														{ currentAction === 'activate' &&
+												{ getAvailableSitesForAction(
+													selectedPlugin,
+													currentAction
+												).length === 0 ? (
+													<Notice
+														status="warning"
+														isDismissible={ false }
+													>
+														<p
+															style={ {
+																margin: 0,
+															} }
+														>
+															{ currentAction ===
+																'activate' &&
 																__(
 																	'No sites available for activation. Plugin is already active on all sites.',
-																	'oneupdate',
+																	'oneupdate'
 																) }
-														{ currentAction === 'deactivate' &&
+															{ currentAction ===
+																'deactivate' &&
 																__(
 																	'No sites available for deactivation. Plugin is not active on any sites.',
-																	'oneupdate',
+																	'oneupdate'
 																) }
-														{ currentAction === 'update' &&
-																__( 'No sites have updates available for this plugin.', 'oneupdate' ) }
-													</p>
-												</Notice>
-											) : (
-												<VStack spacing={ 2 }>
-													{ getAvailableSitesForAction( selectedPlugin, currentAction ).map( ( [ url, siteInfo ] ) => (
-														<div
-															key={ url }
-															style={ { padding: '8px', border: '1px solid #f0f0f1', borderRadius: '4px', cursor: 'pointer' } }
-															role="button"
-															tabIndex={ 0 }
-															onClick={ () => {
-																if ( actionLoading ) {
-																	return;
-																}
+															{ currentAction ===
+																'update' &&
+																__(
+																	'No sites have updates available for this plugin.',
+																	'oneupdate'
+																) }
+														</p>
+													</Notice>
+												) : (
+													<VStack spacing={ 2 }>
+														{ getAvailableSitesForAction(
+															selectedPlugin,
+															currentAction
+														).map(
+															( [
+																url,
+																siteInfo,
+															] ) => (
+																<div
+																	key={ url }
+																	style={ {
+																		padding:
+																			'8px',
+																		border: '1px solid #f0f0f1',
+																		borderRadius:
+																			'4px',
+																		cursor: 'pointer',
+																	} }
+																	role="button"
+																	tabIndex={
+																		0
+																	}
+																	onClick={ () => {
+																		if (
+																			actionLoading
+																		) {
+																			return;
+																		}
 
-																handleSiteToggle( url, ! selectedSites.includes( url ) );
-															} }
-															onKeyDown={ ( e ) => {
-																if ( actionLoading ) {
-																	e.preventDefault();
-																	return;
-																}
-																if ( e.key === 'Enter' || e.key === ' ' ) {
-																	e.preventDefault();
-																	handleSiteToggle( url, ! selectedSites.includes( url ) );
-																}
-															} }
-															aria-pressed={ selectedSites.includes( url ) }
-														>
-															<CheckboxControl
-																className="oneupdate-site-checkbox"
-																label={
-																	<div>
-																		<div style={ { fontWeight: '500', color: '#23282d' } }>
-																			{ siteInfo.site_name || formatSiteUrl( url ) }
-																		</div>
-																		<div style={ { fontSize: '12px', color: '#6c757d' } }>
-																			{ ( url ) } • v{ siteInfo.version }
-																			{ siteInfo.is_active && (
-																				<span style={ { color: '#00a32a', marginLeft: '8px' } }>
-																					{ __( 'Active', 'oneupdate' ) }
-																				</span>
-																			) }
-																			{ siteInfo.is_update_available && (
-																				<span style={ { color: '#d63638', marginLeft: '8px' } }>
-																					{ __( 'Update Available', 'oneupdate' ) }
-																				</span>
-																			) }
-																		</div>
-																	</div>
-																}
-																checked={ selectedSites.includes( url ) }
-																disabled={ actionLoading }
-															/>
-														</div>
-													) ) }
-												</VStack>
-											) }
+																		handleSiteToggle(
+																			url,
+																			! selectedSites.includes(
+																				url
+																			)
+																		);
+																	} }
+																	onKeyDown={ (
+																		e
+																	) => {
+																		if (
+																			actionLoading
+																		) {
+																			e.preventDefault();
+																			return;
+																		}
+																		if (
+																			e.key ===
+																				'Enter' ||
+																			e.key ===
+																				' '
+																		) {
+																			e.preventDefault();
+																			handleSiteToggle(
+																				url,
+																				! selectedSites.includes(
+																					url
+																				)
+																			);
+																		}
+																	} }
+																	aria-pressed={ selectedSites.includes(
+																		url
+																	) }
+																>
+																	<CheckboxControl
+																		className="oneupdate-site-checkbox"
+																		label={
+																			<div>
+																				<div
+																					style={ {
+																						fontWeight:
+																							'500',
+																						color: '#23282d',
+																					} }
+																				>
+																					{ siteInfo.site_name ||
+																						formatSiteUrl(
+																							url
+																						) }
+																				</div>
+																				<div
+																					style={ {
+																						fontSize:
+																							'12px',
+																						color: '#6c757d',
+																					} }
+																				>
+																					{
+																						url
+																					}{ ' ' }
+																					•
+																					v
+																					{
+																						siteInfo.version
+																					}
+																					{ siteInfo.is_active && (
+																						<span
+																							style={ {
+																								color: '#00a32a',
+																								marginLeft:
+																									'8px',
+																							} }
+																						>
+																							{ __(
+																								'Active',
+																								'oneupdate'
+																							) }
+																						</span>
+																					) }
+																					{ siteInfo.is_update_available && (
+																						<span
+																							style={ {
+																								color: '#d63638',
+																								marginLeft:
+																									'8px',
+																							} }
+																						>
+																							{ __(
+																								'Update Available',
+																								'oneupdate'
+																							) }
+																						</span>
+																					) }
+																				</div>
+																			</div>
+																		}
+																		checked={ selectedSites.includes(
+																			url
+																		) }
+																		disabled={
+																			actionLoading
+																		}
+																	/>
+																</div>
+															)
+														) }
+													</VStack>
+												) }
+											</div>
 										</div>
-									</div>
 
-									{ /* Action Buttons */ }
-									<HStack justify="flex-end" spacing={ 3 }>
-										<Button
-											variant="secondary"
-											onClick={ () => setShowSiteSelectionModal( false ) }
-											disabled={ actionLoading }
+										{ /* Action Buttons */ }
+										<HStack
+											justify="flex-end"
+											spacing={ 3 }
 										>
-											{ __( 'Cancel', 'oneupdate' ) }
-										</Button>
-										<Button
-											variant="primary"
-											onClick={ executeAction }
-											disabled={
-												selectedSites.length === 0 ||
-												actionLoading ||
-												( currentAction === 'change-version' && ! selectedVersion )
-											}
-											isBusy={ actionLoading }
-											isDestructive={ currentAction === 'remove' }
-										>
-											<Dashicon icon={ getActionInfo( currentAction ).icon } style={ { marginRight: '8px' } } />
-											{ actionLoading
-												? __( 'Processing…', 'oneupdate' )
-												: getActionInfo( currentAction ).buttonText }
-										</Button>
-									</HStack>
-								</VStack>
-							</div>
-						</Modal>
-					) }
+											<Button
+												variant="secondary"
+												onClick={ () =>
+													setShowSiteSelectionModal(
+														false
+													)
+												}
+												disabled={ actionLoading }
+											>
+												{ __( 'Cancel', 'oneupdate' ) }
+											</Button>
+											<Button
+												variant="primary"
+												onClick={ executeAction }
+												disabled={
+													selectedSites.length ===
+														0 ||
+													actionLoading ||
+													( currentAction ===
+														'change-version' &&
+														! selectedVersion )
+												}
+												isBusy={ actionLoading }
+												isDestructive={
+													currentAction === 'remove'
+												}
+											>
+												<Dashicon
+													icon={
+														getActionInfo(
+															currentAction
+														).icon
+													}
+													style={ {
+														marginRight: '8px',
+													} }
+												/>
+												{ actionLoading
+													? __(
+															'Processing…',
+															'oneupdate'
+													  )
+													: getActionInfo(
+															currentAction
+													  ).buttonText }
+											</Button>
+										</HStack>
+									</VStack>
+								</div>
+							</Modal>
+						) }
 
 					{ /* Plugin Details Modal */ }
 					{ showPluginModal && selectedPlugin && (
 						<Modal
-							title={ decodeEntities( selectedPlugin.plugin_info.name ) }
+							title={ decodeEntities(
+								selectedPlugin.plugin_info.name
+							) }
 							onRequestClose={ () => setShowPluginModal( false ) }
 							style={ { maxWidth: '800px', minWidth: '800px' } }
-							shouldCloseOnClickOutside={ true }
+							shouldCloseOnClickOutside
 						>
 							<div style={ { paddingTop: '24px' } }>
 								{ /* Plugin Header */ }
-								<div style={ { display: 'flex', gap: '20px', marginBottom: '24px', alignItems: 'center' } }>
+								<div
+									style={ {
+										display: 'flex',
+										gap: '20px',
+										marginBottom: '24px',
+										alignItems: 'center',
+									} }
+								>
 									<div style={ { flexShrink: 0 } }>
 										<div
 											style={ {
 												width: '80px',
 												height: '80px',
 												borderRadius: '12px',
-												background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+												background:
+													'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
 												border: '2px solid #f1f3f4',
 												display: 'flex',
 												alignItems: 'center',
@@ -1942,10 +2887,18 @@ const PluginManager = () => {
 												overflow: 'hidden',
 											} }
 										>
-											{ selectedPlugin.plugin_info.icon ? (
+											{ selectedPlugin.plugin_info
+												.icon ? (
 												<img
-													src={ selectedPlugin.plugin_info.icon || '/placeholder.svg' }
-													alt={ selectedPlugin.plugin_info.name }
+													src={
+														selectedPlugin
+															.plugin_info.icon ||
+														'/placeholder.svg'
+													}
+													alt={
+														selectedPlugin
+															.plugin_info.name
+													}
 													style={ {
 														width: '100%',
 														height: '100%',
@@ -1954,15 +2907,42 @@ const PluginManager = () => {
 													} }
 												/>
 											) : (
-												<Dashicon icon="admin-plugins" style={ { fontSize: '32px', color: '#6c757d', display: 'flex', alignItems: 'center', justifyContent: 'center' } } />
+												<Dashicon
+													icon="admin-plugins"
+													style={ {
+														fontSize: '32px',
+														color: '#6c757d',
+														display: 'flex',
+														alignItems: 'center',
+														justifyContent:
+															'center',
+													} }
+												/>
 											) }
 										</div>
 									</div>
-									<div style={ { } }>
-										<p style={ { margin: '0 0 12px 0', color: '#6c757d', fontSize: '16px' } }>
-											by { decodeEntities( selectedPlugin.plugin_info.author ) }
+									<div style={ {} }>
+										<p
+											style={ {
+												margin: '0 0 12px 0',
+												color: '#6c757d',
+												fontSize: '16px',
+											} }
+										>
+											by{ ' ' }
+											{ decodeEntities(
+												selectedPlugin.plugin_info
+													.author
+											) }
 										</p>
-										<Flex gap={ 3 } style={ { justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'wrap' } }>
+										<Flex
+											gap={ 3 }
+											style={ {
+												justifyContent: 'flex-start',
+												alignItems: 'center',
+												flexWrap: 'wrap',
+											} }
+										>
 											<FlexItem>
 												<span
 													style={ {
@@ -1974,15 +2954,22 @@ const PluginManager = () => {
 														fontWeight: '500',
 													} }
 												>
-													Version { selectedPlugin.plugin_info.version }
+													Version{ ' ' }
+													{
+														selectedPlugin
+															.plugin_info.version
+													}
 												</span>
 											</FlexItem>
 											<FlexItem>
 												<span
 													style={ {
-														background: selectedPlugin.plugin_info.is_public
-															? 'linear-gradient(135deg, #00a32a 0%, #008a20 100%)'
-															: 'linear-gradient(135deg, #826eb4 0%, #6c5b7b 100%)',
+														background:
+															selectedPlugin
+																.plugin_info
+																.is_public
+																? 'linear-gradient(135deg, #00a32a 0%, #008a20 100%)'
+																: 'linear-gradient(135deg, #826eb4 0%, #6c5b7b 100%)',
 														color: '#fff',
 														padding: '6px 12px',
 														borderRadius: '16px',
@@ -1990,25 +2977,47 @@ const PluginManager = () => {
 														fontWeight: '500',
 													} }
 												>
-													{ selectedPlugin.plugin_info.is_public
-														? __( 'Public Plugin', 'oneupdate' )
-														: __( 'Private Plugin', 'oneupdate' ) }
+													{ selectedPlugin.plugin_info
+														.is_public
+														? __(
+																'Public Plugin',
+																'oneupdate'
+														  )
+														: __(
+																'Private Plugin',
+																'oneupdate'
+														  ) }
 												</span>
 											</FlexItem>
-											{ selectedPlugin.plugin_info.rating > 0 && (
+											{ selectedPlugin.plugin_info
+												.rating > 0 && (
 												<FlexItem>
 													<span
 														style={ {
-															background: '#fff3cd',
+															background:
+																'#fff3cd',
 															padding: '6px 12px',
-															borderRadius: '16px',
+															borderRadius:
+																'16px',
 															fontSize: '14px',
 															border: '1px solid #ffeaa7',
 															color: '#856404',
 															fontWeight: '500',
 														} }
 													>
-														⭐ { selectedPlugin.plugin_info.rating }% ({ selectedPlugin.plugin_info.num_ratings } reviews)
+														⭐{ ' ' }
+														{
+															selectedPlugin
+																.plugin_info
+																.rating
+														}
+														% (
+														{
+															selectedPlugin
+																.plugin_info
+																.num_ratings
+														}{ ' ' }
+														reviews)
 													</span>
 												</FlexItem>
 											) }
@@ -2018,7 +3027,14 @@ const PluginManager = () => {
 
 								{ /* Description */ }
 								<div style={ { marginBottom: '24px' } }>
-									<h4 style={ { margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#23282d' } }>
+									<h4
+										style={ {
+											margin: '0 0 12px 0',
+											fontSize: '16px',
+											fontWeight: '600',
+											color: '#23282d',
+										} }
+									>
 										{ __( 'Description', 'oneupdate' ) }
 									</h4>
 									<div
@@ -2028,119 +3044,310 @@ const PluginManager = () => {
 											fontSize: '14px',
 										} }
 										dangerouslySetInnerHTML={ {
-											__html: selectedPlugin.plugin_info.full_description || selectedPlugin.plugin_info.description,
+											__html:
+												selectedPlugin.plugin_info
+													.full_description ||
+												selectedPlugin.plugin_info
+													.description,
 										} }
 									/>
 								</div>
 
 								{ /* Plugin Details Grid */ }
-								<Grid columns={ 2 } gap={ 6 } style={ { marginBottom: '24px' } }>
+								<Grid
+									columns={ 2 }
+									gap={ 6 }
+									style={ { marginBottom: '24px' } }
+								>
 									<div>
-										<h4 style={ { margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', color: '#23282d' } }>
+										<h4
+											style={ {
+												margin: '0 0 8px 0',
+												fontSize: '14px',
+												fontWeight: '600',
+												color: '#23282d',
+											} }
+										>
 											{ __( 'Author', 'oneupdate' ) }
 										</h4>
-										<p style={ { margin: 0, color: '#50575e' } }>{ selectedPlugin.plugin_info.author }</p>
-									</div>
-									<div>
-										<h4 style={ { margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', color: '#23282d' } }>
-											{ __( 'Version', 'oneupdate' ) }
-										</h4>
-										<p style={ { margin: 0, color: '#50575e' } }>{ selectedPlugin.plugin_info.version }</p>
-									</div>
-									<div>
-										<h4 style={ { margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', color: '#23282d' } }>
-											{ __( 'Sites', 'oneupdate' ) }
-										</h4>
-										<p style={ { margin: 0, color: '#50575e' } }>
-											{ selectedPlugin.active_sites }/{ selectedPlugin.total_sites } active
+										<p
+											style={ {
+												margin: 0,
+												color: '#50575e',
+											} }
+										>
+											{
+												selectedPlugin.plugin_info
+													.author
+											}
 										</p>
 									</div>
-									{ selectedPlugin.plugin_info.downloaded > 0 && (
+									<div>
+										<h4
+											style={ {
+												margin: '0 0 8px 0',
+												fontSize: '14px',
+												fontWeight: '600',
+												color: '#23282d',
+											} }
+										>
+											{ __( 'Version', 'oneupdate' ) }
+										</h4>
+										<p
+											style={ {
+												margin: 0,
+												color: '#50575e',
+											} }
+										>
+											{
+												selectedPlugin.plugin_info
+													.version
+											}
+										</p>
+									</div>
+									<div>
+										<h4
+											style={ {
+												margin: '0 0 8px 0',
+												fontSize: '14px',
+												fontWeight: '600',
+												color: '#23282d',
+											} }
+										>
+											{ __( 'Sites', 'oneupdate' ) }
+										</h4>
+										<p
+											style={ {
+												margin: 0,
+												color: '#50575e',
+											} }
+										>
+											{ selectedPlugin.active_sites }/
+											{ selectedPlugin.total_sites }{ ' ' }
+											active
+										</p>
+									</div>
+									{ selectedPlugin.plugin_info.downloaded >
+										0 && (
 										<div>
-											<h4 style={ { margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', color: '#23282d' } }>
-												{ __( 'Downloads', 'oneupdate' ) }
+											<h4
+												style={ {
+													margin: '0 0 8px 0',
+													fontSize: '14px',
+													fontWeight: '600',
+													color: '#23282d',
+												} }
+											>
+												{ __(
+													'Downloads',
+													'oneupdate'
+												) }
 											</h4>
-											<p style={ { margin: 0, color: '#50575e' } }>
+											<p
+												style={ {
+													margin: 0,
+													color: '#50575e',
+												} }
+											>
 												{ selectedPlugin.plugin_info.downloaded.toLocaleString() }
 											</p>
 										</div>
 									) }
 									{ selectedPlugin.plugin_info.requires && (
 										<div>
-											<h4 style={ { margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', color: '#23282d' } }>
-												{ __( 'Requires WordPress', 'oneupdate' ) }
+											<h4
+												style={ {
+													margin: '0 0 8px 0',
+													fontSize: '14px',
+													fontWeight: '600',
+													color: '#23282d',
+												} }
+											>
+												{ __(
+													'Requires WordPress',
+													'oneupdate'
+												) }
 											</h4>
-											<p style={ { margin: 0, color: '#50575e' } }>{ selectedPlugin.plugin_info.requires }</p>
+											<p
+												style={ {
+													margin: 0,
+													color: '#50575e',
+												} }
+											>
+												{
+													selectedPlugin.plugin_info
+														.requires
+												}
+											</p>
 										</div>
 									) }
 									{ selectedPlugin.plugin_info.tested && (
 										<div>
-											<h4 style={ { margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', color: '#23282d' } }>
-												{ __( 'Tested up to', 'oneupdate' ) }
+											<h4
+												style={ {
+													margin: '0 0 8px 0',
+													fontSize: '14px',
+													fontWeight: '600',
+													color: '#23282d',
+												} }
+											>
+												{ __(
+													'Tested up to',
+													'oneupdate'
+												) }
 											</h4>
-											<p style={ { margin: 0, color: '#50575e' } }>{ selectedPlugin.plugin_info.tested }</p>
+											<p
+												style={ {
+													margin: 0,
+													color: '#50575e',
+												} }
+											>
+												{
+													selectedPlugin.plugin_info
+														.tested
+												}
+											</p>
 										</div>
 									) }
-									{ selectedPlugin.plugin_info.requires_php && (
+									{ selectedPlugin.plugin_info
+										.requires_php && (
 										<div>
-											<h4 style={ { margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', color: '#23282d' } }>
-												{ __( 'Requires PHP', 'oneupdate' ) }
+											<h4
+												style={ {
+													margin: '0 0 8px 0',
+													fontSize: '14px',
+													fontWeight: '600',
+													color: '#23282d',
+												} }
+											>
+												{ __(
+													'Requires PHP',
+													'oneupdate'
+												) }
 											</h4>
-											<p style={ { margin: 0, color: '#50575e' } }>{ selectedPlugin.plugin_info.requires_php }</p>
+											<p
+												style={ {
+													margin: 0,
+													color: '#50575e',
+												} }
+											>
+												{
+													selectedPlugin.plugin_info
+														.requires_php
+												}
+											</p>
 										</div>
 									) }
-									{ selectedPlugin.plugin_info.last_updated && (
+									{ selectedPlugin.plugin_info
+										.last_updated && (
 										<div>
-											<h4 style={ { margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', color: '#23282d' } }>
-												{ __( 'Last Updated', 'oneupdate' ) }
+											<h4
+												style={ {
+													margin: '0 0 8px 0',
+													fontSize: '14px',
+													fontWeight: '600',
+													color: '#23282d',
+												} }
+											>
+												{ __(
+													'Last Updated',
+													'oneupdate'
+												) }
 											</h4>
-											<p style={ { margin: 0, color: '#50575e' } }>
-												{ new Date( selectedPlugin.plugin_info.last_updated ).toLocaleDateString() }
+											<p
+												style={ {
+													margin: 0,
+													color: '#50575e',
+												} }
+											>
+												{ new Date(
+													selectedPlugin.plugin_info.last_updated
+												).toLocaleDateString() }
 											</p>
 										</div>
 									) }
 								</Grid>
 
 								{ /* Tags */ }
-								{ selectedPlugin.plugin_info.tags && Object.keys( selectedPlugin.plugin_info.tags ).length > 0 && (
-									<div style={ { marginBottom: '24px' } }>
-										<h4 style={ { margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: '#23282d' } }>
-											{ __( 'Tags', 'oneupdate' ) }
-										</h4>
-										<Flex gap={ 2 } style={ { justifyContent: 'flex-start', flexWrap: 'wrap' } }>
-											{ Object.keys( selectedPlugin.plugin_info.tags ).map( ( tag ) => (
-												<FlexItem key={ tag }>
-													<span
-														style={ {
-															background: '#f8f9fa',
-															padding: '4px 8px',
-															borderRadius: '12px',
-															fontSize: '12px',
-															border: '1px solid #e9ecef',
-															color: '#495057',
-														} }
-													>
-														{ tag }
-													</span>
-												</FlexItem>
-											) ) }
-										</Flex>
-									</div>
-								) }
+								{ selectedPlugin.plugin_info.tags &&
+									Object.keys(
+										selectedPlugin.plugin_info.tags
+									).length > 0 && (
+										<div style={ { marginBottom: '24px' } }>
+											<h4
+												style={ {
+													margin: '0 0 12px 0',
+													fontSize: '14px',
+													fontWeight: '600',
+													color: '#23282d',
+												} }
+											>
+												{ __( 'Tags', 'oneupdate' ) }
+											</h4>
+											<Flex
+												gap={ 2 }
+												style={ {
+													justifyContent:
+														'flex-start',
+													flexWrap: 'wrap',
+												} }
+											>
+												{ Object.keys(
+													selectedPlugin.plugin_info
+														.tags
+												).map( ( tag ) => (
+													<FlexItem key={ tag }>
+														<span
+															style={ {
+																background:
+																	'#f8f9fa',
+																padding:
+																	'4px 8px',
+																borderRadius:
+																	'12px',
+																fontSize:
+																	'12px',
+																border: '1px solid #e9ecef',
+																color: '#495057',
+															} }
+														>
+															{ tag }
+														</span>
+													</FlexItem>
+												) ) }
+											</Flex>
+										</div>
+									) }
 
 								{ /* Plugin URI */ }
 								{ selectedPlugin.plugin_info.plugin_uri && (
 									<div style={ { marginBottom: '24px' } }>
-										<h4 style={ { margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', color: '#23282d' } }>
+										<h4
+											style={ {
+												margin: '0 0 8px 0',
+												fontSize: '14px',
+												fontWeight: '600',
+												color: '#23282d',
+											} }
+										>
 											{ __( 'Plugin URI', 'oneupdate' ) }
 										</h4>
 										<a
-											href={ selectedPlugin.plugin_info.plugin_uri }
+											href={
+												selectedPlugin.plugin_info
+													.plugin_uri
+											}
 											target="_blank"
 											rel="noopener noreferrer"
-											style={ { color: '#0073aa', textDecoration: 'none' } }
+											style={ {
+												color: '#0073aa',
+												textDecoration: 'none',
+											} }
 										>
-											{ selectedPlugin.plugin_info.plugin_uri }
+											{
+												selectedPlugin.plugin_info
+													.plugin_uri
+											}
 										</a>
 									</div>
 								) }
@@ -2148,8 +3355,18 @@ const PluginManager = () => {
 								{ /* Installation Instructions */ }
 								{ selectedPlugin.plugin_info.installation && (
 									<div style={ { marginBottom: '24px' } }>
-										<h4 style={ { margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#23282d' } }>
-											{ __( 'Installation', 'oneupdate' ) }
+										<h4
+											style={ {
+												margin: '0 0 12px 0',
+												fontSize: '16px',
+												fontWeight: '600',
+												color: '#23282d',
+											} }
+										>
+											{ __(
+												'Installation',
+												'oneupdate'
+											) }
 										</h4>
 										<div
 											style={ {
@@ -2157,7 +3374,10 @@ const PluginManager = () => {
 												lineHeight: '1.6',
 												fontSize: '14px',
 											} }
-											dangerouslySetInnerHTML={ { __html: selectedPlugin.plugin_info.installation } }
+											dangerouslySetInnerHTML={ {
+												__html: selectedPlugin
+													.plugin_info.installation,
+											} }
 										/>
 									</div>
 								) }
@@ -2165,7 +3385,14 @@ const PluginManager = () => {
 								{ /* FAQ */ }
 								{ selectedPlugin.plugin_info.faq && (
 									<div style={ { marginBottom: '24px' } }>
-										<h4 style={ { margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#23282d' } }>
+										<h4
+											style={ {
+												margin: '0 0 12px 0',
+												fontSize: '16px',
+												fontWeight: '600',
+												color: '#23282d',
+											} }
+										>
 											{ __( 'FAQ', 'oneupdate' ) }
 										</h4>
 										<div
@@ -2174,7 +3401,10 @@ const PluginManager = () => {
 												lineHeight: '1.6',
 												fontSize: '14px',
 											} }
-											dangerouslySetInnerHTML={ { __html: selectedPlugin.plugin_info.faq } }
+											dangerouslySetInnerHTML={ {
+												__html: selectedPlugin
+													.plugin_info.faq,
+											} }
 										/>
 									</div>
 								) }
@@ -2182,7 +3412,14 @@ const PluginManager = () => {
 								{ /* Changelog */ }
 								{ selectedPlugin.plugin_info.changelog && (
 									<div style={ { marginBottom: '24px' } }>
-										<h4 style={ { margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#23282d' } }>
+										<h4
+											style={ {
+												margin: '0 0 12px 0',
+												fontSize: '16px',
+												fontWeight: '600',
+												color: '#23282d',
+											} }
+										>
 											{ __( 'Changelog', 'oneupdate' ) }
 										</h4>
 										<div
@@ -2197,15 +3434,25 @@ const PluginManager = () => {
 												borderRadius: '8px',
 												border: '1px solid #e9ecef',
 											} }
-											dangerouslySetInnerHTML={ { __html: selectedPlugin.plugin_info.changelog } }
+											dangerouslySetInnerHTML={ {
+												__html: selectedPlugin
+													.plugin_info.changelog,
+											} }
 										/>
 									</div>
 								) }
 
-								<div style={ { textAlign: 'right', marginTop: '32px' } }>
+								<div
+									style={ {
+										textAlign: 'right',
+										marginTop: '32px',
+									} }
+								>
 									<Button
 										variant="primary"
-										onClick={ () => setShowPluginModal( false ) }
+										onClick={ () =>
+											setShowPluginModal( false )
+										}
 									>
 										{ __( 'Close', 'oneupdate' ) }
 									</Button>
@@ -2220,47 +3467,99 @@ const PluginManager = () => {
 							title={ sprintf(
 								/* translators: %s is the plugin name */
 								__( '%s - Sites', 'oneupdate' ),
-								selectedPlugin.plugin_info.name,
+								selectedPlugin.plugin_info.name
 							) }
 							onRequestClose={ () => setShowSitesModal( false ) }
 							style={ { maxWidth: '400px', minWidth: '400px' } }
-							shouldCloseOnClickOutside={ true }
+							shouldCloseOnClickOutside
 						>
 							<div style={ { padding: '8px' } }>
-								<p style={ { marginBottom: '1rem', color: '#50575e', fontSize: '14px' } }>
-									{ __( 'Plugin status across all sites', 'oneupdate' ) }
+								<p
+									style={ {
+										marginBottom: '1rem',
+										color: '#50575e',
+										fontSize: '14px',
+									} }
+								>
+									{ __(
+										'Plugin status across all sites',
+										'oneupdate'
+									) }
 								</p>
 
-								<div style={ { maxHeight: '400px', overflowY: 'auto' } }>
-									{ Object.entries( selectedPlugin.sites ).map( ( [ url, siteInfo ] ) => (
+								<div
+									style={ {
+										maxHeight: '400px',
+										overflowY: 'auto',
+									} }
+								>
+									{ Object.entries(
+										selectedPlugin.sites
+									).map( ( [ url, siteInfo ] ) => (
 										<Card
 											key={ url }
 											style={ {
 												marginBottom: '12px',
 												border: '1px solid #e1e5e9',
 												borderRadius: '8px',
-												boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+												boxShadow:
+													'0 1px 3px rgba(0, 0, 0, 0.05)',
 											} }
 										>
-											<CardBody style={ { padding: '16px' } }>
-												<Flex justify="space-between" align="center">
+											<CardBody
+												style={ { padding: '16px' } }
+											>
+												<Flex
+													justify="space-between"
+													align="center"
+												>
 													<FlexBlock>
-														<Flex align="center" gap={ 3 }>
+														<Flex
+															align="center"
+															gap={ 3 }
+														>
 															<FlexItem>
 																<Dashicon
-																	icon={ siteInfo.is_active ? 'yes-alt' : 'marker' }
+																	icon={
+																		siteInfo.is_active
+																			? 'yes-alt'
+																			: 'marker'
+																	}
 																	style={ {
-																		color: siteInfo.is_active ? '#00a32a' : '#d63638',
-																		fontSize: '18px',
+																		color: siteInfo.is_active
+																			? '#00a32a'
+																			: '#d63638',
+																		fontSize:
+																			'18px',
 																	} }
 																/>
 															</FlexItem>
 															<FlexBlock>
-																<div style={ { fontWeight: '500', color: '#23282d', fontSize: '14px' } }>
-																	{ siteInfo.site_name || formatSiteUrl( url ) }
+																<div
+																	style={ {
+																		fontWeight:
+																			'500',
+																		color: '#23282d',
+																		fontSize:
+																			'14px',
+																	} }
+																>
+																	{ siteInfo.site_name ||
+																		formatSiteUrl(
+																			url
+																		) }
 																</div>
-																<div style={ { fontSize: '12px', color: '#6c757d' } }>
-																	{ ( url ) } • v{ siteInfo.version }
+																<div
+																	style={ {
+																		fontSize:
+																			'12px',
+																		color: '#6c757d',
+																	} }
+																>
+																	{ url } • v
+																	{
+																		siteInfo.version
+																	}
 																</div>
 															</FlexBlock>
 														</Flex>
@@ -2270,14 +3569,24 @@ const PluginManager = () => {
 															<FlexItem>
 																<span
 																	style={ {
-																		color: siteInfo.is_active ? '#00a32a' : '#d63638',
-																		fontSize: '13px',
-																		fontWeight: '500',
+																		color: siteInfo.is_active
+																			? '#00a32a'
+																			: '#d63638',
+																		fontSize:
+																			'13px',
+																		fontWeight:
+																			'500',
 																	} }
 																>
 																	{ siteInfo.is_active
-																		? __( 'Active', 'oneupdate' )
-																		: __( 'Inactive', 'oneupdate' ) }
+																		? __(
+																				'Active',
+																				'oneupdate'
+																		  )
+																		: __(
+																				'Inactive',
+																				'oneupdate'
+																		  ) }
 																</span>
 															</FlexItem>
 															{ siteInfo.is_update_available && (
@@ -2285,13 +3594,20 @@ const PluginManager = () => {
 																	<span
 																		style={ {
 																			color: '#d63638',
-																			fontSize: '13px',
-																			fontWeight: '500',
-																			padding: '2px 8px',
-																			borderRadius: '12px',
+																			fontSize:
+																				'13px',
+																			fontWeight:
+																				'500',
+																			padding:
+																				'2px 8px',
+																			borderRadius:
+																				'12px',
 																		} }
 																	>
-																		{ __( 'Update Available', 'oneupdate' ) }
+																		{ __(
+																			'Update Available',
+																			'oneupdate'
+																		) }
 																	</span>
 																</FlexItem>
 															) }
@@ -2303,10 +3619,17 @@ const PluginManager = () => {
 									) ) }
 								</div>
 
-								<div style={ { textAlign: 'right', marginTop: '24px' } }>
+								<div
+									style={ {
+										textAlign: 'right',
+										marginTop: '24px',
+									} }
+								>
 									<Button
 										variant="primary"
-										onClick={ () => setShowSitesModal( false ) }
+										onClick={ () =>
+											setShowSitesModal( false )
+										}
 									>
 										{ __( 'Close', 'oneupdate' ) }
 									</Button>

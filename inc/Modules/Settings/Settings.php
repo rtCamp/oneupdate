@@ -35,9 +35,11 @@ final class Settings implements Registrable {
 	 */
 	// Shared settings.
 	public const OPTION_SITE_TYPE = self::SETTING_PREFIX . 'site_type';
+
 	// Consumer settings.
 	public const OPTION_CONSUMER_API_KEY         = self::SETTING_PREFIX . 'consumer_api_key';
 	public const OPTION_CONSUMER_PARENT_SITE_URL = self::SETTING_PREFIX . 'parent_site_url';
+
 	// Governing settings.
 	public const OPTION_GOVERNING_SHARED_SITES = self::SETTING_PREFIX . 'shared_sites';
 

@@ -5,6 +5,8 @@
  * @package OneUpdate\Modules\Core
  */
 
+declare( strict_types = 1 );
+
 namespace OneUpdate\Modules\Core;
 
 use OneUpdate\Contracts\Interfaces\Registrable;
@@ -13,7 +15,6 @@ use OneUpdate\Contracts\Interfaces\Registrable;
  * Class DB
  */
 class DB implements Registrable {
-
 	/**
 	 * Global prefix.
 	 *
@@ -47,8 +48,6 @@ class DB implements Registrable {
 
 	/**
 	 * Maybe create database tables.
-	 *
-	 * @return void
 	 */
 	private static function maybe_create_tables(): void {
 
@@ -66,8 +65,6 @@ class DB implements Registrable {
 
 	/**
 	 * Create S3 Zip History Table.
-	 *
-	 * @return void
 	 */
 	private static function create_s3_zip_history_table(): void {
 		global $wpdb;

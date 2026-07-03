@@ -5,6 +5,8 @@
  * @package OneUpdate
  */
 
+declare( strict_types = 1 );
+
 namespace OneUpdate\Modules\Rest;
 
 use OneUpdate\Modules\Core\DB;
@@ -18,7 +20,6 @@ use WP_REST_Server;
  * Class S3_Controller
  */
 class S3_Controller extends Abstract_REST_Controller {
-
 	/**
 	 * {@inheritDoc}
 	 */

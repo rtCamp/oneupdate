@@ -72,8 +72,6 @@ final class Admin implements Registrable {
 
 	/**
 	 * Render admin page
-	 *
-	 * @return void
 	 */
 	public function render_plugin_manager(): void {
 		?>
@@ -86,8 +84,6 @@ final class Admin implements Registrable {
 
 	/**
 	 * Render admin page
-	 *
-	 * @return void
 	 */
 	public function render_settings(): void {
 		?>
@@ -100,8 +96,6 @@ final class Admin implements Registrable {
 
 	/**
 	 * Render pull requests page
-	 *
-	 * @return void
 	 */
 	public function render_pull_requests(): void {
 		?>

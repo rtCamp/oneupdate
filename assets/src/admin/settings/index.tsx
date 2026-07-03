@@ -1,6 +1,9 @@
 /**
  * WordPress dependencies
  */
+/**
+ * External dependencies
+ */
 import { createRoot } from 'react-dom/client';
 
 /**

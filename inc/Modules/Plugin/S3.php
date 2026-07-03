@@ -20,7 +20,6 @@ use OneUpdate\Modules\Settings\Settings;
  * Class - S3
  */
 final class S3 implements Registrable {
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -35,8 +34,6 @@ final class S3 implements Registrable {
 
 	/**
 	 * Handle S3 zip cleanup event.
-	 *
-	 * @return void
 	 *
 	 * @throws \Exception If there is an error deleting files from S3.
 	 */
@@ -88,8 +85,6 @@ final class S3 implements Registrable {
 
 	/**
 	 * Get S3 instance.
-	 *
-	 * @return \Aws\S3\S3Client
 	 */
 	public static function get_s3_instance(): S3Client {
 		$s3_credentials = Plugin_Settings::get_s3_credentials();

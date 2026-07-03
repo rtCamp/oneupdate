@@ -1,7 +1,12 @@
 /**
  * WordPress dependencies
  */
-import { useState, useEffect, useCallback, createRoot } from '@wordpress/element';
+import {
+	useState,
+	useEffect,
+	useCallback,
+	createRoot,
+} from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import {
 	Card,
@@ -20,9 +25,13 @@ import {
 } from '@wordpress/components';
 import { decodeEntities } from '@wordpress/html-entities';
 import { moreVertical } from '@wordpress/icons';
+/**
+ * Internal dependencies
+ */
 import ViewIcon from '../../components/icons/View';
 
-const API_NAMESPACE = window.OneUpdatePullRequests.restUrl + '/oneupdate/v1/github';
+const API_NAMESPACE =
+	window.OneUpdatePullRequests.restUrl + '/oneupdate/v1/github';
 const NONCE = window.OneUpdatePullRequests.restNonce;
 const REPOS = window.OneUpdatePullRequests.repos;
 
@@ -40,7 +49,9 @@ const GitHubPullRequests = () => {
 	const [ pullRequests, setPullRequests ] = useState( [] );
 	const [ loading, setLoading ] = useState( false );
 	const [ notice, setNotice ] = useState( null );
-	const [ selectedRepo, setSelectedRepo ] = useState( Object.keys( REPOS )?.[ 0 ] || '' );
+	const [ selectedRepo, setSelectedRepo ] = useState(
+		Object.keys( REPOS )?.[ 0 ] || ''
+	);
 	const [ statusFilter, setStatusFilter ] = useState( 'all' );
 	const [ searchQuery, setSearchQuery ] = useState( '[OneUpdate]' );
 	const [ page, setPage ] = useState( 1 );
@@ -90,19 +101,25 @@ const GitHubPullRequests = () => {
 						'Content-Type': 'application/json',
 						'X-WP-NONCE': NONCE,
 					},
-				},
+				}
 			);
 
 			if ( ! response.ok ) {
 				if ( response?.statusText === 'Unprocessable Entity' ) {
 					setNotice( {
 						type: 'error',
-						message: __( 'Please enter valid character to search pull requests.', 'oneupdate' ),
+						message: __(
+							'Please enter valid character to search pull requests.',
+							'oneupdate'
+						),
 					} );
 				} else {
 					setNotice( {
 						type: 'error',
-						message: __( 'Failed to fetch pull requests.', 'oneupdate' ),
+						message: __(
+							'Failed to fetch pull requests.',
+							'oneupdate'
+						),
 					} );
 				}
 				return;
@@ -113,7 +130,9 @@ const GitHubPullRequests = () => {
 			if ( data.success ) {
 				setPullRequests( data.pull_requests || [] );
 				// Calculate total pages based on response (you might need to adjust based on your API)
-				const totalCount = response.headers.get( 'X-WP-Total' ) || data.pull_requests.length;
+				const totalCount =
+					response.headers.get( 'X-WP-Total' ) ||
+					data.pull_requests.length;
 				setTotalPages( Math.ceil( totalCount / PER_PAGE ) );
 				setCurrentPage( data?.pagination?.current_page || 1 );
 			} else {
@@ -125,7 +144,9 @@ const GitHubPullRequests = () => {
 		} catch ( error ) {
 			setNotice( {
 				type: 'error',
-				message: error.message || __( 'Error fetching pull requests.', 'oneupdate' ),
+				message:
+					error.message ||
+					__( 'Error fetching pull requests.', 'oneupdate' ),
 			} );
 			setPullRequests( [] );
 		} finally {
@@ -133,43 +154,48 @@ const GitHubPullRequests = () => {
 		}
 	}, [ selectedRepo, statusFilter, searchQuery, page ] );
 
-	const fetchPRDetails = useCallback( async ( prNumber ) => {
-		if ( ! selectedRepo || ! prNumber ) {
-			return;
-		}
-
-		setDetailsLoading( true );
-		try {
-			const response = await fetch(
-				`${ API_NAMESPACE }/pull-requests/${ selectedRepo }?pr_number=${ prNumber }&_=${ new Date().getTime() }`,
-				{
-					headers: {
-						'Content-Type': 'application/json',
-						'X-WP-NONCE': NONCE,
-					},
-				},
-			);
-
-			if ( ! response.ok ) {
-				throw new Error( 'Failed to fetch PR details' );
+	const fetchPRDetails = useCallback(
+		async ( prNumber ) => {
+			if ( ! selectedRepo || ! prNumber ) {
+				return;
 			}
 
-			const data = await response.json();
+			setDetailsLoading( true );
+			try {
+				const response = await fetch(
+					`${ API_NAMESPACE }/pull-requests/${ selectedRepo }?pr_number=${ prNumber }&_=${ new Date().getTime() }`,
+					{
+						headers: {
+							'Content-Type': 'application/json',
+							'X-WP-NONCE': NONCE,
+						},
+					}
+				);
 
-			if ( data.success && data.pull_request?.[ 0 ] ) {
-				setPrDetails( data.pull_request[ 0 ] );
-			} else {
-				throw new Error( 'Failed to fetch PR details' );
+				if ( ! response.ok ) {
+					throw new Error( 'Failed to fetch PR details' );
+				}
+
+				const data = await response.json();
+
+				if ( data.success && data.pull_request?.[ 0 ] ) {
+					setPrDetails( data.pull_request[ 0 ] );
+				} else {
+					throw new Error( 'Failed to fetch PR details' );
+				}
+			} catch ( error ) {
+				setNotice( {
+					type: 'error',
+					message:
+						error.message ||
+						__( 'Error fetching PR details.', 'oneupdate' ),
+				} );
+			} finally {
+				setDetailsLoading( false );
 			}
-		} catch ( error ) {
-			setNotice( {
-				type: 'error',
-				message: error.message || __( 'Error fetching PR details.', 'oneupdate' ),
-			} );
-		} finally {
-			setDetailsLoading( false );
-		}
-	}, [ selectedRepo ] );
+		},
+		[ selectedRepo ]
+	);
 
 	const openDetailModal = ( pr ) => {
 		setSelectedPR( pr );
@@ -242,7 +268,10 @@ const GitHubPullRequests = () => {
 												onClose();
 											} }
 										>
-											{ __( 'View Details', 'oneupdate' ) }
+											{ __(
+												'View Details',
+												'oneupdate'
+											) }
 										</MenuItem>
 									</>
 								) }
@@ -285,10 +314,21 @@ const GitHubPullRequests = () => {
 				</CardHeader>
 				<CardBody>
 					{ /* Filters */ }
-					<Grid columns="3" gap="4" style={ { alignItems: 'flex-end', marginBottom: '20px', justifyContent: 'space-between' } }>
+					<Grid
+						columns="3"
+						gap="4"
+						style={ {
+							alignItems: 'flex-end',
+							marginBottom: '20px',
+							justifyContent: 'space-between',
+						} }
+					>
 						<TextControl
 							label={ __( 'Search', 'oneupdate' ) }
-							placeholder={ __( 'Search by title, number…', 'oneupdate' ) }
+							placeholder={ __(
+								'Search by title, number…',
+								'oneupdate'
+							) }
 							value={ searchQuery }
 							onChange={ setSearchQuery }
 						/>
@@ -312,27 +352,58 @@ const GitHubPullRequests = () => {
 					<table className="wp-list-table widefat fixed striped">
 						<thead>
 							<tr>
-								<th style={ { width: '8%' } }>{ __( 'PR #', 'oneupdate' ) }</th>
-								<th style={ { width: '35%' } }>{ __( 'Title', 'oneupdate' ) }</th>
-								<th style={ { width: '12%' } }>{ __( 'Author', 'oneupdate' ) }</th>
-								<th style={ { width: '8%' } }>{ __( 'Status', 'oneupdate' ) }</th>
-								<th style={ { width: '15%' } }>{ __( 'Created at', 'oneupdate' ) }</th>
-								<th style={ { width: '15%' } }>{ __( 'Labels', 'oneupdate' ) }</th>
-								<th style={ { width: '7%' } }>{ __( 'Actions', 'oneupdate' ) }</th>
+								<th style={ { width: '8%' } }>
+									{ __( 'PR #', 'oneupdate' ) }
+								</th>
+								<th style={ { width: '35%' } }>
+									{ __( 'Title', 'oneupdate' ) }
+								</th>
+								<th style={ { width: '12%' } }>
+									{ __( 'Author', 'oneupdate' ) }
+								</th>
+								<th style={ { width: '8%' } }>
+									{ __( 'Status', 'oneupdate' ) }
+								</th>
+								<th style={ { width: '15%' } }>
+									{ __( 'Created at', 'oneupdate' ) }
+								</th>
+								<th style={ { width: '15%' } }>
+									{ __( 'Labels', 'oneupdate' ) }
+								</th>
+								<th style={ { width: '7%' } }>
+									{ __( 'Actions', 'oneupdate' ) }
+								</th>
 							</tr>
 						</thead>
 						<tbody>
 							{ loading && (
 								<tr>
-									<td colSpan="7" style={ { textAlign: 'center', padding: '20px' } }>
-										<Spinner style={ { width: '40px', height: '40px' } } />
+									<td
+										colSpan="7"
+										style={ {
+											textAlign: 'center',
+											padding: '20px',
+										} }
+									>
+										<Spinner
+											style={ {
+												width: '40px',
+												height: '40px',
+											} }
+										/>
 									</td>
 								</tr>
 							) }
 							{ ! loading && pullRequests.length === 0 && (
 								<tr>
-									<td colSpan="7" style={ { textAlign: 'center' } }>
-										{ __( 'No pull requests found.', 'oneupdate' ) }
+									<td
+										colSpan="7"
+										style={ { textAlign: 'center' } }
+									>
+										{ __(
+											'No pull requests found.',
+											'oneupdate'
+										) }
 									</td>
 								</tr>
 							) }
@@ -340,7 +411,10 @@ const GitHubPullRequests = () => {
 								<tr key={ pr.id }>
 									<td>
 										<span
-											style={ { textDecoration: 'none', fontWeight: 'bold' } }
+											style={ {
+												textDecoration: 'none',
+												fontWeight: 'bold',
+											} }
 										>
 											#{ pr.number }
 										</span>
@@ -351,11 +425,19 @@ const GitHubPullRequests = () => {
 											target="_blank"
 											rel="noopener noreferrer"
 										>
-											<strong>{ decodeEntities( pr.title ) }</strong>
+											<strong>
+												{ decodeEntities( pr.title ) }
+											</strong>
 										</a>
 									</td>
 									<td>
-										<div style={ { display: 'flex', alignItems: 'center', gap: '8px' } }>
+										<div
+											style={ {
+												display: 'flex',
+												alignItems: 'center',
+												gap: '8px',
+											} }
+										>
 											<img
 												src={ pr.user.avatar_url }
 												alt={ pr.user.login }
@@ -372,24 +454,52 @@ const GitHubPullRequests = () => {
 									<td>{ formatDate( pr.created_at ) }</td>
 									<td>
 										{ pr.labels.length > 0 ? (
-											<div style={ { display: 'flex', flexWrap: 'wrap', gap: '4px' } }>
-												{ pr.labels.slice( 0, 2 ).map( ( label ) => (
-													<span
-														key={ label.id }
-														style={ PR_LABEL_STYLES }
-													>
-														{ label.name }
-													</span>
-												) ) }
+											<div
+												style={ {
+													display: 'flex',
+													flexWrap: 'wrap',
+													gap: '4px',
+												} }
+											>
+												{ pr.labels
+													.slice( 0, 2 )
+													.map( ( label ) => (
+														<span
+															key={ label.id }
+															style={
+																PR_LABEL_STYLES
+															}
+														>
+															{ label.name }
+														</span>
+													) ) }
 												{ pr.labels.length > 2 && (
-													<span style={ { fontSize: '11px', color: '#6b7280' } }>
-														+{ pr.labels.length - 2 } { __( 'more', 'oneupdate' ) }
+													<span
+														style={ {
+															fontSize: '11px',
+															color: '#6b7280',
+														} }
+													>
+														+
+														{ pr.labels.length - 2 }{ ' ' }
+														{ __(
+															'more',
+															'oneupdate'
+														) }
 													</span>
 												) }
 											</div>
 										) : (
-											<span style={ { color: '#6b7280', fontSize: '12px' } }>
-												{ __( 'No labels', 'oneupdate' ) }
+											<span
+												style={ {
+													color: '#6b7280',
+													fontSize: '12px',
+												} }
+											>
+												{ __(
+													'No labels',
+													'oneupdate'
+												) }
 											</span>
 										) }
 									</td>
@@ -400,29 +510,43 @@ const GitHubPullRequests = () => {
 					</table>
 
 					{ /* Pagination */ }
-					{ (
-						<div style={ { marginTop: '16px', display: 'flex', justifyContent: 'center' } }>
-							<Button
-								variant="secondary"
-								onClick={ () => setPage( ( prev ) => Math.max( prev - 1, 1 ) ) }
-								disabled={ page === 1 }
-								style={ { marginRight: '8px' } }
-							>
-								{ __( 'Previous', 'oneupdate' ) }
-							</Button>
-							<span style={ { alignSelf: 'center' } }>
-								{ __( 'Page', 'oneupdate' ) } { page } { __( 'of', 'oneupdate' ) } { totalPages === 0 || totalPages < currentPage ? currentPage : totalPages }
-							</span>
-							<Button
-								variant="secondary"
-								onClick={ () => setPage( ( prev ) => Math.min( prev + 1, totalPages ) ) }
-								disabled={ page >= totalPages }
-								style={ { marginLeft: '8px' } }
-							>
-								{ __( 'Next', 'oneupdate' ) }
-							</Button>
-						</div>
-					) }
+					<div
+						style={ {
+							marginTop: '16px',
+							display: 'flex',
+							justifyContent: 'center',
+						} }
+					>
+						<Button
+							variant="secondary"
+							onClick={ () =>
+								setPage( ( prev ) => Math.max( prev - 1, 1 ) )
+							}
+							disabled={ page === 1 }
+							style={ { marginRight: '8px' } }
+						>
+							{ __( 'Previous', 'oneupdate' ) }
+						</Button>
+						<span style={ { alignSelf: 'center' } }>
+							{ __( 'Page', 'oneupdate' ) } { page }{ ' ' }
+							{ __( 'of', 'oneupdate' ) }{ ' ' }
+							{ totalPages === 0 || totalPages < currentPage
+								? currentPage
+								: totalPages }
+						</span>
+						<Button
+							variant="secondary"
+							onClick={ () =>
+								setPage( ( prev ) =>
+									Math.min( prev + 1, totalPages )
+								)
+							}
+							disabled={ page >= totalPages }
+							style={ { marginLeft: '8px' } }
+						>
+							{ __( 'Next', 'oneupdate' ) }
+						</Button>
+					</div>
 				</CardBody>
 			</Card>
 
@@ -432,12 +556,16 @@ const GitHubPullRequests = () => {
 					title={ __( 'Pull Request Details', 'oneupdate' ) }
 					onRequestClose={ closeModals }
 					size="medium"
-					shouldCloseOnClickOutside={ true }
+					shouldCloseOnClickOutside
 				>
 					{ /* Detailed PR Info */ }
 					{ detailsLoading && (
-						<div style={ { textAlign: 'center', margin: '20px 0' } }>
-							<Spinner style={ { width: '40px', height: '40px' } } />
+						<div
+							style={ { textAlign: 'center', margin: '20px 0' } }
+						>
+							<Spinner
+								style={ { width: '40px', height: '40px' } }
+							/>
 							<p>{ __( 'Loading PR details…', 'oneupdate' ) }</p>
 						</div>
 					) }
@@ -445,21 +573,90 @@ const GitHubPullRequests = () => {
 					{ ! detailsLoading && prDetails && (
 						<>
 							<div style={ { marginBottom: '20px' } }>
-								<div style={ { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' } }>
+								<div
+									style={ {
+										display: 'grid',
+										gridTemplateColumns: 'repeat(2, 1fr)',
+										gap: '16px',
+									} }
+								>
 									<div>
-										<p><strong>{ __( 'PR Number:', 'oneupdate' ) }</strong> #{ prDetails.number }</p>
-										<p><strong>{ __( 'Title:', 'oneupdate' ) }</strong> { decodeEntities( prDetails.title ) }</p>
-										<p><strong>{ __( 'Author:', 'oneupdate' ) }</strong> { prDetails.user.login }</p>
-										<p><strong>{ __( 'Status:', 'oneupdate' ) }</strong> { getPRStatusBadge( prDetails ) }</p>
+										<p>
+											<strong>
+												{ __(
+													'PR Number:',
+													'oneupdate'
+												) }
+											</strong>{ ' ' }
+											#{ prDetails.number }
+										</p>
+										<p>
+											<strong>
+												{ __( 'Title:', 'oneupdate' ) }
+											</strong>{ ' ' }
+											{ decodeEntities(
+												prDetails.title
+											) }
+										</p>
+										<p>
+											<strong>
+												{ __( 'Author:', 'oneupdate' ) }
+											</strong>{ ' ' }
+											{ prDetails.user.login }
+										</p>
+										<p>
+											<strong>
+												{ __( 'Status:', 'oneupdate' ) }
+											</strong>{ ' ' }
+											{ getPRStatusBadge( prDetails ) }
+										</p>
 									</div>
 									<div>
-										<p><strong>{ __( 'Created:', 'oneupdate' ) }</strong> { formatDate( prDetails.created_at ) }</p>
-										<p><strong>{ __( 'Updated:', 'oneupdate' ) }</strong> { formatDate( prDetails.updated_at ) }</p>
-										<p><strong>{ __( 'Branch:', 'oneupdate' ) }</strong> { prDetails.pr_branch } → { prDetails.base_branch }</p>
 										<p>
-											<strong>{ __( 'GitHub URL:', 'oneupdate' ) }</strong>{ ' ' }
-											<a href={ prDetails.html_url } target="_blank" rel="noopener noreferrer">
-												{ __( 'View on GitHub', 'oneupdate' ) }
+											<strong>
+												{ __(
+													'Created:',
+													'oneupdate'
+												) }
+											</strong>{ ' ' }
+											{ formatDate(
+												prDetails.created_at
+											) }
+										</p>
+										<p>
+											<strong>
+												{ __(
+													'Updated:',
+													'oneupdate'
+												) }
+											</strong>{ ' ' }
+											{ formatDate(
+												prDetails.updated_at
+											) }
+										</p>
+										<p>
+											<strong>
+												{ __( 'Branch:', 'oneupdate' ) }
+											</strong>{ ' ' }
+											{ prDetails.pr_branch } →{ ' ' }
+											{ prDetails.base_branch }
+										</p>
+										<p>
+											<strong>
+												{ __(
+													'GitHub URL:',
+													'oneupdate'
+												) }
+											</strong>{ ' ' }
+											<a
+												href={ prDetails.html_url }
+												target="_blank"
+												rel="noopener noreferrer"
+											>
+												{ __(
+													'View on GitHub',
+													'oneupdate'
+												) }
 											</a>
 										</p>
 									</div>
@@ -468,16 +665,29 @@ const GitHubPullRequests = () => {
 								{ /* Labels */ }
 								{ prDetails.labels.length > 0 && (
 									<div style={ { marginTop: '16px' } }>
-										<strong>{ __( 'Labels:', 'oneupdate' ) }</strong>
-										<div style={ { display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' } }>
-											{ prDetails.labels.map( ( label ) => (
-												<span
-													key={ label.id }
-													style={ PR_LABEL_STYLES }
-												>
-													{ label.name }
-												</span>
-											) ) }
+										<strong>
+											{ __( 'Labels:', 'oneupdate' ) }
+										</strong>
+										<div
+											style={ {
+												display: 'flex',
+												flexWrap: 'wrap',
+												gap: '4px',
+												marginTop: '8px',
+											} }
+										>
+											{ prDetails.labels.map(
+												( label ) => (
+													<span
+														key={ label.id }
+														style={
+															PR_LABEL_STYLES
+														}
+													>
+														{ label.name }
+													</span>
+												)
+											) }
 										</div>
 									</div>
 								) }
@@ -485,7 +695,12 @@ const GitHubPullRequests = () => {
 								{ /* Description */ }
 								{ prDetails.body && (
 									<div style={ { marginTop: '16px' } }>
-										<strong>{ __( 'Description:', 'oneupdate' ) }</strong>
+										<strong>
+											{ __(
+												'Description:',
+												'oneupdate'
+											) }
+										</strong>
 										<div
 											style={ {
 												marginTop: '8px',
@@ -497,8 +712,16 @@ const GitHubPullRequests = () => {
 												overflow: 'auto',
 											} }
 										>
-											<pre style={ { whiteSpace: 'pre-wrap', margin: 0, fontSize: '14px' } }>
-												{ decodeEntities( prDetails.body ) }
+											<pre
+												style={ {
+													whiteSpace: 'pre-wrap',
+													margin: 0,
+													fontSize: '14px',
+												} }
+											>
+												{ decodeEntities(
+													prDetails.body
+												) }
 											</pre>
 										</div>
 									</div>
@@ -507,14 +730,29 @@ const GitHubPullRequests = () => {
 
 							{ /* Merged By Info */ }
 							{ prDetails.merged_by && (
-								<div style={ { marginTop: '20px', borderTop: '1px solid #ddd', paddingTop: '20px' } }>
-
+								<div
+									style={ {
+										marginTop: '20px',
+										borderTop: '1px solid #ddd',
+										paddingTop: '20px',
+									} }
+								>
 									{ prDetails.merged_by && (
 										<div style={ { marginTop: '10px' } }>
-											<strong>{ __( 'Merged By:', 'oneupdate' ) }</strong>
+											<strong>
+												{ __(
+													'Merged By:',
+													'oneupdate'
+												) }
+											</strong>
 											<img
-												src={ prDetails.merged_by.avatar_url }
-												alt={ prDetails.merged_by.login }
+												src={
+													prDetails.merged_by
+														.avatar_url
+												}
+												alt={
+													prDetails.merged_by.login
+												}
 												style={ {
 													width: '24px',
 													height: '24px',
@@ -523,14 +761,20 @@ const GitHubPullRequests = () => {
 													verticalAlign: 'middle',
 												} }
 											/>
-											<span style={ { marginLeft: '8px', verticalAlign: 'middle' } }>{ prDetails.merged_by.login }</span>
+											<span
+												style={ {
+													marginLeft: '8px',
+													verticalAlign: 'middle',
+												} }
+											>
+												{ prDetails.merged_by.login }
+											</span>
 										</div>
 									) }
 								</div>
 							) }
 						</>
 					) }
-
 				</Modal>
 			) }
 
@@ -540,7 +784,11 @@ const GitHubPullRequests = () => {
 					isDismissible
 					status={ notice.type }
 					onRemove={ () => setNotice( null ) }
-					className={ notice?.type === 'error' ? 'oneupdate-error-notice' : 'oneupdate-success-notice' }
+					className={
+						notice?.type === 'error'
+							? 'oneupdate-error-notice'
+							: 'oneupdate-success-notice'
+					}
 				>
 					{ notice.message }
 				</Snackbar>

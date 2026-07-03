@@ -5,6 +5,8 @@
  * @package OneUpdate
  */
 
+declare(strict_types = 1);
+
 namespace OneUpdate\Modules\Core;
 
 use OneUpdate\Contracts\Interfaces\Registrable;

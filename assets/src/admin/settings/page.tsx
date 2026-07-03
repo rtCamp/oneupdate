@@ -1,6 +1,9 @@
 /**
  * WordPress dependencies
  */
+/**
+ * External dependencies
+ */
 import { useState, useEffect, useCallback } from 'react';
 import { __ } from '@wordpress/i18n';
 import { Snackbar } from '@wordpress/components';
@@ -26,7 +29,7 @@ export interface BrandSite {
 	name: string;
 	url: string;
 	api_key: string;
-    gh_repo: string;
+	gh_repo: string;
 }
 
 export const defaultBrandSite: BrandSite = {
@@ -39,7 +42,7 @@ export const defaultBrandSite: BrandSite = {
 export type EditingIndex = number | null;
 
 const NONCE = window.OneUpdateSettings.restNonce;
-const SITE_TYPE = window.OneUpdateSettings.siteType as SiteType || '';
+const SITE_TYPE = ( window.OneUpdateSettings.siteType as SiteType ) || '';
 const SHARED_SITES_ENDPOINT = '/oneupdate/v1/shared-sites';
 const API_NAMESPACE = window.OneUpdateSettings.restUrl + '/oneupdate/v1';
 
@@ -57,16 +60,13 @@ const SettingsPage = () => {
 
 	const [ allGitHubRepos, setAllGitHubRepos ] = useState( [] );
 	const fetchAllAvailableGitHubRepos = useCallback( async () => {
-		const response = await fetch(
-			`${ API_NAMESPACE }/github-repos`,
-			{
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-WP-NONCE': NONCE,
-				},
+		const response = await fetch( `${ API_NAMESPACE }/github-repos`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-WP-NONCE': NONCE,
 			},
-		);
+		} );
 		const data = await response.json();
 		if ( data?.repos ) {
 			setAllGitHubRepos( data.repos );
@@ -82,7 +82,7 @@ const SettingsPage = () => {
 	}, [ SITE_TYPE ] );
 
 	useEffect( () => {
-		apiFetch<{ shared_sites?: BrandSite[] }>( {
+		apiFetch< { shared_sites?: BrandSite[] } >( {
 			path: SHARED_SITES_ENDPOINT,
 		} )
 			.then( ( data ) => {
@@ -104,89 +104,115 @@ const SettingsPage = () => {
 		}
 	}, [ sites ] );
 
-	const handleFormSubmit = async () : Promise< boolean > => {
-		const updated : BrandSite[] = editingIndex !== null
-			? sites.map( ( item, i ) => ( i === editingIndex ? formData : item ) )
-			: [ ...sites, formData ];
+	const handleFormSubmit = async (): Promise< boolean > => {
+		const updated: BrandSite[] =
+			editingIndex !== null
+				? sites.map( ( item, i ) =>
+						i === editingIndex ? formData : item
+				  )
+				: [ ...sites, formData ];
 
-		return apiFetch<{ shared_sites?: BrandSite[] }>( {
+		return apiFetch< { shared_sites?: BrandSite[] } >( {
 			path: SHARED_SITES_ENDPOINT,
 			method: 'POST',
 			data: { sites_data: updated },
-		} ).then( ( data ) => {
-			if ( ! data?.shared_sites ) {
-				throw new Error( 'No shared sites in response' );
-			}
+		} )
+			.then( ( data ) => {
+				if ( ! data?.shared_sites ) {
+					throw new Error( 'No shared sites in response' );
+				}
 
-			if ( data.shared_sites.length === 1 && sites.length === 0 ) {
-				// Reloading causes the menus etc to reflect the missing sites.
-				window.location.reload();
-			}
+				if ( data.shared_sites.length === 1 && sites.length === 0 ) {
+					// Reloading causes the menus etc to reflect the missing sites.
+					window.location.reload();
+				}
 
-			setSites( data.shared_sites );
+				setSites( data.shared_sites );
 
-			setNotice( {
-				type: 'success',
-				message: __( 'Brand Site saved successfully.', 'oneupdate' ),
+				setNotice( {
+					type: 'success',
+					message: __(
+						'Brand Site saved successfully.',
+						'oneupdate'
+					),
+				} );
+				return true;
+			} )
+			.catch( () => {
+				setNotice( {
+					type: 'error',
+					message: __( 'Failed to update shared sites', 'oneupdate' ),
+				} );
+				return false;
+			} )
+			.finally( () => {
+				setFormData( defaultBrandSite );
+				setShowModal( false );
+				setEditingIndex( null );
 			} );
-			return true;
-		} ).catch( () => {
-			setNotice( {
-				type: 'error',
-				message: __( 'Failed to update shared sites', 'oneupdate' ),
-			} );
-			return false;
-		} ).finally( () => {
-			setFormData( defaultBrandSite );
-			setShowModal( false );
-			setEditingIndex( null );
-		} );
 	};
 
-	const handleDelete = async ( index : number|null ) : Promise<void> => {
-		const updated : BrandSite[] = sites.filter( ( _, i ) => i !== index );
+	const handleDelete = async ( index: number | null ): Promise< void > => {
+		const updated: BrandSite[] = sites.filter( ( _, i ) => i !== index );
 
-		apiFetch<{ shared_sites?: BrandSite[] }>( {
+		apiFetch< { shared_sites?: BrandSite[] } >( {
 			path: SHARED_SITES_ENDPOINT,
 			method: 'POST',
 			data: { sites_data: updated },
-		} ).then( ( data ) => {
-			if ( ! data?.shared_sites ) {
-				throw new Error( 'No shared sites in response' );
-			}
-			setSites( data.shared_sites );
+		} )
+			.then( ( data ) => {
+				if ( ! data?.shared_sites ) {
+					throw new Error( 'No shared sites in response' );
+				}
+				setSites( data.shared_sites );
 
-			if ( data.shared_sites.length === 0 ) {
-				// Reloading causes the menus etc to reflect the missing sites.
-				window.location.reload();
-			} else {
-				document.body.classList.remove( 'oneupdate-missing-brand-sites' );
-			}
-		} ).catch( () => {
-			throw new Error( 'Failed to update shared sites' );
-		} );
+				if ( data.shared_sites.length === 0 ) {
+					// Reloading causes the menus etc to reflect the missing sites.
+					window.location.reload();
+				} else {
+					document.body.classList.remove(
+						'oneupdate-missing-brand-sites'
+					);
+				}
+			} )
+			.catch( () => {
+				throw new Error( 'Failed to update shared sites' );
+			} );
 	};
 
 	return (
 		<>
-			{ !! notice && notice?.message?.length > 0 &&
+			{ !! notice && notice?.message?.length > 0 && (
 				<Snackbar
 					explicitDismiss={ false }
 					onRemove={ () => setNotice( null ) }
-					className={ notice?.type === 'error' ? 'oneupdate-error-notice' : 'oneupdate-success-notice' }
+					className={
+						notice?.type === 'error'
+							? 'oneupdate-error-notice'
+							: 'oneupdate-success-notice'
+					}
 				>
 					{ notice?.message }
 				</Snackbar>
-			}
-
-			{ SITE_TYPE === 'brand-site' && (
-				<SiteSettings />
 			) }
+
+			{ SITE_TYPE === 'brand-site' && <SiteSettings /> }
 
 			{ SITE_TYPE === 'governing-site' && (
 				<>
-					<SiteTable sites={ sites } onEdit={ setEditingIndex } onDelete={ handleDelete } setFormData={ setFormData } setShowModal={ setShowModal } />
-					<GitHubRepoToken setNotice={ setNotice } fetchAllAvailableGitHubRepos={ fetchAllAvailableGitHubRepos } />
+					<SiteTable
+						sites={ sites }
+						onEdit={ setEditingIndex }
+						onDelete={ handleDelete }
+						setFormData={ setFormData }
+						setShowModal={ setShowModal }
+					/>
+					<GitHubRepoToken
+						setNotice={ setNotice }
+						fetchAllAvailableGitHubRepos={
+							fetchAllAvailableGitHubRepos
+						}
+					/>
 					<S3Credentials setNotice={ setNotice } />
 				</>
 			) }
@@ -203,7 +229,11 @@ const SettingsPage = () => {
 					} }
 					editing={ editingIndex !== null }
 					sites={ sites }
-					originalData={ editingIndex !== null ? sites[ editingIndex ] : undefined }
+					originalData={
+						editingIndex !== null
+							? sites[ editingIndex ]
+							: undefined
+					}
 					allGitHubRepos={ allGitHubRepos }
 				/>
 			) }

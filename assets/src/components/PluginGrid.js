@@ -1,7 +1,20 @@
+/**
+ * WordPress dependencies
+ */
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Button, CheckboxControl, Modal, Spinner, TextControl, Notice } from '@wordpress/components';
+import {
+	Button,
+	CheckboxControl,
+	Modal,
+	Spinner,
+	TextControl,
+	Notice,
+} from '@wordpress/components';
 
+/**
+ * Internal dependencies
+ */
 import PluginCard from './PluginCard';
 
 const API_NAMESPACE = OneUpdatePlugins.restUrl + '/oneupdate/v1';
@@ -31,7 +44,9 @@ const PluginGrid = () => {
 
 			const response = await fetch( WORDPRESS_PLUGINS_API );
 			if ( ! response.ok ) {
-				throw new Error( __( 'Failed to fetch plugins.', 'oneupdate' ) );
+				throw new Error(
+					__( 'Failed to fetch plugins.', 'oneupdate' )
+				);
 			}
 
 			const data = await response.json();
@@ -59,7 +74,7 @@ const PluginGrid = () => {
 			const existing = prev.find( ( p ) => p.slug === slug );
 			if ( existing ) {
 				return prev.map( ( p ) =>
-					p.slug === slug ? { ...p, version } : p,
+					p.slug === slug ? { ...p, version } : p
 				);
 			}
 			return [ ...prev, { slug, version } ];
@@ -68,23 +83,18 @@ const PluginGrid = () => {
 
 	const handleVersionChange = ( slug, version ) => {
 		setSelectedPlugin( ( prev ) =>
-			prev.map( ( p ) =>
-				p.slug === slug ? { ...p, version } : p,
-			),
+			prev.map( ( p ) => ( p.slug === slug ? { ...p, version } : p ) )
 		);
 	};
 
 	const fetchSharedSitesData = useCallback( async () => {
-		const response = await fetch(
-			`${ API_NAMESPACE }/shared-sites`,
-			{
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-ONEUPDATE-TOKEN': API_KEY,
-				},
+		const response = await fetch( `${ API_NAMESPACE }/shared-sites`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-ONEUPDATE-TOKEN': API_KEY,
 			},
-		);
+		} );
 		const data = await response.json();
 		if ( data?.shared_sites ) {
 			setSharedSites( data.shared_sites );
@@ -106,29 +116,24 @@ const PluginGrid = () => {
 
 	return (
 		<div className="oneupdate-plugin-container">
-
 			{ /* Notice State */ }
 			{ isNoticeVisible && (
-				<Notice
-					status={ noticeMessage.type }
-					isDismissible={ true }
-				>
+				<Notice status={ noticeMessage.type } isDismissible>
 					{ noticeMessage.message }
 				</Notice>
 			) }
 
 			{ /* Search Bar */ }
-			<div className="oneupdate-search-container"
-				style={
-					{
-						marginBottom: '1em',
-						display: 'flex',
-						flexDirection: 'row',
-						alignItems: 'baseline',
-						justifyContent: 'flex-end',
-						gap: '1em',
-					}
-				}
+			<div
+				className="oneupdate-search-container"
+				style={ {
+					marginBottom: '1em',
+					display: 'flex',
+					flexDirection: 'row',
+					alignItems: 'baseline',
+					justifyContent: 'flex-end',
+					gap: '1em',
+				} }
 			>
 				<TextControl
 					placeholder={ __( 'Search plugins…', 'oneupdate' ) }
@@ -140,10 +145,7 @@ const PluginGrid = () => {
 						}
 					} }
 				/>
-				<Button
-					variant="primary"
-					onClick={ handleSearchSubmit }
-				>
+				<Button variant="primary" onClick={ handleSearchSubmit }>
 					{ __( 'Search', 'oneupdate' ) }
 				</Button>
 			</div>
@@ -152,7 +154,9 @@ const PluginGrid = () => {
 			{ loading && (
 				<div className="oneupdate-loading-container">
 					<Spinner style={ { width: '40px', height: '40px' } } />
-					<p className="loading-text">{ __( 'Loading plugins…', 'oneupdate' ) }</p>
+					<p className="loading-text">
+						{ __( 'Loading plugins…', 'oneupdate' ) }
+					</p>
 				</div>
 			) }
 
@@ -162,10 +166,7 @@ const PluginGrid = () => {
 					<div className="error-content">
 						<h3>{ __( 'Unable to load plugins', 'oneupdate' ) }</h3>
 						<p>{ error }</p>
-						<Button
-							variant="primary"
-							onClick={ handleRetry }
-						>
+						<Button variant="primary" onClick={ handleRetry }>
 							{ __( 'Try Again', 'oneupdate' ) }
 						</Button>
 					</div>
@@ -177,11 +178,13 @@ const PluginGrid = () => {
 				<div className="oneupdate-empty-container">
 					<div className="empty-content">
 						<h3>{ __( 'No plugins found', 'oneupdate' ) }</h3>
-						<p>{ __( 'Unable to find any plugins to display.', 'oneupdate' ) }</p>
-						<Button
-							variant="secondary"
-							onClick={ handleRetry }
-						>
+						<p>
+							{ __(
+								'Unable to find any plugins to display.',
+								'oneupdate'
+							) }
+						</p>
+						<Button variant="secondary" onClick={ handleRetry }>
 							{ __( 'Refresh', 'oneupdate' ) }
 						</Button>
 					</div>
@@ -204,10 +207,16 @@ const PluginGrid = () => {
 								<Button
 									variant="primary"
 									disabled={ selectedCount === 0 }
-									aria-label={ __( 'Apply selected plugins', 'oneupdate' ) }
+									aria-label={ __(
+										'Apply selected plugins',
+										'oneupdate'
+									) }
 									onClick={ () => setShowApplyModal( true ) }
 								>
-									{ __( 'Apply Selected plugins', 'oneupdate' ) }
+									{ __(
+										'Apply Selected plugins',
+										'oneupdate'
+									) }
 								</Button>
 							</div>
 						</div>
@@ -241,17 +250,24 @@ const PluginGrid = () => {
 					<div className="oneupdate-pagination">
 						<Button
 							disabled={ page <= 1 }
-							onClick={ () => setPage( ( prev ) => Math.max( prev - 1, 1 ) ) }
+							onClick={ () =>
+								setPage( ( prev ) => Math.max( prev - 1, 1 ) )
+							}
 							variant="secondary"
 						>
 							{ __( 'Previous', 'oneupdate' ) }
 						</Button>
 						<span className="page-info">
-							{ __( 'Page', 'oneupdate' ) } { page } { __( 'of', 'oneupdate' ) } { totalPages }
+							{ __( 'Page', 'oneupdate' ) } { page }{ ' ' }
+							{ __( 'of', 'oneupdate' ) } { totalPages }
 						</span>
 						<Button
 							disabled={ page >= totalPages }
-							onClick={ () => setPage( ( prev ) => Math.min( prev + 1, totalPages ) ) }
+							onClick={ () =>
+								setPage( ( prev ) =>
+									Math.min( prev + 1, totalPages )
+								)
+							}
 							variant="secondary"
 						>
 							{ __( 'Next', 'oneupdate' ) }
@@ -260,11 +276,17 @@ const PluginGrid = () => {
 				</>
 			) }
 		</div>
-
 	);
 };
 
-const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, setNoticeMessage, setIsNoticeVisible, setSelectedPlugin } ) => {
+const ApplyPluginsModal = ( {
+	sharedSites,
+	selectedPlugin,
+	setShowApplyModal,
+	setNoticeMessage,
+	setIsNoticeVisible,
+	setSelectedPlugin,
+} ) => {
 	const [ selectedSite, setSelectedSite ] = useState( [] );
 	const [ selectedSiteInfo, setSelectedSiteInfo ] = useState( [] );
 
@@ -281,7 +303,7 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 	// based on selected sites need to get all info from sharedsites for all selected sites
 	useEffect( () => {
 		const selectedSiteFullInfo = sharedSites.filter( ( site ) =>
-			selectedSite.includes( site.url ),
+			selectedSite.includes( site.url )
 		);
 
 		setSelectedSiteInfo( selectedSiteFullInfo );
@@ -289,26 +311,26 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 
 	const handleApplyPlugins = async () => {
 		try {
-			const response = await fetch(
-				`${ API_NAMESPACE }/apply-plugins`,
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-ONEUPDATE-TOKEN': API_KEY,
-					},
-					body: JSON.stringify( {
-						sites: selectedSiteInfo,
-						plugins: selectedPlugin,
-					} ),
+			const response = await fetch( `${ API_NAMESPACE }/apply-plugins`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-ONEUPDATE-TOKEN': API_KEY,
 				},
-			);
+				body: JSON.stringify( {
+					sites: selectedSiteInfo,
+					plugins: selectedPlugin,
+				} ),
+			} );
 			const data = await response.json();
 			if ( data?.success && data?.created_prs ) {
 				const prUrls = data?.created_prs;
-				const prUrlsArray = prUrls?.map( ( pr ) => {
-					return pr?.data?.pr_url || '';
-				} ).filter( ( url ) => url !== '' ) || [];
+				const prUrlsArray =
+					prUrls
+						?.map( ( pr ) => {
+							return pr?.data?.pr_url || '';
+						} )
+						.filter( ( url ) => url !== '' ) || [];
 
 				// Join to comma separated string
 				const prUrlsString = prUrlsArray.join( ', ' );
@@ -316,21 +338,31 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 				setIsNoticeVisible( true );
 				setNoticeMessage( {
 					type: 'success',
-					message: __( 'Plugins applied successfully. Please check the PR at:', 'oneupdate' ) + ` ${ prUrlsString }`,
+					message:
+						__(
+							'Plugins applied successfully. Please check the PR at:',
+							'oneupdate'
+						) + ` ${ prUrlsString }`,
 				} );
 				setSelectedPlugin( [] );
 			} else {
 				setIsNoticeVisible( true );
 				setNoticeMessage( {
 					type: 'error',
-					message: __( 'Failed to apply plugins. Please try again.', 'oneupdate' ),
+					message: __(
+						'Failed to apply plugins. Please try again.',
+						'oneupdate'
+					),
 				} );
 			}
 		} catch ( error ) {
 			setIsNoticeVisible( true );
 			setNoticeMessage( {
 				type: 'error',
-				message: __( 'An error occurred while applying plugins.', 'oneupdate' ),
+				message: __(
+					'An error occurred while applying plugins.',
+					'oneupdate'
+				),
 			} );
 		}
 	};
@@ -338,12 +370,14 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 	return (
 		<Modal
 			title={ __( 'Apply Selected Plugins', 'oneupdate' ) }
-			isOpen={ true }
-			shouldCloseOnClickOutside={ true }
+			isOpen
+			shouldCloseOnClickOutside
 			className="oneupdate-apply-plugins-modal"
 		>
 			<div className="oneupdate-modal-content">
-				<h3>{ __( 'Select a site to apply the plugins', 'oneupdate' ) }</h3>
+				<h3>
+					{ __( 'Select a site to apply the plugins', 'oneupdate' ) }
+				</h3>
 				{ sharedSites.length > 0 ? (
 					<div className="oneupdate-site-selection">
 						{ sharedSites.map( ( site ) => (
@@ -351,12 +385,19 @@ const ApplyPluginsModal = ( { sharedSites, selectedPlugin, setShowApplyModal, se
 								key={ site?.url }
 								label={ site?.name }
 								checked={ selectedSite.includes( site?.url ) }
-								onChange={ () => handleSiteSelection( site.url ) }
+								onChange={ () =>
+									handleSiteSelection( site.url )
+								}
 							/>
 						) ) }
 					</div>
 				) : (
-					<p>{ __( 'No sites available to apply plugins.', 'oneupdate' ) }</p>
+					<p>
+						{ __(
+							'No sites available to apply plugins.',
+							'oneupdate'
+						) }
+					</p>
 				) }
 				<Button
 					variant="primary"

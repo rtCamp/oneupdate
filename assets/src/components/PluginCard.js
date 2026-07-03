@@ -1,3 +1,6 @@
+/**
+ * WordPress dependencies
+ */
 import { decodeEntities } from '@wordpress/html-entities';
 import { Button, SelectControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
@@ -8,7 +11,13 @@ const PluginCard = ( {
 	onSelect,
 	onVersionChange,
 } ) => {
-	const { name, slug, version, short_description: shortDescription, versions } = plugin;
+	const {
+		name,
+		slug,
+		version,
+		short_description: shortDescription,
+		versions,
+	} = plugin;
 
 	const selectedEntry = selectedPlugin?.find( ( p ) => p.slug === slug );
 	const isSelected = !! selectedEntry;
@@ -27,18 +36,28 @@ const PluginCard = ( {
 	};
 
 	return (
-		<div className={ `oneupdate-plugin-card ${ isSelected ? 'selected' : '' }` } key={ slug }>
+		<div
+			className={ `oneupdate-plugin-card ${
+				isSelected ? 'selected' : ''
+			}` }
+			key={ slug }
+		>
 			<div className="plugin-card-header">
 				<div className="plugin-icon-wrapper">
 					<img
-						src={ plugin?.icons?.[ '1x' ] || plugin?.icons?.default }
+						src={
+							plugin?.icons?.[ '1x' ] || plugin?.icons?.default
+						}
 						alt={ decodeEntities( name ) }
 						className="plugin-card-logo"
 						loading="lazy"
 					/>
 				</div>
 				<div className="plugin-card-header-text">
-					<h3 className="plugin-name" title={ decodeEntities( name ) }>
+					<h3
+						className="plugin-name"
+						title={ decodeEntities( name ) }
+					>
 						{ decodeEntities( name ) }
 					</h3>
 					<div className="plugin-version-badge">
@@ -56,14 +75,22 @@ const PluginCard = ( {
 
 			<div className="plugin-card-footer">
 				<Button
-					className={ `plugin-select-btn ${ isSelected ? 'selected' : '' }` }
+					className={ `plugin-select-btn ${
+						isSelected ? 'selected' : ''
+					}` }
 					variant={ isSelected ? 'primary' : 'secondary' }
 					onClick={ handlePluginToggle }
 				>
 					<span className="btn-text">
-						{ isSelected ? __( 'Selected', 'oneupdate' ) : __( 'Select Plugin', 'oneupdate' ) }
+						{ isSelected
+							? __( 'Selected', 'oneupdate' )
+							: __( 'Select Plugin', 'oneupdate' ) }
 					</span>
-					{ isSelected && <span className="btn-icon" aria-hidden="true">✓</span> }
+					{ isSelected && (
+						<span className="btn-icon" aria-hidden="true">
+							✓
+						</span>
+					) }
 				</Button>
 				{ isSelected && (
 					<PluginVersionSelectControl
@@ -77,18 +104,27 @@ const PluginCard = ( {
 	);
 };
 
-const PluginVersionSelectControl = ( { versions, selectedVersion, onChange } ) => {
+const PluginVersionSelectControl = ( {
+	versions,
+	selectedVersion,
+	onChange,
+} ) => {
 	const getLastFiveVersions = ( versionsObj ) => {
 		if ( ! versionsObj || typeof versionsObj !== 'object' ) {
 			return [];
 		}
 
-		const versionKeys = Object.keys( versionsObj )
-			.filter( ( key ) => key !== 'trunk' && ! /(alpha|beta|rc|dev|a)/i.test( key ) );
+		const versionKeys = Object.keys( versionsObj ).filter(
+			( key ) => key !== 'trunk' && ! /(alpha|beta|rc|dev|a)/i.test( key )
+		);
 
 		const sortedVersions = versionKeys.sort( ( a, b ) => {
-			const aParts = a.split( '.' ).map( ( part ) => parseInt( part, 10 ) || 0 );
-			const bParts = b.split( '.' ).map( ( part ) => parseInt( part, 10 ) || 0 );
+			const aParts = a
+				.split( '.' )
+				.map( ( part ) => parseInt( part, 10 ) || 0 );
+			const bParts = b
+				.split( '.' )
+				.map( ( part ) => parseInt( part, 10 ) || 0 );
 
 			const maxLength = Math.max( aParts.length, bParts.length );
 			for ( let i = 0; i < maxLength; i++ ) {
