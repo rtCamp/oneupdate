@@ -342,9 +342,9 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 	/**
 	 * Extract total count from Link headers when using pulls API
 	 *
-	 * @param array|\WpOrg\Requests\Utility\CaseInsensitiveDictionary $headers Response headers.
-	 * @param int                                                     $current_count Current count of items fetched.
-	 * @param int                                                     $per_page Number of items per page. Default is 25.
+	 * @param array<string, string>|\WpOrg\Requests\Utility\CaseInsensitiveDictionary<string, string> $headers Response headers.
+	 * @param int                                                                                     $current_count Current count of items fetched.
+	 * @param int                                                                                     $per_page Number of items per page. Default is 25.
 	 *
 	 * @return int Total count of items.
 	 */
@@ -410,9 +410,9 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 	/**
 	 * Format GitHub pull requests info to return only necessary fields.
 	 *
-	 * @param array $pull_requests Array of pull requests from GitHub API.
+	 * @param array<int, array<string, mixed>> $pull_requests Array of pull requests from GitHub API.
 	 *
-	 * @return array Formatted array of pull requests.
+	 * @return array<int, array<string, mixed>> Formatted array of pull requests.
 	 */
 	private static function format_github_pull_requests_info( array $pull_requests ): array {
 		$formatted_prs = [];
@@ -463,7 +463,7 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 	 *
 	 * @param string $endpoint GitHub API endpoint.
 	 *
-	 * @return array Array containing success status, data, headers, status_code, and message.
+	 * @return array<string, mixed> Array containing success status, data, headers, status_code, and message.
 	 */
 	private static function gh_api_request_with_validation( string $endpoint ): array {
 		$response = self::gh_api_request( $endpoint );
@@ -524,7 +524,7 @@ class GH_Pull_Request_Controller extends Abstract_REST_Controller {
 	 *
 	 * @param string $endpoint GitHub API endpoint.
 	 *
-	 * @return array|\WP_Error Response array or WP_Error on failure.
+	 * @return array<string, mixed>|\WP_Error Response array or WP_Error on failure.
 	 */
 	private static function gh_api_request( string $endpoint ): array|\WP_Error {
 		$gh_token = Plugin_Settings::get_github_token();

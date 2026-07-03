@@ -154,6 +154,8 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	 * Get GitHub API headers with authorization.
 	 *
 	 * @param string $github_token GitHub personal access token.
+	 *
+	 * @return array<string, string> GitHub API headers.
 	 */
 	protected static function get_github_headers( string $github_token ): array {
 		return array_merge(

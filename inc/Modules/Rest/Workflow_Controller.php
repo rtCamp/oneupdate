@@ -609,6 +609,8 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	 * @param string $private_plugin The private plugin zip URL.
 	 * @param string $branch         The branch to create PR against.
 	 * @param string $site_name      The site name for which the action is triggered.
+	 *
+	 * @return array<string, mixed>|\WP_Error Result array or WP_Error on failure.
 	 */
 	private function trigger_github_action_for_private_plugin( string $repo, string $private_plugin, string $branch, string $site_name ): array|\WP_Error {
 		$github_token = Plugin_Settings::get_github_token();
@@ -875,6 +877,8 @@ class Workflow_Controller extends Abstract_REST_Controller {
 	 * @param string $version The plugin version.
 	 * @param string $plugin_type The type of plugin action (add_update, deactivate, remove).
 	 * @param string $site_name The site name for which the action is triggered.
+	 *
+	 * @return array<string, mixed>|\WP_Error Result array or WP_Error on failure.
 	 */
 	private function trigger_github_action_for_pr_creation( string $repo, string $branch, string $plugin_slug, string $version, string $plugin_type, string $site_name ): array|\WP_Error {
 		$github_token = Plugin_Settings::get_github_token();
