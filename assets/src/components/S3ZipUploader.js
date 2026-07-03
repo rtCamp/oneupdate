@@ -587,7 +587,7 @@ const ApplyPluginsModal = ( {
 
 	useEffect( () => {
 		fetchSharedSitesData();
-	}, [] );
+	}, [ fetchSharedSitesData ] );
 
 	const applySelectedPlugins = useCallback( async () => {
 		setApplyingPlugins( true );
@@ -665,7 +665,7 @@ const ApplyPluginsModal = ( {
 						data.message,
 				} );
 			}
-		} catch ( error ) {
+		} catch {
 			setCurrentNotice( {
 				status: 'error',
 				message: __(
@@ -681,6 +681,7 @@ const ApplyPluginsModal = ( {
 		setShowApplyPluginsModal,
 		selectedSiteInfo,
 		setCurrentNotice,
+		setApplyingPlugins,
 	] );
 
 	const handleClose = () => {
@@ -788,13 +789,13 @@ const S3ZipUploader = () => {
 			} else {
 				setSharedSites( [] );
 			}
-		} catch ( error ) {
+		} catch {
 			setSharedSites( [] );
 		}
 	}, [] );
 
 	// Fetch upload history
-	const fetchHistory = () => {
+	const fetchHistory = useCallback( () => {
 		setLoadingHistory( true );
 		apiFetch( { path: '/oneupdate/v1/history' } )
 			.then( ( data ) => {
@@ -813,12 +814,12 @@ const S3ZipUploader = () => {
 			.catch( () => {
 				setLoadingHistory( false );
 			} );
-	};
+	}, [] );
 
 	useEffect( () => {
 		fetchHistory();
 		fetchSharedSitesData();
-	}, [] );
+	}, [ fetchHistory, fetchSharedSitesData ] );
 
 	// Handle file selection
 	const handleFileChange = ( event ) => {

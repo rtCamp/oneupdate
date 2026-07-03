@@ -17,8 +17,8 @@ import {
  */
 import PluginCard from './PluginCard';
 
-const API_NAMESPACE = OneUpdatePlugins.restUrl + '/oneupdate/v1';
-const API_KEY = OneUpdatePlugins.api_key;
+const API_NAMESPACE = window.OneUpdatePlugins.restUrl + '/oneupdate/v1';
+const API_KEY = window.OneUpdatePlugins.api_key;
 
 const PluginGrid = () => {
 	const [ page, setPage ] = useState( 1 );
@@ -105,7 +105,7 @@ const PluginGrid = () => {
 
 	useEffect( () => {
 		fetchSharedSitesData();
-	}, [] );
+	}, [ fetchSharedSitesData ] );
 
 	const handleSearchSubmit = () => {
 		setPage( 1 );
@@ -355,7 +355,7 @@ const ApplyPluginsModal = ( {
 					),
 				} );
 			}
-		} catch ( error ) {
+		} catch {
 			setIsNoticeVisible( true );
 			setNoticeMessage( {
 				type: 'error',

@@ -77,10 +77,10 @@ final class Cache implements Registrable {
 	/**
 	 * Clear the cache after plugin update.
 	 *
-	 * @param \WP_Upgrader $upgrader The upgrader instance.
+	 * @param \WP_Upgrader         $upgrader The upgrader instance.
 	 * @param array<string, mixed> $hook_extra Extra hook data.
 	 */
-	public function clear_update_plugin_cache( $upgrader, $hook_extra ): void {
+	public function clear_update_plugin_cache( $upgrader, $hook_extra ): void { // phpcs:ignore SlevomatCodingStandard.Functions.UnusedParameter.UnusedParameter
 		// Check if the plugin being updated is the OneUpdate plugin.
 		if ( ! isset( $hook_extra['action'] ) || 'update' !== $hook_extra['action'] || ! isset( $hook_extra['type'] ) || 'plugin' !== $hook_extra['type'] ) {
 			return;
@@ -92,6 +92,8 @@ final class Cache implements Registrable {
 
 	/**
 	 * Build the plugins transient.
+	 *
+	 * @return array<string, mixed>|\WP_Error
 	 */
 	public static function build_plugins_transient(): array|\WP_Error {
 		if ( ! function_exists( 'get_plugins' ) ) {

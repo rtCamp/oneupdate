@@ -108,14 +108,14 @@ const PluginManager = () => {
 			} else {
 				setIsValidS3Credentials( false );
 			}
-		} catch ( error ) {
+		} catch {
 			setIsValidS3Credentials( false );
 		}
 	}, [] );
 
 	useEffect( () => {
 		performHealthCheckOnS3Credentials();
-	}, [] );
+	}, [ performHealthCheckOnS3Credentials ] );
 
 	const fetchSitesWithPluginLoader = useCallback( async () => {
 		try {
@@ -139,7 +139,7 @@ const PluginManager = () => {
 			const data = await response.json();
 			setAllAvailableSites( data.shared_sites || [] ); // Store all available sites for later use
 			return data.success ? data.shared_sites : [];
-		} catch ( error ) {
+		} catch {
 			return [];
 		}
 	}, [] );
@@ -170,7 +170,7 @@ const PluginManager = () => {
 
 			const data = await response.json();
 			return data.success ? data.plugins : {};
-		} catch ( error ) {
+		} catch {
 			return {};
 		}
 	}, [] );
@@ -588,6 +588,7 @@ const PluginManager = () => {
 		typeFilter,
 		updateFilter,
 		siteFilter,
+		allAvailableSites.length,
 	] );
 
 	const getUpdateTooltipText = ( plugin ) => {
@@ -946,7 +947,7 @@ const PluginManager = () => {
 
 			// Refresh plugins data
 			await fetchRealTimePluginsData();
-		} catch ( error ) {
+		} catch {
 			setGlobalNotice( {
 				status: 'error',
 				message: sprintf(
@@ -1098,7 +1099,7 @@ const PluginManager = () => {
 				status: 'success',
 				message: noticeMessage,
 			} );
-		} catch ( error ) {
+		} catch {
 			setGlobalNotice( {
 				status: 'error',
 				message: __( 'Failed to update plugins.', 'oneupdate' ),
@@ -1114,7 +1115,7 @@ const PluginManager = () => {
 			setSelectedSites( ( prev ) => [ ...prev, url ] );
 		} else {
 			setSelectedSites( ( prev ) =>
-				prev.filter( ( url ) => url !== url )
+				prev.filter( ( siteUrl ) => siteUrl !== url )
 			);
 		}
 	};

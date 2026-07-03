@@ -28,7 +28,7 @@ const NONCE = window.OneUpdateSettings.restNonce;
 const API_KEY = window.OneUpdateSettings.api_key;
 
 const SiteSettings = () => {
-	const [ api_key, setApiKey ] = useState( '' );
+	const [ apiKey, setApiKey ] = useState( '' );
 	const [ isLoading, setIsLoading ] = useState( false );
 	const [ notice, setNotice ] = useState< NoticeType | null >( null );
 	const [ governingSite, setGoverningSite ] = useState( '' );
@@ -51,7 +51,7 @@ const SiteSettings = () => {
 			}
 			const data = await response.json();
 			setApiKey( data?.secret_key || '' );
-		} catch ( error ) {
+		} catch {
 			setNotice( {
 				type: 'error',
 				message: __(
@@ -96,7 +96,7 @@ const SiteSettings = () => {
 					),
 				} );
 			}
-		} catch ( error ) {
+		} catch {
 			setNotice( {
 				type: 'error',
 				message: __(
@@ -117,7 +117,7 @@ const SiteSettings = () => {
 					headers: {
 						'Content-Type': 'application/json',
 						'X-WP-Nonce': NONCE,
-						'X-OneUpdate-Token': api_key,
+						'X-OneUpdate-Token': apiKey,
 					},
 				}
 			);
@@ -126,7 +126,7 @@ const SiteSettings = () => {
 			}
 			const data = await response.json();
 			setGoverningSite( data?.governing_site_url || '' );
-		} catch ( error ) {
+		} catch {
 			setNotice( {
 				type: 'error',
 				message: __(
@@ -137,7 +137,7 @@ const SiteSettings = () => {
 		} finally {
 			setIsLoading( false );
 		}
-	}, [ api_key ] );
+	}, [ apiKey ] );
 
 	const deleteGoverningSiteConnection = useCallback( async () => {
 		try {
@@ -146,7 +146,7 @@ const SiteSettings = () => {
 				headers: {
 					'Content-Type': 'application/json',
 					'X-WP-Nonce': NONCE,
-					'X-OneUpdate-Token': api_key,
+					'X-OneUpdate-Token': apiKey,
 				},
 			} );
 			if ( ! response.ok ) {
@@ -160,7 +160,7 @@ const SiteSettings = () => {
 					'oneupdate'
 				),
 			} );
-		} catch ( error ) {
+		} catch {
 			setNotice( {
 				type: 'error',
 				message: __(
@@ -171,7 +171,7 @@ const SiteSettings = () => {
 		} finally {
 			setShowDisconnectionModal( false );
 		}
-	}, [ api_key ] );
+	}, [ apiKey ] );
 
 	const handleDisconnectGoverningSite = useCallback( async () => {
 		setShowDisconnectionModal( true );
@@ -207,7 +207,7 @@ const SiteSettings = () => {
 							variant="primary"
 							onClick={ () => {
 								navigator?.clipboard
-									?.writeText( api_key )
+									?.writeText( apiKey )
 									.then( () => {
 										setNotice( {
 											type: 'success',
@@ -217,16 +217,13 @@ const SiteSettings = () => {
 											),
 										} );
 									} )
-									.catch( ( error ) => {
+									.catch( () => {
 										setNotice( {
 											type: 'error',
-											message:
-												__(
-													'Failed to copy api key. Please try again.',
-													'oneupdate'
-												) +
-												' ' +
-												error,
+											message: __(
+												'Failed to copy api key. Please try again.',
+												'oneupdate'
+											),
 										} );
 									} );
 							} }
@@ -246,7 +243,7 @@ const SiteSettings = () => {
 				<CardBody>
 					<div>
 						<TextareaControl
-							value={ api_key }
+							value={ apiKey }
 							disabled
 							help={ __(
 								'This key is used for secure communication with the Governing site.',
