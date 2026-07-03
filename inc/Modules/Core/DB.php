@@ -1,12 +1,11 @@
 <?php
-
-declare( strict_types = 1 );
-
 /**
  * DB module.
  *
  * @package OneUpdate\Modules\Core
  */
+
+declare( strict_types = 1 );
 
 namespace OneUpdate\Modules\Core;
 

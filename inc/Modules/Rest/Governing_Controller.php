@@ -1,12 +1,11 @@
 <?php
-
-declare( strict_types = 1 );
-
 /**
  * This will have routes specific to governing site other then basic options.
  *
  * @package OneUpdate
  */
+
+declare( strict_types = 1 );
 
 namespace OneUpdate\Modules\Rest;
 

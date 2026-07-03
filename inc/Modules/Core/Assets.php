@@ -1,12 +1,11 @@
 <?php
-
-declare( strict_types = 1 );
-
 /**
  * Enqueue assets for OneUpdate.
  *
  * @package OneUpdate
  */
+
+declare(strict_types = 1);
 
 namespace OneUpdate\Modules\Core;
 

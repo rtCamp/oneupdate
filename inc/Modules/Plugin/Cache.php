@@ -78,7 +78,7 @@ final class Cache implements Registrable {
 	 * Clear the cache after plugin update.
 	 *
 	 * @param \WP_Upgrader $upgrader The upgrader instance.
-	 * @param array        $hook_extra Extra hook data.
+	 * @param array<string, mixed> $hook_extra Extra hook data.
 	 */
 	public function clear_update_plugin_cache( $upgrader, $hook_extra ): void {
 		// Check if the plugin being updated is the OneUpdate plugin.

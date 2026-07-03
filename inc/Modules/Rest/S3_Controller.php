@@ -1,12 +1,11 @@
 <?php
-
-declare( strict_types = 1 );
-
 /**
  * Class S3_Controller - this class has api endpoints for S3 uploads.
  *
  * @package OneUpdate
  */
+
+declare( strict_types = 1 );
 
 namespace OneUpdate\Modules\Rest;
 

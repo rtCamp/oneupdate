@@ -1,12 +1,11 @@
 <?php
-
-declare( strict_types = 1 );
-
 /**
  * Class GitHub_Pull_Requests which contains routes for GH PR's.
  *
  * @package OneUpdate
  */
+
+declare( strict_types = 1 );
 
 namespace OneUpdate\Modules\Rest;
 
