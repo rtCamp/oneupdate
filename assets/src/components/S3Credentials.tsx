@@ -71,11 +71,11 @@ const S3Credentials = ( {
 			setS3Credentials( data.s3_credentials );
 		}
 		setIsLoading( false );
-	}, [] );
+	}, [ setNotice ] );
 
 	useEffect( () => {
 		getS3Credentials();
-	}, [] );
+	}, [ getS3Credentials ] );
 
 	const saveS3Credentials = useCallback( async () => {
 		setIsSaving( true );

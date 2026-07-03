@@ -30,7 +30,7 @@ const isValidUrl = ( url: string ): boolean => {
 	try {
 		const parsedUrl = new URL( url );
 		return isURL( parsedUrl.href );
-	} catch ( e ) {
+	} catch {
 		return false;
 	}
 };

@@ -79,7 +79,7 @@ const SettingsPage = () => {
 		if ( SITE_TYPE === 'governing-site' ) {
 			fetchAllAvailableGitHubRepos();
 		}
-	}, [ SITE_TYPE ] );
+	}, [ fetchAllAvailableGitHubRepos ] );
 
 	useEffect( () => {
 		apiFetch< { shared_sites?: BrandSite[] } >( {

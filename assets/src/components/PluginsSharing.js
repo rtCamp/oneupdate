@@ -17,8 +17,8 @@ import {
 } from '@wordpress/components';
 import { decodeEntities } from '@wordpress/html-entities';
 
-const API_NAMESPACE = OneUpdatePlugins.restUrl + '/oneupdate/v1';
-const RestNonce = OneUpdatePlugins.restNonce;
+const API_NAMESPACE = window.OneUpdatePlugins.restUrl + '/oneupdate/v1';
+const RestNonce = window.OneUpdatePlugins.restNonce;
 
 const PluginCard = ( {
 	plugin,
@@ -315,7 +315,7 @@ const PluginGrid = () => {
 		if ( searchQuery ) {
 			fetchPlugins();
 		}
-	}, [ fetchPlugins ] );
+	}, [ fetchPlugins, searchQuery ] );
 
 	const handleRetry = () => fetchPlugins();
 
@@ -358,7 +358,7 @@ const PluginGrid = () => {
 
 	useEffect( () => {
 		fetchSharedSitesData();
-	}, [] );
+	}, [ fetchSharedSitesData ] );
 
 	const handleSearchSubmit = () => {
 		if ( ! searchInput.trim() ) {
@@ -749,7 +749,7 @@ const ApplyPluginsModal = ( {
 					),
 				} );
 			}
-		} catch ( error ) {
+		} catch {
 			setIsNoticeVisible( true );
 			setNoticeMessage( {
 				type: 'error',

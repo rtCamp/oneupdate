@@ -37,6 +37,7 @@ const GitHubRepoToken = ( {
 		} );
 
 		if ( ! response.ok ) {
+			// eslint-disable-next-line no-console
 			console.error(
 				'Error fetching GitHub token:',
 				response.statusText
@@ -52,50 +53,56 @@ const GitHubRepoToken = ( {
 
 	useEffect( () => {
 		getRepoToken();
-	}, [] );
+	}, [ getRepoToken ] );
 
-	const setGitHubRepoToken = useCallback( async ( token: string ) => {
-		const response = await fetch( `${ API_NAMESPACE }/github-token`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-WP-NONCE': NONCE,
-			},
-			body: JSON.stringify( { token } ),
-		} );
-
-		if ( response.ok === false || response.status === 400 ) {
-			setNotice( {
-				type: 'error',
-				message: __(
-					'Please enter valid GitHub PAT token.',
-					'oneupdate'
-				),
+	const setGitHubRepoToken = useCallback(
+		async ( token: string ) => {
+			const response = await fetch( `${ API_NAMESPACE }/github-token`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-WP-NONCE': NONCE,
+				},
+				body: JSON.stringify( { token } ),
 			} );
-			return;
-		}
-		const data = await response.json();
 
-		if ( data?.status === '400' ) {
-			setNotice( {
-				type: 'error',
-				message:
-					data?.message ||
-					__( 'Enter valid PAT token.', 'oneupdate' ),
-			} );
-			return;
-		}
+			if ( response.ok === false || response.status === 400 ) {
+				setNotice( {
+					type: 'error',
+					message: __(
+						'Please enter valid GitHub PAT token.',
+						'oneupdate'
+					),
+				} );
+				return;
+			}
+			const data = await response.json();
 
-		if ( data?.success ) {
-			setNotice( {
-				type: 'success',
-				message: __( 'GitHub token saved successfully.', 'oneupdate' ),
-			} );
-			await fetchAllAvailableGitHubRepos();
-		} else {
-			console.error( 'Error setting GitHub token:', data ); // eslint-disable-line no-console
-		}
-	}, [] );
+			if ( data?.status === '400' ) {
+				setNotice( {
+					type: 'error',
+					message:
+						data?.message ||
+						__( 'Enter valid PAT token.', 'oneupdate' ),
+				} );
+				return;
+			}
+
+			if ( data?.success ) {
+				setNotice( {
+					type: 'success',
+					message: __(
+						'GitHub token saved successfully.',
+						'oneupdate'
+					),
+				} );
+				await fetchAllAvailableGitHubRepos();
+			} else {
+				console.error( 'Error setting GitHub token:', data ); // eslint-disable-line no-console
+			}
+		},
+		[ fetchAllAvailableGitHubRepos, setNotice ]
+	);
 
 	return (
 		<Card style={ { marginTop: '20px' } }>
