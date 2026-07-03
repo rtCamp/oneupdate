@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare( strict_types = 1 );
 
 /**
  * Class S3_Controller - this class has api endpoints for S3 uploads.

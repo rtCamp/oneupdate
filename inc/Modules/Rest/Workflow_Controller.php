@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare( strict_types = 1 );
 
 /**
  * Class Workflow_Controller - this contains the REST API endpoints for managing GitHub workflows.

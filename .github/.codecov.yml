@@ -3,7 +3,7 @@
 
 # Fix path prefixes from Docker container paths to repo-relative paths
 fixes:
-  - '/var/www/html/wp-content/plugins/onesearch/::'
+  - '/var/www/html/wp-content/plugins/oneupdate/::'
 
 coverage:
   status:
