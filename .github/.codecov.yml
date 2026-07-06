@@ -25,6 +25,8 @@ ignore:
   - '**/*.spec.tsx'
   - '**/types.d.ts'
   - 'playwright.config.ts'
+  - 'assets/src/components/icons/**'
+  - 'assets/src/componenets/icons/**'
 
 comment:
   layout: 'reach,diff,flags,files'
