@@ -22,6 +22,12 @@ const config = defineConfig( {
 	...baseConfig,
 	testDir: './tests/e2e',
 	outputDir: './tests/_output/e2e',
+	webServer: {
+		command: 'npm run wp-env:test start',
+		port: 8889,
+		timeout: 120000,
+		reuseExistingServer: true,
+	},
 } );
 
 export default config;

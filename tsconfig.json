@@ -8,7 +8,8 @@
 		"paths": {
 			"@/*": [ "./assets/src/*" ]
 		},
-		"types": [ "jest", "node" ]
+		"types": [ "jest", "node" ],
+		"checkJs": false
 	},
 	"include": [
 		"**/*.d.ts",
@@ -16,7 +17,11 @@
 		"**/*.mjs",
 		"**/*.ts",
 		"**/*.tsx",
-		"**/*.json"
+		"**/*.json",
+		"assets/src/components/PluginCard.js",
+		"assets/src/components/PluginGrid.js",
+		"assets/src/components/PluginsSharing.js",
+		"assets/src/components/S3ZipUploader.js"
 	],
 	"exclude": [
 		"**/build/*",

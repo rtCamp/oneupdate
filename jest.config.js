@@ -63,6 +63,10 @@ module.exports = {
 		'!assets/src/**/index.{js,tsx,jsx}',
 		// Exclude style files
 		'!assets/src/**/*.{css,scss}',
+		// Exclude static SVG icon components
+		'!assets/src/components/icons/**',
+		// Exclude the js files
+		'!assets/src/js/**.js',
 	],
 
 	// Coverage output directory
