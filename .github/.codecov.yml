@@ -26,7 +26,7 @@ ignore:
   - '**/types.d.ts'
   - 'playwright.config.ts'
   - 'assets/src/components/icons/**'
-  - 'assets/src/componenets/icons/**'
+  - 'assets/src/js/**.js'
 
 comment:
   layout: 'reach,diff,flags,files'
