@@ -227,7 +227,9 @@ describe( 'S3ZipUploader', () => {
 
 		// Step 1: Plugin Selection Modal
 		expect(
-			screen.getByRole( 'heading', { name: 'Select Plugins to Install' } )
+			screen.getByRole( 'heading', {
+				name: 'Select Plugins to Install',
+			} )
 		).toBeInTheDocument();
 
 		// Select the plugin wrapper button in history list
@@ -278,5 +280,271 @@ describe( 'S3ZipUploader', () => {
 			/Plugins applied successfully.*Shared Brand Site.*https:\/\/github.com\/org\/repo\/actions\/runs\/12345/i
 		);
 		expect( successNotice.length ).toBeGreaterThanOrEqual( 1 );
+	} );
+
+	it( 'shows error notice when apply-private-plugins returns failure', async () => {
+		render( <S3ZipUploader /> );
+		await screen.findByText( 'Custom Woo Addon' );
+
+		// Open wizard
+		fireEvent.click(
+			screen.getByRole( 'button', { name: 'Install Plugins' } )
+		);
+
+		// Select plugin
+		fireEvent.click(
+			screen.getByRole( 'button', { name: /Custom Woo Addon/i } )
+		);
+
+		// Next step
+		fireEvent.click(
+			screen.getByRole( 'button', { name: 'Next: Select Sites' } )
+		);
+
+		// Select site
+		const siteRow = await screen.findByRole( 'button', {
+			name: /Shared Brand Site/i,
+		} );
+		fireEvent.click( siteRow );
+
+		// Mock failure response for apply
+		fetchSpy.mockImplementation( ( url ) => {
+			if (
+				typeof url === 'string' &&
+				url.includes( 'apply-private-plugins' )
+			) {
+				return Promise.resolve( {
+					ok: true,
+					json: () =>
+						Promise.resolve( {
+							success: false,
+							message: 'Token expired',
+						} ),
+				} as any );
+			}
+			if ( typeof url === 'string' && url.includes( 'shared-sites' ) ) {
+				return Promise.resolve( {
+					ok: true,
+					json: () => Promise.resolve( mockSharedSitesResponse ),
+				} as any );
+			}
+			return Promise.resolve( {
+				ok: true,
+				json: () => Promise.resolve( {} ),
+			} as any );
+		} );
+
+		// Install
+		fireEvent.click(
+			screen.getByRole( 'button', { name: 'Install Plugins' } )
+		);
+
+		// Verify error notice
+		const errorNotices = await screen.findAllByText(
+			/Failed to apply plugins:.*Token expired/i
+		);
+		expect( errorNotices.length ).toBeGreaterThanOrEqual( 1 );
+	} );
+
+	it( 'renders empty history state when no uploads exist', async () => {
+		// Mock empty history
+		(
+			apiFetch as jest.MockedFunction< typeof apiFetch >
+		 ).mockResolvedValue( [] );
+
+		render( <S3ZipUploader /> );
+
+		// Should still render the upload card
+		expect(
+			screen.getByText( /Upload Private Plugin/i )
+		).toBeInTheDocument();
+
+		// Should render empty history state
+		await waitFor( () => {
+			expect( screen.getByText( /No uploads yet/i ) ).toBeInTheDocument();
+		} );
+	} );
+
+	it( 'shows upload error when presigned URL fetch fails', async () => {
+		render( <S3ZipUploader /> );
+		await screen.findByText( 'Custom Woo Addon' );
+
+		// Select a zip file
+		const fileInput = screen.getByTestId(
+			'form-file-upload-input'
+		) as HTMLInputElement;
+		const file = new File( [ 'dummy content' ], 'bad-plugin.zip', {
+			type: 'application/zip',
+		} );
+		fireEvent.change( fileInput, { target: { files: [ file ] } } );
+
+		// Mock upload URL failure
+		fetchSpy.mockImplementation( ( url ) => {
+			if ( typeof url === 'string' && url.includes( 'upload' ) ) {
+				return Promise.reject( new Error( 'Network connection lost' ) );
+			}
+			if ( typeof url === 'string' && url.includes( 'shared-sites' ) ) {
+				return Promise.resolve( {
+					ok: true,
+					json: () => Promise.resolve( mockSharedSitesResponse ),
+				} as any );
+			}
+			return Promise.resolve( {
+				ok: true,
+				json: () => Promise.resolve( {} ),
+			} as any );
+		} );
+
+		// Click Upload button
+		fireEvent.click(
+			screen.getByRole( 'button', {
+				name: 'Upload & Install Plugin',
+			} )
+		);
+
+		// Verify site selection modal opened
+		expect(
+			screen.getByRole( 'heading', {
+				name: 'Select Sites for Plugin Installation',
+			} )
+		).toBeInTheDocument();
+
+		// Select site
+		const siteRow = screen.getByRole( 'button', {
+			name: /Shared Brand Site/i,
+		} );
+		fireEvent.click( siteRow );
+
+		// Confirm upload
+		fireEvent.click(
+			screen.getByRole( 'button', { name: 'Install Plugin' } )
+		);
+
+		// Verify error notice
+		const errorNotices = await screen.findAllByText(
+			/Upload failed:.*Network connection lost/i
+		);
+		expect( errorNotices.length ).toBeGreaterThanOrEqual( 1 );
+		// Click notice dismiss button to cover onRemove
+		const dismissBtn = document.querySelector(
+			'.components-notice__dismiss'
+		);
+		expect( dismissBtn ).toBeInTheDocument();
+		fireEvent.click( dismissBtn! );
+
+		// Verify notice is gone
+		expect(
+			document.querySelector( '.components-notice' )
+		).not.toBeInTheDocument();
+	} );
+
+	it( 'copies URL and shows Copied feedback on Copy URL button click', async () => {
+		render( <S3ZipUploader /> );
+		await screen.findByText( 'Custom Woo Addon' );
+
+		// Click Copy URL button
+		const copyBtn = screen.getByRole( 'button', { name: 'Copy URL' } );
+		fireEvent.click( copyBtn );
+
+		// Verify clipboard was called
+		expect( navigator.clipboard.writeText ).toHaveBeenCalledWith(
+			'https://s3.amazonaws.com/bucket/custom-woo-addon.2.1.0.zip'
+		);
+
+		// Verify button text changed to Copied
+		expect(
+			screen.getByRole( 'button', { name: 'Copied URL' } )
+		).toBeInTheDocument();
+	} );
+
+	it( 'shows selected file name after choosing a zip file', async () => {
+		render( <S3ZipUploader /> );
+		await screen.findByText( 'Custom Woo Addon' );
+
+		// Select a zip file
+		const fileInput = screen.getByTestId(
+			'form-file-upload-input'
+		) as HTMLInputElement;
+		const file = new File( [ 'dummy' ], 'my-plugin.zip', {
+			type: 'application/zip',
+		} );
+		fireEvent.change( fileInput, { target: { files: [ file ] } } );
+
+		// Verify file name is displayed
+		expect(
+			screen.getByText( /Selected file:.*my-plugin\.zip/i )
+		).toBeInTheDocument();
+
+		// Verify Upload button is now enabled
+		const uploadBtn = screen.getByRole( 'button', {
+			name: 'Upload & Install Plugin',
+		} );
+		expect( uploadBtn ).not.toBeDisabled();
+	} );
+
+	it( 'supports keyboard accessibility and bulk selection in the apply wizard modal', async () => {
+		render( <S3ZipUploader /> );
+		await screen.findByText( 'Custom Woo Addon' );
+
+		// Open apply plugins wizard modal
+		fireEvent.click(
+			screen.getByRole( 'button', { name: 'Install Plugins' } )
+		);
+
+		// Step 1: Plugin Selection Modal
+		expect(
+			screen.getByRole( 'heading', {
+				name: 'Select Plugins to Install',
+			} )
+		).toBeInTheDocument();
+
+		// Find the plugin row button (Custom Woo Addon)
+		const pluginButton = screen.getByRole( 'button', {
+			name: /Custom Woo Addon/i,
+		} );
+
+		// Press key 'Enter' on the plugin row button
+		fireEvent.keyDown( pluginButton, { key: 'Enter', code: 'Enter' } );
+
+		// Verify it got selected (Clear Selection button becomes enabled)
+		const clearBtn = screen.getByRole( 'button', {
+			name: 'Clear Selection',
+		} );
+		expect( clearBtn ).not.toBeDisabled();
+
+		// Click Clear Selection
+		fireEvent.click( clearBtn );
+		expect( clearBtn ).toBeDisabled();
+
+		// Toggle select all plugins checkbox
+		const selectAllCheckbox = screen.getByLabelText( 'Select All Plugins' );
+		fireEvent.click( selectAllCheckbox );
+		expect( clearBtn ).not.toBeDisabled();
+
+		// Click Next: Select Sites
+		fireEvent.click(
+			screen.getByRole( 'button', { name: 'Next: Select Sites' } )
+		);
+
+		// Step 2: Site Selection Modal
+		expect(
+			screen.getByRole( 'heading', {
+				name: 'Select Sites for Installation',
+			} )
+		).toBeInTheDocument();
+
+		// Find site row
+		const siteRow = await screen.findByRole( 'button', {
+			name: /Shared Brand Site/i,
+		} );
+
+		// Press key 'Enter' on the site row button
+		fireEvent.keyDown( siteRow, { key: 'Enter', code: 'Enter' } );
+
+		// Verify Install Plugins button is enabled (since site is selected)
+		const installBtn = screen.getByRole( 'button', {
+			name: 'Install Plugins',
+		} );
+		expect( installBtn ).not.toBeDisabled();
 	} );
 } );
