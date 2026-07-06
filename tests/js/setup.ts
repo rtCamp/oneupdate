@@ -1,7 +1,11 @@
+/* eslint-disable no-console */
 /**
  * External dependencies
  */
 import '@testing-library/jest-dom';
+
+console.warn = jest.fn();
+console.error = jest.fn();
 
 const fetchMock = jest.fn<
 	ReturnType< typeof fetch >,
