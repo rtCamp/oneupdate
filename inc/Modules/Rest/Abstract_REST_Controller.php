@@ -77,12 +77,14 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 		$request_origin = ! empty( $request_origin ) ? esc_url_raw( wp_unslash( $request_origin ) ) : '';
 		$parsed_origin  = wp_parse_url( $request_origin );
 		$request_url    = ! empty( $parsed_origin['scheme'] ) && ! empty( $parsed_origin['host'] ) ? sprintf(
-			'%s://%s',
+			'%s://%s%s',
 			$parsed_origin['scheme'],
-			$parsed_origin['host']
+			$parsed_origin['host'],
+			isset( $parsed_origin['port'] ) ? ':' . $parsed_origin['port'] : ''
 		) : '';
 
-		if ( empty( $request_url ) || $this->is_url_from_host( get_site_url(), $parsed_origin['host'] ) ) {
+		$origin_port = $parsed_origin['port'] ?? 80;
+		if ( empty( $request_url ) || $this->is_url_from_host( get_site_url(), $parsed_origin['host'], $origin_port ) ) {
 			return current_user_can( 'manage_options' );
 		}
 
@@ -106,7 +108,7 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 		// If it's not a healthcheck, compare the origins.
 		$governing_site_url = Settings::get_parent_site_url();
 		if ( '/' . $this->namespace . '/health-check' !== $request->get_route() ) {
-			return ! empty( $governing_site_url ) ? $this->is_url_from_host( $governing_site_url, $parsed_origin['host'] ) : false;
+			return ! empty( $governing_site_url ) ? $this->is_url_from_host( $governing_site_url, $parsed_origin['host'], $origin_port ) : false;
 		}
 
 		// For health-checks, if no governing site is set, we set it now.
@@ -117,15 +119,27 @@ abstract class Abstract_REST_Controller extends \WP_REST_Controller implements R
 	/**
 	 * Check if two URLs belong to the same host.
 	 *
-	 * @param string $url  The URL to check.
-	 * @param string $host The host to compare against.
+	 * @param string   $url  The URL to check.
+	 * @param string   $host The host to compare against.
+	 * @param int|null $port Optional. The port to compare against.
 	 *
-	 * @return bool True if both URLs belong to the same domain, false otherwise.
+	 * @return bool True if both URLs belong to the same host (and port if specified), false otherwise.
 	 */
-	private function is_url_from_host( string $url, string $host ): bool {
+	protected function is_url_from_host( string $url, string $host, ?int $port = null ): bool {
 		$parsed_url = wp_parse_url( $url );
 
-		return isset( $parsed_url['host'] ) && $parsed_url['host'] === $host;
+		// Compare both host and port to properly handle localhost with different ports.
+		if ( ! isset( $parsed_url['host'] ) || $parsed_url['host'] !== $host ) {
+			return false;
+		}
+
+		// If a port was provided, also compare ports.
+		if ( null !== $port ) {
+			$url_port = $parsed_url['port'] ?? 80;
+			return $url_port === $port;
+		}
+
+		return true;
 	}
 
 	/**

@@ -11,7 +11,7 @@ export default {
 	'**/*.php': ( filenames ) => {
 		const cwd = process.cwd();
 		const relativeFilenames = filenames
-			.map( ( filename ) => `"${ filename.replace( cwd + '/', '' ) }"` )
+			.map( ( filename ) => `'${ filename.replace( cwd + '/', '' ) }'` )
 			.join( ' ' );
 
 		// Only fail if phpcbf itself failed (exit code 3).
