@@ -1,13 +1,36 @@
 ## Important Files
-- @docs/DEVELOPMENT.md: Detailed development guidelines, tools, directory tree map, and best practices.
-- inc/: Contains the main plugin PHP code.
-- assets/src/: Contains the source files for the plugin's assets (JavaScript, CSS).
-- package.json: Contains our script commands.
+
+- @docs/DEVELOPMENT.md: detailed development guidelines and instructions, tools, directory tree map, and best practices.
+- inc/: contains the main plugin code
+- assets/src/: contains the source files for the plugin's assets (e.g., JavaScript, CSS).
+- package.json: contains our script commands.
 
 ## Important Notes
-Use `wp-env` for local development and testing. Key commands include:
-- `npm run wp-env {command}`: Manage the local environment.
-- `npm run wp-env:cli {command}`: Run commands inside the local environment's CLI container.
-- `npm run wp-env run {container} -- --env-cwd=wp-content/plugins/oneupdate {command}`: Run commands inside a specific container in the plugin directory.
-- `npm run wp-env start --xdebug-mode=coverage`: Start local environment with Xdebug enabled.
-- `npm run wp-env:cli -- composer install`: Install composer dependencies inside the CLI container.
+
+- Use `wp-env` (v11 parallel environments setup) for local development and testing:
+
+  ```cli
+  # Start the governing site (port 8888)
+  npm run wp-env start
+
+  # Start the child/brand site (port 8890)
+  npm run wp-env:child start
+
+  # Start the test environment (port 8889)
+  npm run wp-env:test start
+
+  # Run CLI/Composer commands in the governing site
+  npm run wp-env:cli -- composer install
+
+  # Run CLI commands in the child site
+  npm run wp-env:child run cli -- --env-cwd=wp-content/plugins/oneupdate {command}
+
+  # Run PHPUnit tests
+  npm run test:php
+  ```
+
+- Git Hooks & Pre-commit:
+  - Lefthook manages the git hooks. You can manually run the pre-commit hook on staged files with:
+    ```bash
+    npx --no-install lint-staged
+    ```
